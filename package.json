@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "format": "prettier --write . --ignore-unknown",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepare": "husky"
   },
   "dependencies": {
     "react": "^19.1.1",
@@ -29,6 +30,7 @@
     "eslint-plugin-react-refresh": "^0.4.22",
     "eslint-plugin-react-x": "^2.0.6",
     "globals": "^16.4.0",
+    "husky": "^9.1.7",
     "prettier": "^3.6.2",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.45.0",
@@ -36,5 +38,6 @@
   },
   "resolutions": {
     "vite": "npm:rolldown-vite@7.1.14"
-  }
+  },
+  "packageManager": "pnpm@10.18.1+sha512.77a884a165cbba2d8d1c19e3b4880eee6d2fcabd0d879121e282196b80042351d5eb3ca0935fa599da1dc51265cc68816ad2bddd2a2de5ea9fdf92adbec7cd34"
 }

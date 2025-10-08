@@ -1,0 +1,2 @@
+# Detect vulnerable or outdated packages
+pnpm audit
