@@ -1,2 +1,8 @@
 # Detect vulnerable or outdated packages
 pnpm audit
+
+# Run lint-staged to lint and format staged files
+npx lint-staged --config .lintstagedrc.json
+
+# For debugging, uncomment the following line [Reference](https://typicode.github.io/husky/how-to.html#testing-hooks-without-committing)
+# exit 1
