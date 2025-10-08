@@ -11,7 +11,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 export default defineConfig([
   globalIgnores(["dist"]),
   {
-    files: ["**/*.{ts,tsx}"],
+    files: ["**/*.{js,jsx,ts,tsx}"],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommendedTypeChecked,
@@ -32,6 +32,7 @@ export default defineConfig([
       },
       ecmaVersion: 2020,
       globals: globals.browser
-    }
+    },
+    ignores: ["eslint.config.js", "commitlint.config.js"]
   }
 ]);
