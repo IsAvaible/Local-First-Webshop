@@ -1,0 +1,2 @@
+# Verify that the commit message meets the Conventional Commits spec.
+npx commitlint  --edit "$1"
