@@ -182,7 +182,7 @@ interface LoanCollectionDoc {
 ├── contexts
 │   └── DocumentsContext.tsx  # Provides access to all loaded Automerge documents
 ├── lib
-│   ├── automerge-helpers.ts  # Functions for initializing/loading/managing docs
+│   ├── documents-helpers.ts  # Functions for initializing/loading/managing docs
 │   └── utils.ts
 └── App.tsx                   # Main application component and routing
 ```
@@ -199,8 +199,8 @@ interface LoanCollectionDoc {
    - [x] Set up shadcn/ui using its CLI.
    - [x] Install Automerge and set up basic project structure.
 2. **Automerge Integration:**
-   - [ ] Create `DocumentsContext` to hold a map of loaded document handles (`docId` -> `handle`).
-   - [ ] Develop the `useDocuments` custom hook. It will manage loading documents listed in the user's `UserDoc` and provide functions to change a specific document.
+   - [x] Create `DocumentsContext` to hold a map of loaded document handles (`docId` -> `handle`).
+   - [x] Develop the `useDocuments` custom hook. It will manage loading documents listed in the user's `UserDoc` and provide functions to change a specific document.
 3. **UI - Core Ledger:**
    - [ ] Build the main layout (sidebar for navigation, main content area).
    - [ ] Create a LedgerView component that displays transactions.
@@ -216,7 +216,7 @@ interface LoanCollectionDoc {
 **Goal:** Enable two or more users to share and edit a ledger in real-time.
 
 1. **Sync Server:**
-   - Set up a secure server based on the Automerge docks and use it to broadcast changes between connected clients.
+   - Set up a secure server based on the Automerge docs and use it to broadcast changes between connected clients.
 2. **Sharing UI:**
    - Implement a "Share" button on the ledger view.
    - Create a UI to invite another user (e.g., by their user ID or email). This adds their ID to the members list in the Automerge doc.

@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import App, { initTaskList, type TaskList } from "./App.tsx";
+import App from "./App.tsx";
 import {
   BroadcastChannelNetworkAdapter,
   DocHandle,
@@ -10,37 +10,48 @@ import {
   Repo,
   RepoContext
 } from "@automerge/react";
+import type { UserDoc } from "./lib/automerge-helpers.ts";
+import { DocumentsProvider } from "./contexts/DocumentsContext.tsx";
 
 const repo = new Repo({
   network: [new BroadcastChannelNetworkAdapter()],
   storage: new IndexedDBStorageAdapter()
 });
 
-// Add the repo to the global window object so it can be accessed in the browser console
-// This is useful for debugging and testing purposes.
 declare global {
   interface Window {
     repo: Repo;
-    handle: DocHandle<TaskList>;
+    handle: DocHandle<UserDoc>;
   }
 }
 window.repo = repo;
 
+const initUserDoc = (): UserDoc => ({
+  profile: {
+    userId: "user-" + Math.random().toString(36).substring(2, 9), // dummy user id
+    name: "New User"
+  },
+  documentRegistry: {}
+});
+
 // Check the URL for a document to load
 const locationHash = document.location.hash.substring(1);
-// Depending on if we have an AutomergeUrl, either find or create the document
+let userDocHandle: DocHandle<UserDoc>;
+
 if (isValidAutomergeUrl(locationHash)) {
-  window.handle = await repo.find(locationHash);
+  userDocHandle = await repo.find(locationHash);
 } else {
-  window.handle = repo.create<TaskList>(initTaskList());
-  // Set the location hash to the new document we just made.
-  document.location.hash = window.handle.url;
+  userDocHandle = repo.create<UserDoc>(initUserDoc());
+  document.location.hash = userDocHandle.url;
 }
+window.handle = userDocHandle;
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <RepoContext value={repo}>
-      <App docUrl={window.handle.url} />
+      <DocumentsProvider userDocHandle={userDocHandle}>
+        <App />
+      </DocumentsProvider>
     </RepoContext>
   </StrictMode>
 );
