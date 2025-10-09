@@ -34,5 +34,14 @@ export default defineConfig([
       globals: globals.browser
     },
     ignores: ["eslint.config.js", "commitlint.config.js"]
+  },
+  {
+    // disable react-refresh/only-export-components for shadcn UI components
+    // remove this once https://github.com/shadcn-ui/ui/issues/7736 is resolved
+    // or vite switches to bundle mode in the dev server
+    files: ["src/components/ui/**/*.tsx"],
+    rules: {
+      "react-refresh/only-export-components": "off"
+    }
   }
 ]);
