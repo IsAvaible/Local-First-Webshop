@@ -1,7 +1,7 @@
-import type { DocumentId } from "@automerge/react";
+import type { AutomergeUrl } from "@automerge/react";
 
 // Define basic types for IDs to improve readability.
-export type DocId = DocumentId;
+export type DocId = AutomergeUrl;
 export type UserId = string;
 export type TransactionId = string;
 export type BudgetId = string;
@@ -18,13 +18,14 @@ export interface UserDoc {
     avatarUrl?: string;
   };
   // A registry of all documents (ledgers, budgets, etc.) the user can access
-  documentRegistry: {
-    DocId: {
+  documentRegistry: Record<
+    DocId,
+    {
       type: "ledger" | "budget" | "loan-collection";
       name: string;
       role: "owner" | "member";
-    };
-  };
+    }
+  >;
 }
 
 // 2. Ledger Document (Sharable)
@@ -34,7 +35,7 @@ export interface Transaction {
   amount: number;
   description: string;
   date: string; // ISO 8601 date string
-  categoryId: string;
+  categoryId?: string;
 }
 export interface LedgerDoc {
   meta: {
@@ -42,7 +43,7 @@ export interface LedgerDoc {
     ownerId: UserId;
     members: UserId[];
   };
-  transactions: { TransactionId: Transaction };
+  transactions: Record<TransactionId, Transaction>;
 }
 
 // 3. Budget Document (Sharable)
@@ -67,11 +68,11 @@ export interface BudgetDoc {
     // List of LedgerDoc IDs this budget sources data from
     sourceLedgerIds: DocId[];
   };
-  budgets: { BudgetId: Budget };
-  goals: { GoalId: Goal };
+  budgets: Record<BudgetId, Budget>;
+  goals: Record<GoalId, Goal>;
   gamification: {
-    points: { UserId: number };
-    badges: { UserId: Badge[] };
+    points: Record<UserId, number>;
+    badges: Record<UserId, Badge[]>;
   };
 }
 
@@ -91,5 +92,5 @@ export interface LoanCollectionDoc {
     ownerId: UserId;
     members: UserId[];
   };
-  loans: { LoanId: Loan };
+  loans: Record<LoanId, Loan>;
 }
