@@ -87,69 +87,9 @@ This document outlines the architectural plan for a collaborative budget and exp
 
 The application state is split across multiple Automerge documents, categorized by their function. This ensures that data is only synchronized with users who have explicit access to that specific document, enhancing privacy and efficiency.
 
-A central User Document will act as a private index, tracking all other documents a user has access to.
+A central User Repository Document acts as a private index, tracking all other documents a user has access to.
 
-```ts
-// High-level structure of the Automerge document
-// 1. User Document (Private to the user)
-// This document is the user's private root, tracking their documents.
-interface UserDoc {
-  profile: {
-    userId: string;
-    name: string;
-    avatarUrl?: string;
-  };
-  // A registry of all documents (ledgers, budgets, etc.) the user can access
-  documentRegistry: Automerge.Map<
-    DocId,
-    {
-      type: "ledger" | "budget" | "loan-collection";
-      name: string;
-      role: "owner" | "member";
-    }
-  >;
-}
-
-// 2. Ledger Document (Sharable)
-// Represents a single ledger for transactions. Can be private or shared.
-interface LedgerDoc {
-  meta: {
-    name: string;
-    ownerId: UserId;
-    members: Automerge.List<UserId>;
-  };
-  transactions: Automerge.Map<TransactionId, Transaction>;
-}
-
-// 3. Budget Document (Sharable)
-// Contains budgets, goals, and gamification. Can be linked to multiple ledgers.
-interface BudgetDoc {
-  meta: {
-    name: string;
-    ownerId: UserId;
-    members: Automerge.List<UserId>;
-    // List of LedgerDoc IDs this budget sources data from
-    sourceLedgerIds: Automerge.List<DocId>;
-  };
-  budgets: Automerge.Map<BudgetId, Budget>;
-  goals: Automerge.Map<GoalId, Goal>;
-  gamification: {
-    points: Automerge.Map<UserId, number>;
-    badges: Automerge.Map<UserId, Automerge.List<Badge>>;
-  };
-}
-
-// 4. Loan Collection Document (Sharable)
-// A dedicated document for tracking loans within a group.
-interface LoanCollectionDoc {
-  meta: {
-    name: string;
-    ownerId: UserId;
-    members: Automerge.List<UserId>;
-  };
-  loans: Automerge.Map<LoanId, Loan>;
-}
-```
+You can find the detailed data model in [automerge-helpers.ts](./src/lib/automerge-helpers.ts).
 
 ### 3.2. Collaboration & Syncing
 
