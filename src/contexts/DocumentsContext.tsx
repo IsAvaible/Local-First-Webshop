@@ -1,6 +1,6 @@
 import { createContext, type ReactNode, use } from "react";
 import { DocHandle } from "@automerge/react";
-import type { DocId, UserDoc } from "../lib/automerge-helpers";
+import type { DocId, UserRegistryDoc } from "../lib/automerge-helpers";
 import { useDocuments } from "../hooks/useDocuments";
 
 export interface DocumentsContextType {
@@ -27,7 +27,7 @@ export const useDocumentsContext = () => {
 };
 
 interface DocumentsProviderProps {
-  userDocHandle?: DocHandle<UserDoc>;
+  userDocHandle?: DocHandle<UserRegistryDoc>;
   children: ReactNode;
 }
 

@@ -6,25 +6,20 @@ import {
   useDocument,
   useRepo
 } from "@automerge/react";
-import type { LedgerDoc, UserDoc } from "./lib/automerge-helpers";
+import type { LedgerDoc, UserRegistryDoc } from "./lib/automerge-helpers";
 import { Button } from "./components/ui/button";
 import { Layout } from "./components/shared/layout";
 import LedgerView from "./components/features/LedgerView";
 
 function App() {
   const { documents, loading, error } = useDocumentsContext();
-  const [userDoc, changeUserDoc] = useDocument<UserDoc>(window.handle.url);
+  const [userDoc, changeUserDoc] = useDocument<UserRegistryDoc>(
+    window.handle.url
+  );
   const repo = useRepo();
 
   const createLedger = () => {
-    const newLedgerHandle = repo.create<LedgerDoc>({
-      meta: {
-        name: "My First Ledger",
-        ownerId: userDoc?.profile.userId ?? "unknown",
-        members: []
-      },
-      transactions: {}
-    });
+    const newLedgerHandle = repo.create<LedgerDoc>();
 
     changeUserDoc((doc) => {
       doc.documentRegistry[newLedgerHandle.url] = {
@@ -55,8 +50,8 @@ function App() {
       <h1>Collaborative Budget Tracker</h1>
       {userDoc && (
         <div>
-          <h2>Welcome, {userDoc.profile.name}</h2>
-          <p>User ID: {userDoc.profile.userId}</p>
+          <h2>Welcome</h2>
+          <p>User ID: unimplemented</p>
         </div>
       )}
 

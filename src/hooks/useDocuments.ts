@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { DocHandle, useRepo } from "@automerge/react";
-import type { DocId, UserDoc } from "../lib/automerge-helpers";
+import type { DocId, UserRegistryDoc } from "../lib/automerge-helpers";
 
-export const useDocuments = (userDocHandle?: DocHandle<UserDoc>) => {
+export const useDocuments = (userDocHandle?: DocHandle<UserRegistryDoc>) => {
   const repo = useRepo();
   const [documents, setDocuments] = useState<Map<DocId, DocHandle<unknown>>>(
     // eslint-disable-next-line react-x/prefer-use-state-lazy-initialization

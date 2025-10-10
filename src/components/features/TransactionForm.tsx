@@ -16,7 +16,7 @@ import type { Transaction } from "@/lib/automerge-helpers";
 const transactionSchema = z.object({
   description: z.string().min(1, "Description is required."),
   amount: z.number().positive("Amount must be positive."),
-  date: z.string().min(1, "Date is required."),
+  date: z.date(),
   categoryId: z.string().optional()
 });
 
@@ -32,7 +32,7 @@ export default function TransactionForm({ onSubmit }: TransactionFormProps) {
     defaultValues: {
       description: "",
       amount: 0,
-      date: new Date().toISOString().split("T")[0] // Defaults to today
+      date: new Date()
     }
   });
 
@@ -80,7 +80,21 @@ export default function TransactionForm({ onSubmit }: TransactionFormProps) {
             <FormItem>
               <FormLabel>Date</FormLabel>
               <FormControl>
-                <Input type="date" {...field} />
+                <Input
+                  type="date"
+                  {...field}
+                  value={
+                    field.value instanceof Date
+                      ? field.value.toISOString().split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const dateValue = e.target.value
+                      ? new Date(e.target.value)
+                      : null;
+                    field.onChange(dateValue);
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

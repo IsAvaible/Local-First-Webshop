@@ -9,19 +9,40 @@ export type GoalId = string;
 export type LoanId = string;
 export type Badge = string;
 
+// Define the different document types in the system.
+type docTypes =
+  | "user"
+  | "user-registry"
+  | "ledger"
+  | "budget"
+  | "loan-collection";
+
+// Base interface for all documents to include common metadata.
+export interface AutomergeDoc {
+  meta: {
+    docId: DocId;
+    docType: docTypes;
+    name?: string;
+    ownerId: UserId;
+    members: UserId[];
+    createdAt: Date;
+    updatedAt: Date;
+    schemaVersion: number;
+  };
+}
+
 // 1. User Document (Private to the user)
 // This document is the user's private root, tracking their documents.
-export interface UserDoc {
-  profile: {
-    userId: UserId;
-    name: string;
-    avatarUrl?: string;
+export interface UserRegistryDoc extends AutomergeDoc {
+  meta: AutomergeDoc["meta"] & {
+    docType: "user-registry";
+    members: never[];
   };
   // A registry of all documents (ledgers, budgets, etc.) the user can access
   documentRegistry: Record<
     DocId,
     {
-      type: "ledger" | "budget" | "loan-collection";
+      type: Exclude<docTypes, "user">;
       name: string;
       role: "owner" | "member";
     }
@@ -29,25 +50,21 @@ export interface UserDoc {
 }
 
 // 2. Ledger Document (Sharable)
-// Represents a single ledger for transactions. Can be private or shared.
 export interface Transaction {
   id: TransactionId;
   amount: number;
   description: string;
-  date: string; // ISO 8601 date string
+  date: Date;
   categoryId?: string;
 }
-export interface LedgerDoc {
-  meta: {
-    name: string;
-    ownerId: UserId;
-    members: UserId[];
-  };
+
+// Represents a single ledger for transactions. Can be private or shared.
+export interface LedgerDoc extends AutomergeDoc {
+  meta: AutomergeDoc["meta"] & { docType: "ledger" };
   transactions: Record<TransactionId, Transaction>;
 }
 
 // 3. Budget Document (Sharable)
-// Contains budgets, goals, and gamification. Can be linked to multiple ledgers.
 export interface Budget {
   id: BudgetId;
   name: string;
@@ -60,14 +77,12 @@ export interface Goal {
   targetAmount: number;
   currentAmount: number;
 }
-export interface BudgetDoc {
-  meta: {
-    name: string;
-    ownerId: UserId;
-    members: UserId[];
-    // List of LedgerDoc IDs this budget sources data from
-    sourceLedgerIds: DocId[];
-  };
+
+// Contains budgets, goals, and gamification. Can be linked to multiple ledgers.
+export interface BudgetDoc extends AutomergeDoc {
+  meta: AutomergeDoc["meta"] & { docType: "budget" };
+  // List of LedgerDoc IDs this budget sources data from
+  sourceLedgerIds: DocId[];
   budgets: Record<BudgetId, Budget>;
   goals: Record<GoalId, Goal>;
   gamification: {
@@ -84,13 +99,12 @@ export interface Loan {
   borrower: UserId;
   amount: number;
   description: string;
-  isPaid: boolean;
-}
-export interface LoanCollectionDoc {
-  meta: {
-    name: string;
-    ownerId: UserId;
-    members: UserId[];
+  payment: {
+    status: "unpaid" | "partially-paid" | "paid";
+    amountPaid: number;
   };
+}
+export interface LoanCollectionDoc extends AutomergeDoc {
+  meta: AutomergeDoc["meta"] & { docType: "loan-collection" };
   loans: Record<LoanId, Loan>;
 }

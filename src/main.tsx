@@ -10,7 +10,7 @@ import {
   Repo,
   RepoContext
 } from "@automerge/react";
-import type { UserDoc } from "./lib/automerge-helpers.ts";
+import type { UserRegistryDoc } from "./lib/automerge-helpers.ts";
 import { DocumentsProvider } from "./contexts/DocumentsContext.tsx";
 
 const repo = new Repo({
@@ -21,27 +21,19 @@ const repo = new Repo({
 declare global {
   interface Window {
     repo: Repo;
-    handle: DocHandle<UserDoc>;
+    handle: DocHandle<UserRegistryDoc>;
   }
 }
 window.repo = repo;
 
-const initUserDoc = (): UserDoc => ({
-  profile: {
-    userId: "user-" + Math.random().toString(36).substring(2, 9), // dummy user id
-    name: "New User"
-  },
-  documentRegistry: {}
-});
-
 // Check the URL for a document to load
 const locationHash = document.location.hash.substring(1);
-let userDocHandle: DocHandle<UserDoc>;
+let userDocHandle: DocHandle<UserRegistryDoc>;
 
 if (isValidAutomergeUrl(locationHash)) {
   userDocHandle = await repo.find(locationHash);
 } else {
-  userDocHandle = repo.create<UserDoc>(initUserDoc());
+  userDocHandle = repo.create<UserRegistryDoc>();
   document.location.hash = userDocHandle.url;
 }
 window.handle = userDocHandle;
