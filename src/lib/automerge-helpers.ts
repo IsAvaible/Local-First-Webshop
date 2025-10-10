@@ -69,8 +69,8 @@ export interface UserDoc extends AutomergeDoc<"user"> {
   };
   profile: {
     displayName: string;
-    avatarUrl?: string;
-    bio?: string;
+    avatarUrl: string | null;
+    bio: string | null;
   };
 }
 
@@ -81,45 +81,63 @@ export interface UserDoc extends AutomergeDoc<"user"> {
 export interface Account {
   id: AccountId;
   name: string;
+  description: string | null;
+  currency: CurrencyCode;
+  balance: number;
   type: "checking" | "savings" | "cash" | "credit-card" | "other";
-  icon?: string;
+  icon: string | null;
 }
 
 export interface Category {
   id: CategoryId;
-  parentId?: CategoryId; // For nested categories
+  parentId: CategoryId | null; // For nested categories
   name: string;
-  icon?: string;
+  icon: string | null;
+  description: string | null;
+}
+
+export interface TransactionSplit {
+  amount: number;
+  categoryId: CategoryId | null;
   description?: string;
 }
 
+/**
+ * A financial transaction, which can be an income, expense, or transfer.
+ * A transaction can have multiple splits for detailed categorization.
+ */
 export interface Transaction {
   id: TransactionId;
   type: "income" | "expense" | "transfer";
-  amount: number;
+  splits: [TransactionSplit, ...TransactionSplit[]];
   currency: CurrencyCode;
   description: string;
   date: Date;
-  categoryId?: CategoryId;
-  sourceAccountId?: AccountId;
+  sourceAccountId: AccountId | null;
   /** For internal transfers, the destination of funds. */
-  destinationAccountId?: AccountId;
+  destinationId: [BudgetId, GoalId] | AccountId | null;
   attachmentUrls: string[];
   createdBy: UserId;
 }
 
-/** Defines a transaction that reoccurs on a schedule. */
-export interface RecurringTransaction {
-  id: RecurringTransactionId;
-  baseTransaction: Omit<Transaction, "id" | "date">;
-  startDate: Date;
+interface RecurringFlow {
+  /** The date the recurrence starts. */
+  start: Date;
   /** The date the recurrence ends, if applicable. */
-  endDate?: Date;
+  end: Date | null;
   /** The frequency of the recurrence. */
   frequency: "daily" | "weekly" | "monthly" | "yearly";
   /** The interval of the frequency (e.g., every 2 weeks). */
   interval: number;
-  lastGeneratedDate?: Date;
+  /** The occurrence within the interval (e.g., 1st of the month). */
+  occursOn: number;
+}
+
+/** Defines a transaction that reoccurs on a schedule. */
+export interface RecurringTransaction extends RecurringFlow {
+  id: RecurringTransactionId;
+  baseTransaction: Omit<Transaction, "id" | "date">;
+  generatedTransactionIds: Record<string, TransactionId>; // Maps occurrence dates to generated transaction IDs
 }
 
 // Represents a single ledger for transactions. Can be private or shared.
@@ -142,31 +160,23 @@ export interface Budget {
   currency: CurrencyCode;
   /** Categories from the linked ledger(s) that this budget applies to. */
   categoryIds: CategoryId[];
-  /** If true, unspent/overspent amount rolls over to the next period. */
+  /** If true, unspent/overspent amount rolls over to the next period. If false, unspent amount returns to the pool. */
   rollover: boolean;
   span:
     | { type: "period"; start: Date; end: Date }
-    | {
+    | ({
         type: "interval";
-        start: Date;
-        end?: Date;
-        /** The unit of time for the interval. */
-        intervalUnit: "daily" | "weekly" | "monthly" | "yearly";
-        /** The number of units for the interval (e.g., every 2 weeks). */
-        interval: number;
-        /** The occurrence number within the interval (e.g., 1st of the month). */
-        occursOn: number;
-      }
+      } & RecurringFlow)
     | { type: "ongoing" }; // A continuous budget without a reset period.
 }
 export interface Goal {
   id: GoalId;
   name: string;
   targetAmount: number;
-  currentAmount: number;
+  categoryIds: CategoryId[];
   currency: CurrencyCode;
   startDate: Date;
-  targetDate?: Date;
+  targetDate: Date | null;
   status: "active" | "achieved" | "archived";
 }
 
@@ -174,7 +184,6 @@ export interface Goal {
 export interface BudgetDoc extends AutomergeDoc<"budget"> {
   // List of LedgerDoc IDs this budget sources data from
   sourceLedgerIds: DocId[];
-  categories: Record<CategoryId, Category>;
   budgets: Record<BudgetId, Budget>;
   goals: Record<GoalId, Goal>;
 }
@@ -198,10 +207,11 @@ export interface Loan {
   borrower: UserId;
   /** The initial amount of the loan. */
   principalAmount: number;
+  currency: CurrencyCode;
   description: string;
   status: "outstanding" | "partially-paid" | "paid";
   issueDate: Date;
-  dueDate?: Date;
+  dueDate: Date | null;
   paymentHistory: Record<LoanPaymentId, LoanPayment>;
 }
 
