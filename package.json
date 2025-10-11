@@ -14,7 +14,9 @@
   "dependencies": {
     "@automerge/react": "^2.3.1",
     "@radix-ui/react-slot": "^1.2.3",
+    "@react-three/fiber": "^9.3.0",
     "@tailwindcss/vite": "^4.1.14",
+    "@types/three": "^0.180.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.545.0",
@@ -22,6 +24,7 @@
     "react-dom": "^19.1.1",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.14",
+    "three": "^0.180.0",
     "vite-plugin-wasm": "^3.5.0"
   },
   "devDependencies": {
