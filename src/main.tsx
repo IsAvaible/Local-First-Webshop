@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import App, { type Cube } from "./App.tsx";
+import App, { type Scene } from "./App.tsx";
 import {
   BroadcastChannelNetworkAdapter,
   DocHandle,
@@ -21,7 +21,7 @@ const repo = new Repo({
 declare global {
   interface Window {
     repo: Repo;
-    handle: DocHandle<Cube>;
+    handle: DocHandle<Scene>;
   }
 }
 window.repo = repo;
@@ -32,9 +32,8 @@ const locationHash = document.location.hash.substring(1);
 if (isValidAutomergeUrl(locationHash)) {
   window.handle = await repo.find(locationHash);
 } else {
-  window.handle = repo.create<Cube>({
-    id: crypto.randomUUID(),
-    size: 1
+  window.handle = repo.create<Scene>({
+    walls: []
   });
   // Set the location hash to the new document we just made.
   document.location.hash = window.handle.url;
