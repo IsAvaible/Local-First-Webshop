@@ -33,6 +33,47 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser
     },
-    ignores: ["eslint.config.js", "commitlint.config.js"]
+    ignores: [
+      "eslint.config.js",
+      "commitlint.config.js",
+      "drizzle.config.ts",
+      "prettier.config.ts",
+      "src/vite-plugin-caddy.ts"
+    ],
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          varsIgnorePattern: "^_",
+          argsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_"
+        }
+      ],
+      "prefer-template": "error",
+      "no-template-curly-in-string": "error",
+      "@typescript-eslint/only-throw-error": [
+        "error",
+        {
+          allow: [
+            {
+              // This tells the rule to allow throwing the 'Redirect'
+              // type exported from '@tanstack/router-core'
+              from: "package",
+              package: "@tanstack/router-core",
+              name: "Redirect"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    // disable react-refresh/only-export-components for shadcn UI components
+    // remove this once https://github.com/shadcn-ui/ui/issues/7736 is resolved
+    // or vite switches to bundle mode in the dev server
+    files: ["src/components/ui/**/*.tsx"],
+    rules: {
+      "react-refresh/only-export-components": "off"
+    }
   }
 ]);

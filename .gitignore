@@ -1,3 +1,15 @@
+# Secrets
+.env
+
+# Tanstack
+.tanstack
+.output
+.nitro
+.vinxi
+count.txt
+Caddyfile
+src/db/out/
+
 # Logs
 logs
 *.log
