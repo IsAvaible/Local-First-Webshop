@@ -33,37 +33,37 @@ const productMocks = [
     name: "Lotus Esprit S1",
     description: "From 'The Spy Who Loved Me'",
     price: 25500,
-    image: "https://via.placeholder.com/300"
+    image: "https://placehold.co/300"
   },
   {
     name: "Toyota Supra",
     description: "From 'The Fast and the Furious'",
     price: 15250,
-    image: "https://via.placeholder.com/300"
+    image: "https://placehold.co/300"
   },
   {
     name: "Exhaust Muffler",
     description: "For when your car is too loud",
     price: 300,
-    image: "https://via.placeholder.com/300"
+    image: "https://placehold.co/300"
   },
   {
     name: "Catalytic Converter",
     description: "Perfect exhaust gas disposal",
     price: 250,
-    image: "https://via.placeholder.com/300"
+    image: "https://placehold.co/300"
   },
   {
     name: "Brake Discs",
     description: "Selling almost new brake discs",
     price: 100,
-    image: "https://via.placeholder.com/300"
+    image: "https://placehold.co/300"
   },
   {
     name: "Headlights",
     description: "Main headlights for darkness",
     price: 80,
-    image: "https://via.placeholder.com/300"
+    image: "https://placehold.co/300"
   }
 ];
 
