@@ -1,5 +1,23 @@
-import { useState, useRef, type FocusEvent } from "react";
+import { useState, useRef, type FocusEvent, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut
+} from "@/components/ui/command.tsx";
+import { Command as CommandPrimitive } from "cmdk";
+import {
+  CreditCard,
+  Loader2Icon,
+  SearchIcon,
+  SettingsIcon,
+  UserIcon
+} from "lucide-react";
+import * as React from "react";
 
 // --- Props Definition ---
 interface SearchBarProps {
@@ -19,18 +37,34 @@ export function SearchBar({ search: initialSearch }: SearchBarProps) {
     return "";
   });
   const [searching] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
+  const commandRef = useRef<HTMLDivElement>(null);
 
   const clearSearch = () => {
     setSearch("");
     inputRef.current?.focus();
   };
 
-  // The following handlers replicate the complex focus/blur behavior
-  // which resets cursor position for right-to-left text.
-  const handleFormFocus = () => {
+  // Close the command list when clicking outside the component
+  useEffect(() => {
+    const handleClickOutside = (event: globalThis.MouseEvent) => {
+      if (
+        commandRef.current &&
+        !commandRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleFocus = () => {
+    setOpen(true);
     const input = inputRef.current;
     if (input?.hasAttribute("data-rtl")) {
       input.blur();
@@ -39,13 +73,12 @@ export function SearchBar({ search: initialSearch }: SearchBarProps) {
     }
   };
 
-  const handleFormBlur = (event: FocusEvent<HTMLFormElement>) => {
-    const form = formRef.current;
+  const handleBlur = (event: FocusEvent) => {
+    const command = commandRef.current;
     const input = inputRef.current;
-    // Check if focus is leaving the form entirely
     if (
-      form &&
-      !form.contains(event.relatedTarget) &&
+      command &&
+      !command.contains(event.relatedTarget) &&
       input &&
       !input.hasAttribute("data-rtl")
     ) {
@@ -54,14 +87,16 @@ export function SearchBar({ search: initialSearch }: SearchBarProps) {
         input.setAttribute("data-rtl", "");
       }, delay);
     }
+    if (!command?.contains(event.relatedTarget)) {
+      setOpen(false);
+    }
   };
 
   // --- JSX ---
   return (
-    <form
-      ref={formRef}
-      action={"#"}
-      noValidate
+    <Command
+      unstyled
+      ref={commandRef}
       className={cn(
         "group relative -mr-4 flex max-w-full flex-row items-center gap-x-2 rounded-full py-1 ring-1 ring-transparent duration-500",
         "max-sm:mr-0 max-sm:px-4 max-sm:ring-slate-800", // Mobile styles
@@ -69,8 +104,8 @@ export function SearchBar({ search: initialSearch }: SearchBarProps) {
         "focus-within:mr-0 focus-within:px-4 focus-within:ring-slate-800", // Focus-within styles
         "has-[input:not(:placeholder-shown)]:mr-0 has-[input:not(:placeholder-shown)]:px-4 has-[input:not(:placeholder-shown)]:ring-slate-800" // Has content styles
       )}
-      onFocus={handleFormFocus}
-      onBlur={handleFormBlur}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
     >
       <button
         type="submit"
@@ -80,15 +115,12 @@ export function SearchBar({ search: initialSearch }: SearchBarProps) {
         <SearchIcon className="h-6 w-6" />
       </button>
 
-      <input
+      <CommandPrimitive.Input
         ref={inputRef}
-        type="text"
         name="search"
         placeholder="Search"
         autoComplete="off"
         pattern=".{0,12}"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
         className={cn(
           "peer flex w-40 bg-[inherit] text-[inherit] focus:outline-none", // Base & Styling
           "transition-[width] duration-[inherit]", // Transitions
@@ -111,45 +143,46 @@ export function SearchBar({ search: initialSearch }: SearchBarProps) {
         onClick={clearSearch}
       >
         {searching ? (
-          <SpinnerIcon className="h-5 w-5" />
+          <Loader2Icon className="h-5 w-5 animate-spin" />
         ) : (
           <XCircleIcon className="h-5 w-5" />
         )}
       </button>
-    </form>
+      {open && (
+        <CommandList className="absolute top-11 left-0 z-10 w-full rounded-md border bg-white text-slate-900 shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50">
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Suggestions">
+            <ProductCommandItem
+              imgUrl={"./src/assets/react.svg"}
+              name={"Test Product"}
+              price={"14.99 €"}
+            />
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Settings">
+            <CommandItem>
+              <UserIcon />
+              <span>Profile</span>
+              <CommandShortcut>⌘P</CommandShortcut>
+            </CommandItem>
+            <CommandItem>
+              <CreditCard />
+              <span>Billing</span>
+              <CommandShortcut>⌘B</CommandShortcut>
+            </CommandItem>
+            <CommandItem>
+              <SettingsIcon />
+              <span>Settings</span>
+              <CommandShortcut>⌘S</CommandShortcut>
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+      )}
+    </Command>
   );
 }
 
 // --- Icon Components ---
-// It's best practice to define SVG icons as their own components.
-
-const SearchIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    width="24px"
-    height="24px"
-    viewBox="0 0 24 24"
-    strokeWidth="1.5"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    color="currentColor"
-    {...props}
-  >
-    <path
-      d="M17 17L21 21"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    ></path>
-    <path
-      d="M3 11C3 15.4183 6.58172 19 11 19C13.213 19 15.2161 18.1015 16.6644 16.6493C18.1077 15.2022 19 13.2053 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11Z"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    ></path>
-  </svg>
-);
 
 const XCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -169,22 +202,28 @@ const XCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-const SpinnerIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    aria-hidden="true"
-    className="animate-spin fill-slate-800 text-gray-200 dark:text-gray-600"
-    viewBox="0 0 100 101"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    {...props}
-  >
-    <path
-      d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-      fill="currentColor"
-    ></path>
-    <path
-      d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-      fill="currentFill"
-    ></path>
-  </svg>
-);
+interface ProductCommandItemProps {
+  imgUrl: string;
+  name: string;
+  price: string;
+}
+const ProductCommandItem = ({
+  imgUrl,
+  name,
+  price,
+  ...props
+}: ProductCommandItemProps & React.ComponentProps<typeof CommandItem>) => {
+  return (
+    <CommandItem {...props}>
+      <img
+        className="aspect-square h-6 w-6 rounded-md"
+        src={imgUrl}
+        alt={name}
+      />
+      <div className="flex flex-col">
+        <span className="font-medium">{name}</span>
+        <span className="text-sm text-slate-500">{price}</span>
+      </div>
+    </CommandItem>
+  );
+};
