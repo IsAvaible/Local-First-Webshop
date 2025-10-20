@@ -2,11 +2,12 @@ import {
   HomeIcon,
   HeartIcon,
   BellIcon,
-  ShoppingCartIcon,
   UserIcon,
-  MenuIcon
+  MenuIcon,
+  PackageOpenIcon
 } from "lucide-react";
 import { SearchBar } from "@/components/layout/Header/SearchBar.tsx";
+import { CartHeaderButton } from "@/components/cart/CartHeaderButton.tsx";
 
 export default function Header() {
   return (
@@ -17,7 +18,7 @@ export default function Header() {
             href="#"
             className="flex flex-row items-center gap-x-2 text-2xl font-bold text-slate-800"
           >
-            <img src="src/assets/react.svg" alt="Logo" className="h-8" />
+            <PackageOpenIcon className="h-8 w-8" />
             <span className="max-sm:hidden">Partlist</span>
           </a>
         </div>
@@ -40,9 +41,7 @@ export default function Header() {
           </a>
         </div>
         <div className="flex flex-row items-center justify-end gap-x-4">
-          <a href="#" className="transition-transform hover:scale-110">
-            <ShoppingCartIcon className="h-6 w-6" />
-          </a>
+          <CartHeaderButton />
           <a href="#" className="transition-transform hover:scale-110">
             <UserIcon className="h-6 w-6" />
           </a>

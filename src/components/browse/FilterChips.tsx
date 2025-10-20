@@ -16,6 +16,7 @@ export default function FilterChips({ filters, clearAll }: FilterChipsProps) {
       {/* Conditionally render the "Clear All" button */}
       {filters.length > 0 && (
         <button
+          type="button"
           onClick={clearAll}
           className="rounded bg-gray-800 px-4 py-2 font-bold text-white"
         >

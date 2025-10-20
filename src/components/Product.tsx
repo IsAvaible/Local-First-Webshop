@@ -17,38 +17,42 @@ const products: {
 }[] = [];
 const productMocks = [
   {
-    name: "Lotus Esprit S1",
-    description: "From 'The Spy Who Loved Me'",
+    name: "Gyro-Stabilizer Core (Model 7G)",
+    description: "Maintains rotational axis alignment under high g-force.",
     price: 25500,
     image: "https://placehold.co/600x400"
   },
   {
-    name: "Toyota Supra",
-    description: "From 'The Fast and the Furious'",
+    name: "Hydraulic Manifold Block (HMB-12)",
+    description:
+      "Controls high-pressure fluid distribution for primary actuators.",
     price: 15250,
     image: "https://placehold.co/600x400"
   },
   {
-    name: "Exhaust Muffler",
-    description: "For when your car is too loud",
+    name: "Harmonic Resonance Dampener",
+    description:
+      "Reduces high-frequency vibration in the main drive shaft assembly.",
     price: 300,
     image: "https://placehold.co/600x400"
   },
   {
-    name: "Catalytic Converter",
-    description: "Perfect exhaust gas disposal",
+    name: "Plasma Particulate Scrubber",
+    description: "Filters nano-particulates from the primary exhaust manifold.",
     price: 250,
     image: "https://placehold.co/600x400"
   },
   {
-    name: "Brake Discs",
-    description: "Selling almost new brake discs",
+    name: "Tungsten-Carbide Piston Heads (Set of 4)",
+    description:
+      "High-temperature, high-compression components for generator units.",
     price: 100,
     image: "https://placehold.co/600x400"
   },
   {
-    name: "Headlights",
-    description: "Main headlights for darkness",
+    name: "Optical Triangulation Sensor",
+    description:
+      "Precision alignment laser for robotic arm calibration (Class IIIb).",
     price: 80,
     image: "https://placehold.co/600x400"
   }

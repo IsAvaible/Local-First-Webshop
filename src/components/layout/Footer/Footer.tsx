@@ -25,6 +25,7 @@ export default function Footer() {
       </span>
       <div className="hidden text-center lg:inline lg:flex-1">
         <button
+          type="button"
           onClick={scrollToTop}
           className="cursor-pointer text-center text-sm text-gray-500 hover:underline dark:text-slate-400"
         >

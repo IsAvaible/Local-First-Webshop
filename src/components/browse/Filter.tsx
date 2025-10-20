@@ -21,7 +21,7 @@ const shippingOptions = ["Free", "Express", "Standard"];
 
 export default function Filter() {
   return (
-    <div className="space-y-6 rounded-lg bg-white p-4 shadow-md dark:bg-slate-800">
+    <div className="sticky h-fit w-80 space-y-6 rounded-lg bg-white p-4 shadow-md dark:bg-slate-800">
       <h3 className="text-xl font-semibold">Filters</h3>
       <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3"]}>
         <AccordionItem value="item-1">

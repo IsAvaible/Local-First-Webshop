@@ -1,3 +1,5 @@
+.tanstack/tmp
+
 # Logs
 logs
 *.log

@@ -1,3 +1,5 @@
+import { useCart } from "@/contexts/useCartContext.ts";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,6 +8,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+import { ShoppingCartIcon } from "lucide-react";
 
 interface Product {
   id: number;
@@ -20,8 +23,10 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const { addToCart } = useCart();
+
   return (
-    <Card className="flex flex-col overflow-hidden">
+    <Card className="flex flex-col overflow-hidden pt-0">
       <CardHeader className="relative p-0">
         <img
           src={product.imageUrl}
@@ -35,13 +40,16 @@ export default function ProductCard({ product }: ProductCardProps) {
           {product.description}
         </CardDescription>
       </CardContent>
-      <CardFooter className="mt-auto flex flex-col items-end">
+      <CardFooter className="mt-auto flex items-center justify-between px-4">
         <p className="text-slate-600">
           {new Intl.NumberFormat("de-DE", {
             style: "currency",
             currency: "EUR"
           }).format(product.price)}
         </p>
+        <Button size="icon" onClick={() => addToCart(product.id.toString())}>
+          <ShoppingCartIcon />
+        </Button>
       </CardFooter>
     </Card>
   );

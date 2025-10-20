@@ -93,7 +93,7 @@ export default function ProductImageCarousel({ images }: { images: Image[] }) {
           <CarouselContent>
             {images.map((image, index) => (
               <CarouselItem
-                key={index}
+                key={image.src}
                 className={
                   "w-full p-1 lg:basis-1/4 " +
                   (orientation == "vertical"
