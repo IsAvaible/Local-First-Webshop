@@ -19,6 +19,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { CartItemComponent } from "./CartItem";
+import { cn } from "@/lib/utils.ts";
+import * as React from "react";
 
 const SortableCartItem = ({ item }: { item: CartItem }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -30,8 +32,8 @@ const SortableCartItem = ({ item }: { item: CartItem }) => {
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <CartItemComponent item={item} />
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <CartItemComponent item={item} dragHandleProps={listeners} />
     </div>
   );
 };
@@ -57,7 +59,7 @@ const CartFolderComponent = ({ folder }: { folder: CartFolder }) => {
   );
 };
 
-export function Cart() {
+export function Cart({ className }: React.ComponentProps<"div">) {
   const { cart, dispatch } = useCart();
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -92,7 +94,7 @@ export function Cart() {
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <div className="flex h-full w-80 flex-col">
+      <div className={cn("flex h-full w-80 flex-col", className)}>
         <div className="flex items-center justify-between border-b p-4">
           <h2 className="text-lg font-semibold">Shopping Cart</h2>
         </div>

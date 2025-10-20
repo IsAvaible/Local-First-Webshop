@@ -13,11 +13,16 @@ import {
 import { Textarea } from "@/components/ui/textarea.tsx";
 import * as React from "react";
 import { cn } from "@/lib/utils.ts";
+import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 
 export function CartItemComponent({
   item,
-  className
-}: { item: CartItem } & React.ComponentProps<"div">) {
+  className,
+  dragHandleProps
+}: {
+  item: CartItem;
+  dragHandleProps?: SyntheticListenerMap;
+} & React.ComponentProps<"div">) {
   const { cart, dispatch } = useCart();
   const [notes, setNotes] = useState(item.notes ?? "");
 
@@ -101,7 +106,12 @@ export function CartItemComponent({
         </div>
       </div>
       <div className="flex flex-col justify-between self-stretch">
-        <Button variant="ghost" size="icon" className="h-8 w-8">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 cursor-grab"
+          {...dragHandleProps}
+        >
           <GripVerticalIcon className="text-muted-foreground w-4 cursor-grab" />
         </Button>
         <Button variant="outline" size="icon" className="h-8 w-8">
