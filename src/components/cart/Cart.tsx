@@ -21,6 +21,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { CartItemComponent } from "./CartItem";
 import { cn } from "@/lib/utils.ts";
 import * as React from "react";
+import { restrictToParentElement } from "@dnd-kit/modifiers";
 
 const SortableCartItem = ({ item }: { item: CartItem }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -93,7 +94,11 @@ export function Cart({ className }: React.ComponentProps<"div">) {
   };
 
   return (
-    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+      modifiers={[restrictToParentElement]}
+    >
       <div className={cn("flex h-full w-80 flex-col", className)}>
         <div className="flex items-center justify-between border-b p-4">
           <h2 className="text-lg font-semibold">Shopping Cart</h2>
