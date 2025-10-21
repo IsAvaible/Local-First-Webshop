@@ -1,5 +1,5 @@
 import Filter from "@/components/browse/Filter.tsx";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FilterIcon, Loader2Icon } from "lucide-react";
 import FilterChips from "@/components/browse/FilterChips.tsx";
 import {
@@ -15,20 +15,23 @@ import ProductCard from "@/components/browse/ProductCard.tsx";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select.tsx";
 
 // Mock product data generation
-const products: {
+interface Product {
   id: number;
   name: string;
   description: string;
   price: number;
   imageUrl: string;
   inCart: boolean;
-}[] = [];
+}
+const products: Product[] = [];
 const productMocks = [
   {
     name: "Gyro-Stabilizer Core (Model 7G)",
@@ -84,7 +87,14 @@ for (let i = 0; i < 6; i++) {
   });
 }
 
-function ProductsGrid() {
+// Define which properties are sortable
+// This will need to be dynamically generated from the available products later
+const sortableProperties: (keyof Product)[] = ["id", "name", "price"];
+
+// Helper to capitalize first letter
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+function ProductsGrid({ products }: { products: Product[] }) {
   const [loading] = useState(false);
   const [error] = useState(false);
 
@@ -140,6 +150,72 @@ export default function Browse() {
   ]);
   const [filterDialogVisible, setFilterDialogVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [sortBy, setSortBy] = useState("popularity"); // Default to popularity
+
+  // State for the custom sort dropdowns
+  const [customProperty, setCustomProperty] = useState<keyof Product | "">("");
+  const [customOrder, setCustomOrder] = useState("");
+
+  // Effect to update main sort state when custom selects change
+  useEffect(() => {
+    if (customProperty && customOrder) {
+      setSortBy(`custom-${customProperty}-${customOrder}`);
+    }
+  }, [customProperty, customOrder]);
+
+  // Effect to clear custom selects when a preset sort is chosen
+  useEffect(() => {
+    if (sortBy && !sortBy.startsWith("custom-")) {
+      setCustomProperty("");
+      setCustomOrder("");
+    }
+  }, [sortBy]);
+
+  const sortedProducts = useMemo(() => {
+    const sorted = [...products];
+
+    if (sortBy.startsWith("custom-")) {
+      try {
+        const [, prop, order] = sortBy.split("-");
+        const property = prop as keyof Product;
+
+        return sorted.sort((a, b) => {
+          const valA = a[property];
+          const valB = b[property];
+
+          let comparison = 0;
+          if (typeof valA === "number" && typeof valB === "number") {
+            comparison = valA - valB;
+          } else if (typeof valA === "string" && typeof valB === "string") {
+            comparison = valA.localeCompare(valB);
+          } else if (typeof valA === "boolean" && typeof valB === "boolean") {
+            // false (0) comes before true (1)
+            comparison = valA === valB ? 0 : valA ? 1 : -1;
+          } else {
+            // Fallback for mixed/other types
+            if (valA > valB) comparison = 1;
+            else if (valA < valB) comparison = -1;
+          }
+
+          return order === "asc" ? comparison : -comparison;
+        });
+      } catch (e) {
+        console.error("Error during custom sort:", e);
+        return sorted; // Return unsorted on error
+      }
+    }
+
+    // Handle preset sorting
+    switch (sortBy) {
+      case "price-asc":
+        return sorted.sort((a, b) => a.price - b.price);
+      case "price-desc":
+        return sorted.sort((a, b) => b.price - a.price);
+      case "popularity":
+      default:
+        return sorted;
+    }
+  }, [sortBy]);
 
   useEffect(() => {
     const handleScreenSizeChange = () => {
@@ -191,21 +267,70 @@ export default function Browse() {
                   </Dialog>
                 )}
                 <div className="md:flex-grow"></div>
-                <Select>
-                  <SelectTrigger className="w-[180px]">
+                <Select onValueChange={setSortBy} value={sortBy}>
+                  <SelectTrigger>
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="price-asc">
-                      Price: Low to High
-                    </SelectItem>
-                    <SelectItem value="price-desc">
-                      Price: High to Low
-                    </SelectItem>
+                    <SelectItem value="popularity">Popularity</SelectItem>
+                    <SelectGroup>
+                      <SelectLabel>Price</SelectLabel>
+                      <SelectItem value="price-asc">Low to High</SelectItem>
+                      <SelectItem value="price-desc">High to Low</SelectItem>
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel>Custom</SelectLabel>
+                      {/* This hidden SelectItem is rendered to display the custom sort order in the trigger */}
+                      {customProperty && customOrder ? (
+                        <SelectItem
+                          key={sortBy}
+                          value={sortBy}
+                          className={"hidden"}
+                        >
+                          {capitalize(customProperty) +
+                            " " +
+                            capitalize(customOrder)}
+                        </SelectItem>
+                      ) : (
+                        ""
+                      )}
+
+                      <div className="flex gap-1 p-2">
+                        <Select
+                          onValueChange={(val) =>
+                            setCustomProperty(val as keyof Product)
+                          }
+                          value={customProperty}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Property" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {sortableProperties.map((prop) => (
+                              <SelectItem key={prop} value={prop}>
+                                {capitalize(prop)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          onValueChange={setCustomOrder}
+                          value={customOrder}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Order" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="asc">Ascending</SelectItem>
+                            <SelectItem value="desc">Descending</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </div>
-              <ProductsGrid />
+              <ProductsGrid products={sortedProducts} />
             </div>
           </div>
           <div id="shopping-cart" className="3xl:block hidden">
