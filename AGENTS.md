@@ -143,7 +143,7 @@ export const updateTodoSchema = createUpdateSchema(todos);
 - **Forms**: Use optimistic updates, no loading states needed
 - **Links**: Use TanStack Router's `Link` component
 - **Auth**: Access via `authClient.useSession()`
-- 
+
 ### Icons
 
 You may use any icons from lucide-react. Always use the import with "Icon" suffix.

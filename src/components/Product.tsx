@@ -3,7 +3,14 @@ import ProductDetails from "@/components/product/ProductDetails.tsx";
 import RelatedProducts from "@/components/product/RelatedProducts.tsx";
 import ShippingInfo from "@/components/product/ShippingInfo.tsx";
 import { Loader2Icon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import {
+  type Asset,
+  type Category,
+  type Company,
+  type PricingTier,
+  type Product
+} from "@/db/schema";
 
 // Mock product data generation
 const products: {
@@ -84,42 +91,33 @@ for (let i = 0; i < 6; i++) {
   });
 }
 
-export default function Product({ productId }: { productId: string }) {
-  const [product, setProduct] = useState<
-    (typeof products)[0] | null | undefined
-  >(undefined);
-  const [relatedProducts, setRelatedProducts] = useState<typeof products>([]);
+export default function Product({
+  loading,
+  product,
+  category,
+  company,
+  assets,
+  pricingTiers
+}: {
+  loading: boolean;
+  product?: Product;
+  category?: Category;
+  company?: Company;
+  assets?: Asset[];
+  pricingTiers?: PricingTier[];
+}) {
+  const [relatedProducts] = useState<typeof products>([]);
 
-  useEffect(() => {
-    // Simulate fetching data
-    const timer = setTimeout(() => {
-      const foundProduct = products.find(
-        (p) => p.id === parseInt(productId, 10)
-      );
-      setProduct(foundProduct);
-      if (foundProduct) {
-        const related = products
-          .filter((p) => p.id !== foundProduct.id)
-          .slice(0, 4);
-        setRelatedProducts(related);
-      }
-    }, 500); // 500ms delay to simulate network request
-    return () => clearTimeout(timer);
-  }, [productId]);
-
-  if (product === undefined) {
+  if (loading) {
     return (
-      <div
-        role="status"
-        className="col-span-full flex aspect-square items-center justify-center"
-      >
-        <Loader2Icon className="h-8 w-8 animate-spin fill-slate-800 text-gray-200 dark:text-gray-600" />
+      <div role="status" className="flex h-full items-center justify-center">
+        <Loader2Icon className="h-12 w-12 animate-spin text-gray-800 dark:text-gray-600" />
         <span className="sr-only">Loading...</span>
       </div>
     );
   }
 
-  if (product === null) {
+  if (!product || !category || !company || !assets || !pricingTiers) {
     return (
       <div className="col-span-full flex aspect-[2/1] items-center justify-center">
         <div className="alert alert-error">Product not found.</div>
@@ -131,10 +129,14 @@ export default function Product({ productId }: { productId: string }) {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:px-8">
       <div className="grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2">
         <div>
-          <ProductImageCarousel images={product.images ?? []} />
+          <ProductImageCarousel
+            images={assets
+              .filter((asset) => asset.mime_type.startsWith("image/"))
+              .map((asset) => ({ src: asset.url, alt: asset.alt }))}
+          />
         </div>
         <div>
-          <ProductDetails product={product} />
+          <ProductDetails product={product} pricingTiers={pricingTiers} />
         </div>
       </div>
       <div className="mt-16">

@@ -41,6 +41,37 @@ Follow these steps in order for a smooth first-time setup:
 
 If you run into issues, see the [pre-reqs](#pre-requisites) and [troubleshooting](#common-pitfalls) sections below.
 
+## Application concept - Offline-Capable Webshop
+
+- Users can use the webshop like a normal webshop whilst online
+- Users can “shop together” through the use of CRDTs and local-first principles
+  - Access shared Shopping Cart, Suggest items, Add Comments to items
+  - (optional) “shop together” with a LLM assistant (sync engine is already available)
+  - (optional) Features that go beyond a shared shopping cart, e.g. current navigation of each user
+- Shopping Carts go beyond simple lists, users can organize products into folders, tag them and add descriptions.
+- Visited storefronts / categories are automatically cached on the user's device or can be actively downloaded
+  - (optional) a “storage manager” tool where users can quickly manage their cache
+- When the user is offline, the webshop continues working (except the final payment).
+  - The connection status is communicated within the app
+- Users can use this to add items while they are in an isolated space, like a workshop.
+- (optional) Item availability is predicted based on historical data (e.g. sales per minute)
+- Users can book their order, which will be fulfilled once connection is restored. Conflicts are resolved based on first-to-server.
+  - The user is notified about the state of their order via granular notifications
+  - Price changes are also communicated
+  - (optional) Alternative item suggestion by LLM assistant
+- Users can manage their settings, configuring default units
+
+Technical Solution
+
+- Frontend / Application Code written in React + Vite + TanStack Router
+- “Shop together” feature is realized via ElectricSQL or Automerge
+- Data distribution and Caching are done with ElectricSQL
+- Optional LLM Feature is also supported by ElectricSQL
+- Product Variants can inherit properties from a base product variant
+- Company information & branding is stored in a table
+- Products can associate with different types of assets (e.g. images, specifications, 3D models)
+- Products can have different additional fields, these are inherited by the category they are in
+
 ## Adding a New Table
 
 Here's how to add a new table to the app (using a "categories" table as an example):

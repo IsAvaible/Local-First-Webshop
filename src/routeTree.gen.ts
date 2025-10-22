@@ -17,7 +17,14 @@ import { Route as ProductsProductIdRouteImport } from './routes/products.$produc
 import { Route as ApiUsersRouteImport } from './routes/api/users'
 import { Route as ApiTodosRouteImport } from './routes/api/todos'
 import { Route as ApiProjectsRouteImport } from './routes/api/projects'
+import { Route as ApiProductsRouteImport } from './routes/api/products'
+import { Route as ApiPricingTiersRouteImport } from './routes/api/pricing-tiers'
+import { Route as ApiCustomFieldValuesRouteImport } from './routes/api/custom-field-values'
+import { Route as ApiCustomFieldDefinitionsRouteImport } from './routes/api/custom-field-definitions'
+import { Route as ApiCompaniesRouteImport } from './routes/api/companies'
+import { Route as ApiCategoriesRouteImport } from './routes/api/categories'
 import { Route as ApiAuthRouteImport } from './routes/api/auth'
+import { Route as ApiAssetsRouteImport } from './routes/api/assets'
 import { Route as AuthenticatedIndexxRouteImport } from './routes/_authenticated/indexx'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
 import { Route as AuthenticatedProjectProjectIdRouteImport } from './routes/_authenticated/project/$projectId'
@@ -61,9 +68,45 @@ const ApiProjectsRoute = ApiProjectsRouteImport.update({
   path: '/api/projects',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiProductsRoute = ApiProductsRouteImport.update({
+  id: '/api/products',
+  path: '/api/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPricingTiersRoute = ApiPricingTiersRouteImport.update({
+  id: '/api/pricing-tiers',
+  path: '/api/pricing-tiers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCustomFieldValuesRoute = ApiCustomFieldValuesRouteImport.update({
+  id: '/api/custom-field-values',
+  path: '/api/custom-field-values',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCustomFieldDefinitionsRoute =
+  ApiCustomFieldDefinitionsRouteImport.update({
+    id: '/api/custom-field-definitions',
+    path: '/api/custom-field-definitions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiCompaniesRoute = ApiCompaniesRouteImport.update({
+  id: '/api/companies',
+  path: '/api/companies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCategoriesRoute = ApiCategoriesRouteImport.update({
+  id: '/api/categories',
+  path: '/api/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthRoute = ApiAuthRouteImport.update({
   id: '/api/auth',
   path: '/api/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAssetsRoute = ApiAssetsRouteImport.update({
+  id: '/api/assets',
+  path: '/api/assets',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexxRoute = AuthenticatedIndexxRouteImport.update({
@@ -88,7 +131,14 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/login': typeof LoginRoute
   '/indexx': typeof AuthenticatedIndexxRoute
+  '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
+  '/api/categories': typeof ApiCategoriesRoute
+  '/api/companies': typeof ApiCompaniesRoute
+  '/api/custom-field-definitions': typeof ApiCustomFieldDefinitionsRoute
+  '/api/custom-field-values': typeof ApiCustomFieldValuesRoute
+  '/api/pricing-tiers': typeof ApiPricingTiersRoute
+  '/api/products': typeof ApiProductsRoute
   '/api/projects': typeof ApiProjectsRoute
   '/api/todos': typeof ApiTodosRoute
   '/api/users': typeof ApiUsersRoute
@@ -101,7 +151,14 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/login': typeof LoginRoute
   '/indexx': typeof AuthenticatedIndexxRoute
+  '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
+  '/api/categories': typeof ApiCategoriesRoute
+  '/api/companies': typeof ApiCompaniesRoute
+  '/api/custom-field-definitions': typeof ApiCustomFieldDefinitionsRoute
+  '/api/custom-field-values': typeof ApiCustomFieldValuesRoute
+  '/api/pricing-tiers': typeof ApiPricingTiersRoute
+  '/api/products': typeof ApiProductsRoute
   '/api/projects': typeof ApiProjectsRoute
   '/api/todos': typeof ApiTodosRoute
   '/api/users': typeof ApiUsersRoute
@@ -116,7 +173,14 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/login': typeof LoginRoute
   '/_authenticated/indexx': typeof AuthenticatedIndexxRoute
+  '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
+  '/api/categories': typeof ApiCategoriesRoute
+  '/api/companies': typeof ApiCompaniesRoute
+  '/api/custom-field-definitions': typeof ApiCustomFieldDefinitionsRoute
+  '/api/custom-field-values': typeof ApiCustomFieldValuesRoute
+  '/api/pricing-tiers': typeof ApiPricingTiersRoute
+  '/api/products': typeof ApiProductsRoute
   '/api/projects': typeof ApiProjectsRoute
   '/api/todos': typeof ApiTodosRoute
   '/api/users': typeof ApiUsersRoute
@@ -131,7 +195,14 @@ export interface FileRouteTypes {
     | '/cart'
     | '/login'
     | '/indexx'
+    | '/api/assets'
     | '/api/auth'
+    | '/api/categories'
+    | '/api/companies'
+    | '/api/custom-field-definitions'
+    | '/api/custom-field-values'
+    | '/api/pricing-tiers'
+    | '/api/products'
     | '/api/projects'
     | '/api/todos'
     | '/api/users'
@@ -144,7 +215,14 @@ export interface FileRouteTypes {
     | '/cart'
     | '/login'
     | '/indexx'
+    | '/api/assets'
     | '/api/auth'
+    | '/api/categories'
+    | '/api/companies'
+    | '/api/custom-field-definitions'
+    | '/api/custom-field-values'
+    | '/api/pricing-tiers'
+    | '/api/products'
     | '/api/projects'
     | '/api/todos'
     | '/api/users'
@@ -158,7 +236,14 @@ export interface FileRouteTypes {
     | '/cart'
     | '/login'
     | '/_authenticated/indexx'
+    | '/api/assets'
     | '/api/auth'
+    | '/api/categories'
+    | '/api/companies'
+    | '/api/custom-field-definitions'
+    | '/api/custom-field-values'
+    | '/api/pricing-tiers'
+    | '/api/products'
     | '/api/projects'
     | '/api/todos'
     | '/api/users'
@@ -172,7 +257,14 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   CartRoute: typeof CartRoute
   LoginRoute: typeof LoginRoute
+  ApiAssetsRoute: typeof ApiAssetsRoute
   ApiAuthRoute: typeof ApiAuthRoute
+  ApiCategoriesRoute: typeof ApiCategoriesRoute
+  ApiCompaniesRoute: typeof ApiCompaniesRoute
+  ApiCustomFieldDefinitionsRoute: typeof ApiCustomFieldDefinitionsRoute
+  ApiCustomFieldValuesRoute: typeof ApiCustomFieldValuesRoute
+  ApiPricingTiersRoute: typeof ApiPricingTiersRoute
+  ApiProductsRoute: typeof ApiProductsRoute
   ApiProjectsRoute: typeof ApiProjectsRoute
   ApiTodosRoute: typeof ApiTodosRoute
   ApiUsersRoute: typeof ApiUsersRoute
@@ -238,11 +330,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProjectsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/products': {
+      id: '/api/products'
+      path: '/api/products'
+      fullPath: '/api/products'
+      preLoaderRoute: typeof ApiProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/pricing-tiers': {
+      id: '/api/pricing-tiers'
+      path: '/api/pricing-tiers'
+      fullPath: '/api/pricing-tiers'
+      preLoaderRoute: typeof ApiPricingTiersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/custom-field-values': {
+      id: '/api/custom-field-values'
+      path: '/api/custom-field-values'
+      fullPath: '/api/custom-field-values'
+      preLoaderRoute: typeof ApiCustomFieldValuesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/custom-field-definitions': {
+      id: '/api/custom-field-definitions'
+      path: '/api/custom-field-definitions'
+      fullPath: '/api/custom-field-definitions'
+      preLoaderRoute: typeof ApiCustomFieldDefinitionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/companies': {
+      id: '/api/companies'
+      path: '/api/companies'
+      fullPath: '/api/companies'
+      preLoaderRoute: typeof ApiCompaniesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/categories': {
+      id: '/api/categories'
+      path: '/api/categories'
+      fullPath: '/api/categories'
+      preLoaderRoute: typeof ApiCategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth': {
       id: '/api/auth'
       path: '/api/auth'
       fullPath: '/api/auth'
       preLoaderRoute: typeof ApiAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/assets': {
+      id: '/api/assets'
+      path: '/api/assets'
+      fullPath: '/api/assets'
+      preLoaderRoute: typeof ApiAssetsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/indexx': {
@@ -288,7 +429,14 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   CartRoute: CartRoute,
   LoginRoute: LoginRoute,
+  ApiAssetsRoute: ApiAssetsRoute,
   ApiAuthRoute: ApiAuthRoute,
+  ApiCategoriesRoute: ApiCategoriesRoute,
+  ApiCompaniesRoute: ApiCompaniesRoute,
+  ApiCustomFieldDefinitionsRoute: ApiCustomFieldDefinitionsRoute,
+  ApiCustomFieldValuesRoute: ApiCustomFieldValuesRoute,
+  ApiPricingTiersRoute: ApiPricingTiersRoute,
+  ApiProductsRoute: ApiProductsRoute,
   ApiProjectsRoute: ApiProjectsRoute,
   ApiTodosRoute: ApiTodosRoute,
   ApiUsersRoute: ApiUsersRoute,

@@ -2,16 +2,15 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingCart } from "lucide-react";
 import ProductConfigurator from "@/components/product/ProductConfigurator";
+import type { PricingTier, Product } from "@/db/schema.ts";
 
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  inCart: boolean;
-}
-
-export default function ProductDetails({ product }: { product: Product }) {
+export default function ProductDetails({
+  product,
+  pricingTiers
+}: {
+  product: Product;
+  pricingTiers: PricingTier[];
+}) {
   return (
     <div className="flex h-full flex-col">
       <div>
@@ -23,7 +22,7 @@ export default function ProductDetails({ product }: { product: Product }) {
         </p>
         <div className="mt-6">
           <p className="text-3xl text-gray-900 dark:text-slate-100">
-            ${product.price.toLocaleString()}
+            {pricingTiers[0].price_per_unit.toLocaleString()}€
           </p>
         </div>
         <ProductConfigurator />

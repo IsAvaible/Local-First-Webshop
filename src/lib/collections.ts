@@ -3,20 +3,36 @@ import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import {
   selectTodoSchema,
   selectProjectSchema,
-  selectUsersSchema
+  selectUsersSchema,
+  selectCompanySchema,
+  selectCategorySchema,
+  selectProductSchema,
+  selectPricingTierSchema,
+  selectAssetSchema,
+  selectCustomFieldDefinitionSchema,
+  selectCustomFieldValueSchema
 } from "@/db/schema";
 import { trpc } from "@/lib/trpc-client";
+
+/**
+ * Helper function to create full API URLs
+ * @param path - The API path
+ * @returns Full URL as a string
+ */
+const createApiUrl = (path: string) => {
+  return new URL(
+    path,
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "http://localhost:5173"
+  ).toString();
+};
 
 export const usersCollection = createCollection(
   electricCollectionOptions({
     id: "users",
     shapeOptions: {
-      url: new URL(
-        "/api/users",
-        typeof window !== "undefined"
-          ? window.location.origin
-          : "http://localhost:5173"
-      ).toString(),
+      url: createApiUrl("/api/users"),
       parser: {
         timestamptz: (date: string) => {
           return new Date(date);
@@ -27,16 +43,100 @@ export const usersCollection = createCollection(
     getKey: (item) => item.id
   })
 );
+
+export const companiesCollection = createCollection(
+  electricCollectionOptions({
+    id: "companies",
+    shapeOptions: {
+      url: createApiUrl("/api/companies"),
+      parser: { timestamptz: (date: string) => new Date(date) }
+    },
+    schema: selectCompanySchema,
+    getKey: (item) => item.id
+    // ... onInsert, onUpdate, onDelete
+  })
+);
+
+// --- Categories Collection ---
+export const categoriesCollection = createCollection(
+  electricCollectionOptions({
+    id: "categories",
+    shapeOptions: {
+      url: createApiUrl("/api/categories"),
+      parser: { timestamptz: (date: string) => new Date(date) }
+    },
+    schema: selectCategorySchema,
+    getKey: (item) => item.id
+    // ... onInsert, onUpdate, onDelete
+  })
+);
+
+// --- Products Collection ---
+export const productsCollection = createCollection(
+  electricCollectionOptions({
+    id: "products",
+    shapeOptions: {
+      url: createApiUrl("/api/products"),
+      parser: { timestamptz: (date: string) => new Date(date) }
+    },
+    schema: selectProductSchema,
+    getKey: (item) => item.id
+    // ... onInsert, onUpdate, onDelete
+  })
+);
+
+// --- Pricing Tiers Collection ---
+export const pricingTiersCollection = createCollection(
+  electricCollectionOptions({
+    id: "pricing_tiers",
+    shapeOptions: { url: createApiUrl("/api/pricing-tiers") },
+    schema: selectPricingTierSchema,
+    getKey: (item) => item.id
+    // ... onInsert, onUpdate, onDelete
+  })
+);
+
+// --- Assets Collection ---
+export const assetsCollection = createCollection(
+  electricCollectionOptions({
+    id: "assets",
+    shapeOptions: {
+      url: createApiUrl("/api/assets"),
+      parser: { timestamptz: (date: string) => new Date(date) }
+    },
+    schema: selectAssetSchema,
+    getKey: (item) => item.id
+    // ... onInsert, onUpdate, onDelete
+  })
+);
+
+// --- Custom Field Definitions Collection ---
+export const customFieldDefinitionsCollection = createCollection(
+  electricCollectionOptions({
+    id: createApiUrl("custom_field_definitions"),
+    shapeOptions: { url: "/api/custom-field-definitions" },
+    schema: selectCustomFieldDefinitionSchema,
+    getKey: (item) => item.id
+    // ... onInsert, onUpdate, onDelete
+  })
+);
+
+// --- Custom Field Values Collection ---
+export const customFieldValuesCollection = createCollection(
+  electricCollectionOptions({
+    id: createApiUrl("custom_field_values"),
+    shapeOptions: { url: "/api/custom-field-values" },
+    schema: selectCustomFieldValueSchema,
+    getKey: (item) => item.id
+    // ... onInsert, onUpdate, onDelete
+  })
+);
+
 export const projectCollection = createCollection(
   electricCollectionOptions({
     id: "projects",
     shapeOptions: {
-      url: new URL(
-        "/api/projects",
-        typeof window !== "undefined"
-          ? window.location.origin
-          : "http://localhost:5173"
-      ).toString(),
+      url: createApiUrl("/api/projects"),
       parser: {
         timestamptz: (date: string) => {
           return new Date(date);
@@ -84,12 +184,7 @@ export const todoCollection = createCollection(
   electricCollectionOptions({
     id: "todos",
     shapeOptions: {
-      url: new URL(
-        "/api/todos",
-        typeof window !== "undefined"
-          ? window.location.origin
-          : "http://localhost:5173"
-      ).toString(),
+      url: createApiUrl("/api/todos"),
       parser: {
         // Parse timestamp columns into JavaScript Date objects
         timestamptz: (date: string) => {
