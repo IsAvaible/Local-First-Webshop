@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { projectCollection, todoCollection } from "@/lib/collections";
 import { authClient } from "@/lib/auth-client";
 
-export const Route = createFileRoute(`/_authenticated/`)({
+export const Route = createFileRoute(`/_authenticated/indexx`)({
   component: IndexRedirect,
   ssr: false,
   beforeLoad: async () => {

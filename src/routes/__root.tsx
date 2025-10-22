@@ -10,6 +10,9 @@ import appCss from "@/index.css?url";
 import { seo } from "@/utils/seo.ts";
 import { DefaultCatchBoundary } from "@/components/routing/DefaultCatchBoundary.tsx";
 import { NotFound } from "@/components/routing/NotFound.tsx";
+import Header from "@/components/layout/Header/Header.tsx";
+import Footer from "@/components/layout/Footer/Footer.tsx";
+import { CartProvider } from "@/contexts/CartProvider.tsx";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -60,7 +63,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <CartProvider>
+          <div className="flex min-h-screen flex-col bg-gray-50 text-slate-800 dark:bg-gray-900 dark:text-slate-200">
+            <Header />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+          </div>
+          <TanStackRouterDevtools />
+        </CartProvider>
         <TanStackRouterDevtools position="bottom-right" />
         <Scripts />
       </body>

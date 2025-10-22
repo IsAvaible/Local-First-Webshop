@@ -16,11 +16,13 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
     if (
       authStateCollection.get("auth") &&
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       authStateCollection.get("auth")?.session.expiresAt > new Date()
     ) {
       return authStateCollection.get("auth")!;
     } else {
       const result = await authClient.getSession();
+      // @ts-expect-error type error
       authStateCollection.insert({ id: "auth", ...result.data });
       return result.data;
     }

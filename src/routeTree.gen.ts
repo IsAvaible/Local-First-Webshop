@@ -10,12 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as CartRouteImport } from './routes/cart'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
 import { Route as ApiUsersRouteImport } from './routes/api/users'
 import { Route as ApiTodosRouteImport } from './routes/api/todos'
 import { Route as ApiProjectsRouteImport } from './routes/api/projects'
 import { Route as ApiAuthRouteImport } from './routes/api/auth'
+import { Route as AuthenticatedIndexxRouteImport } from './routes/_authenticated/indexx'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
 import { Route as AuthenticatedProjectProjectIdRouteImport } from './routes/_authenticated/project/$projectId'
 
@@ -24,14 +27,24 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CartRoute = CartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
+  id: '/products/$productId',
+  path: '/products/$productId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiUsersRoute = ApiUsersRouteImport.update({
   id: '/api/users',
@@ -53,6 +66,11 @@ const ApiAuthRoute = ApiAuthRouteImport.update({
   path: '/api/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedIndexxRoute = AuthenticatedIndexxRouteImport.update({
+  id: '/indexx',
+  path: '/indexx',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
   id: '/api/trpc/$',
   path: '/api/trpc/$',
@@ -66,78 +84,99 @@ const AuthenticatedProjectProjectIdRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/cart': typeof CartRoute
   '/login': typeof LoginRoute
+  '/indexx': typeof AuthenticatedIndexxRoute
   '/api/auth': typeof ApiAuthRoute
   '/api/projects': typeof ApiProjectsRoute
   '/api/todos': typeof ApiTodosRoute
   '/api/users': typeof ApiUsersRoute
-  '/': typeof AuthenticatedIndexRoute
+  '/products/$productId': typeof ProductsProductIdRoute
   '/project/$projectId': typeof AuthenticatedProjectProjectIdRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/cart': typeof CartRoute
   '/login': typeof LoginRoute
+  '/indexx': typeof AuthenticatedIndexxRoute
   '/api/auth': typeof ApiAuthRoute
   '/api/projects': typeof ApiProjectsRoute
   '/api/todos': typeof ApiTodosRoute
   '/api/users': typeof ApiUsersRoute
-  '/': typeof AuthenticatedIndexRoute
+  '/products/$productId': typeof ProductsProductIdRoute
   '/project/$projectId': typeof AuthenticatedProjectProjectIdRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/cart': typeof CartRoute
   '/login': typeof LoginRoute
+  '/_authenticated/indexx': typeof AuthenticatedIndexxRoute
   '/api/auth': typeof ApiAuthRoute
   '/api/projects': typeof ApiProjectsRoute
   '/api/todos': typeof ApiTodosRoute
   '/api/users': typeof ApiUsersRoute
-  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/products/$productId': typeof ProductsProductIdRoute
   '/_authenticated/project/$projectId': typeof AuthenticatedProjectProjectIdRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
+    | '/cart'
     | '/login'
+    | '/indexx'
     | '/api/auth'
     | '/api/projects'
     | '/api/todos'
     | '/api/users'
-    | '/'
+    | '/products/$productId'
     | '/project/$projectId'
     | '/api/trpc/$'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
+    | '/cart'
     | '/login'
+    | '/indexx'
     | '/api/auth'
     | '/api/projects'
     | '/api/todos'
     | '/api/users'
-    | '/'
+    | '/products/$productId'
     | '/project/$projectId'
     | '/api/trpc/$'
   id:
     | '__root__'
+    | '/'
     | '/_authenticated'
+    | '/cart'
     | '/login'
+    | '/_authenticated/indexx'
     | '/api/auth'
     | '/api/projects'
     | '/api/todos'
     | '/api/users'
-    | '/_authenticated/'
+    | '/products/$productId'
     | '/_authenticated/project/$projectId'
     | '/api/trpc/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  CartRoute: typeof CartRoute
   LoginRoute: typeof LoginRoute
   ApiAuthRoute: typeof ApiAuthRoute
   ApiProjectsRoute: typeof ApiProjectsRoute
   ApiTodosRoute: typeof ApiTodosRoute
   ApiUsersRoute: typeof ApiUsersRoute
+  ProductsProductIdRoute: typeof ProductsProductIdRoute
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
 }
 
@@ -150,6 +189,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cart': {
+      id: '/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -157,12 +203,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/': {
-      id: '/_authenticated/'
+    '/': {
+      id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/$productId': {
+      id: '/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof ProductsProductIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/users': {
       id: '/api/users'
@@ -192,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/indexx': {
+      id: '/_authenticated/indexx'
+      path: '/indexx'
+      fullPath: '/indexx'
+      preLoaderRoute: typeof AuthenticatedIndexxRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/api/trpc/$': {
       id: '/api/trpc/$'
       path: '/api/trpc/$'
@@ -210,12 +270,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedIndexxRoute: typeof AuthenticatedIndexxRoute
   AuthenticatedProjectProjectIdRoute: typeof AuthenticatedProjectProjectIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedIndexxRoute: AuthenticatedIndexxRoute,
   AuthenticatedProjectProjectIdRoute: AuthenticatedProjectProjectIdRoute,
 }
 
@@ -224,12 +284,15 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  CartRoute: CartRoute,
   LoginRoute: LoginRoute,
   ApiAuthRoute: ApiAuthRoute,
   ApiProjectsRoute: ApiProjectsRoute,
   ApiTodosRoute: ApiTodosRoute,
   ApiUsersRoute: ApiUsersRoute,
+  ProductsProductIdRoute: ProductsProductIdRoute,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
 }
 export const routeTree = rootRouteImport
