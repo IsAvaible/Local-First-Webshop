@@ -1,7 +1,14 @@
 import { Route, useSetSearch } from "@/routes/search.tsx";
 import { Link } from "@tanstack/react-router";
+import type { Category, Company } from "@/db/schema.ts";
 
-export default function FilterChips() {
+export default function FilterChips({
+  categories,
+  companies
+}: {
+  categories: (Category & { count: number })[] | undefined;
+  companies: (Company & { count: number })[] | undefined;
+}) {
   const filters = [];
   const search = Route.useSearch();
   const setSearch = useSetSearch();
@@ -15,17 +22,43 @@ export default function FilterChips() {
   }
 
   if (search.categories?.length) {
+    const count = search.categories.length;
+    let value: string;
+
+    if (count === 1) {
+      const categoryId = search.categories[0];
+      // Find the full category object from props to get its name
+      const category = categories?.find((c) => c.id === categoryId);
+      // Use the name, or fallback to the ID if not found
+      value = `Category: ${category?.name ?? categoryId}`;
+    } else {
+      value = `Categories: ${count}`;
+    }
+
     filters.push({
       name: "Categories",
-      value: `Categories: ${search.categories.length}`,
+      value: value,
       clear: () => setSearch({ categories: [] })
     });
   }
 
   if (search.companies?.length) {
+    const count = search.companies.length;
+    let value: string;
+
+    if (count === 1) {
+      const companyId = search.companies[0];
+      // Find the full company object from props to get its name
+      const company = companies?.find((c) => c.id === companyId);
+      // Use the name, or fallback to the ID if not found
+      value = `Company: ${company?.name ?? companyId}`;
+    } else {
+      value = `Companies: ${count}`;
+    }
+
     filters.push({
       name: "Companies",
-      value: `Companies: ${search.companies.length}`,
+      value: value,
       clear: () => setSearch({ companies: [] })
     });
   }
@@ -53,7 +86,7 @@ export default function FilterChips() {
           <span>{filter.value}</span>
           <span className="absolute top-0 left-0 hidden h-full w-full items-center justify-center bg-inherit p-[inherit] group-hover:flex">
             <span className="truncate">{filter.value}</span>
-            <span className="ml-1 text-nowrap">X</span>
+            <span className="ml-1 cursor-pointer text-nowrap">X</span>
           </span>
         </button>
       ))}

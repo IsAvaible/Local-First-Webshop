@@ -56,7 +56,7 @@ export default function Browse({
           <div className="col-span-full max-w-5xl md:col-span-1 md:col-start-2">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
               <div className="col-span-full flex flex-row items-start gap-2">
-                <FilterChips />
+                <FilterChips categories={categories} companies={companies} />
                 {isMobile && (
                   <Dialog
                     open={filterDialogVisible}
