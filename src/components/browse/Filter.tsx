@@ -27,6 +27,11 @@ export default function Filter({
   const [maxPrice, setMaxPrice] = useState(search.price_max);
 
   useEffect(() => {
+    setMinPrice(search.price_min);
+    setMaxPrice(search.price_max);
+  }, [search.price_min, search.price_max]);
+
+  useEffect(() => {
     const handler = setTimeout(() => {
       setSearch({ price_min: minPrice, price_max: maxPrice });
     }, 500);
@@ -67,7 +72,7 @@ export default function Filter({
               <div key={c.id} className="flex items-center gap-2">
                 <Checkbox
                   id={c.name}
-                  checked={search.categories?.includes(c.id)}
+                  checked={search.categories?.includes(c.id) ?? false}
                   onCheckedChange={() => handleCategoryChange(c.id)}
                 />
                 <Label htmlFor={c.name} className="flex-grow">
@@ -87,7 +92,7 @@ export default function Filter({
               <div key={c.id} className="flex items-center gap-2">
                 <Checkbox
                   id={c.name}
-                  checked={search.companies?.includes(c.id)}
+                  checked={search.companies?.includes(c.id) ?? false}
                   onCheckedChange={() => handleCompanyChange(c.id)}
                 />
                 <Label htmlFor={c.name} className="flex-grow">
