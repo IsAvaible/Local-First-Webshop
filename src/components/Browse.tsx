@@ -23,8 +23,8 @@ export default function Browse({
 }: {
   loading: boolean;
   products: (Product & { min_price: number | null })[] | undefined;
-  categories: Category[] | undefined;
-  companies: Company[] | undefined;
+  categories: (Category & { count: number })[] | undefined;
+  companies: (Company & { count: number })[] | undefined;
 }) {
   const [filterDialogVisible, setFilterDialogVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);

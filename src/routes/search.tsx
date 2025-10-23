@@ -13,7 +13,8 @@ import {
   lte,
   min,
   not,
-  isUndefined
+  isUndefined,
+  count
 } from "@tanstack/react-db";
 
 import {
@@ -169,12 +170,44 @@ function RouteComponent() {
     }));
   }, [search]);
 
-  const { data: categories } = useLiveQuery((q) =>
+  // --- Category Counts ---
+  const { categories: _c, ...searchForCategoryCounts } = search;
+  const { data: categoryCounts } = useLiveQuery(() => {
+    return getFilteredProductsQuery(searchForCategoryCounts)
+      .groupBy(({ p }) => p.category_id)
+      .select(({ p }) => ({
+        id: p.category_id,
+        count: count(p.id)
+      }));
+  }, [search]);
+
+  // --- Company Counts ---
+  const { companies: _co, ...searchForCompanyCounts } = search;
+  const { data: companyCounts } = useLiveQuery(() => {
+    return getFilteredProductsQuery(searchForCompanyCounts)
+      .groupBy(({ p }) => p.company_id)
+      .select(({ p }) => ({
+        id: p.company_id,
+        count: count(p.id)
+      }));
+  }, [search]);
+
+  const { data: categoriesFromDb } = useLiveQuery((q) =>
     q.from({ categoriesCollection })
   );
-  const { data: companies } = useLiveQuery((q) =>
+  const { data: companiesFromDb } = useLiveQuery((q) =>
     q.from({ companiesCollection })
   );
+
+  const categories = categoriesFromDb?.map((category) => ({
+    ...category,
+    count: categoryCounts?.find((c) => c.id === category.id)?.count ?? 0
+  }));
+
+  const companies = companiesFromDb?.map((company) => ({
+    ...company,
+    count: companyCounts?.find((c) => c.id === company.id)?.count ?? 0
+  }));
 
   return (
     <Browse

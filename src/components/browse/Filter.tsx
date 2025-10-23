@@ -17,8 +17,8 @@ export default function Filter({
   categories,
   companies
 }: {
-  categories: Category[] | undefined;
-  companies: Company[] | undefined;
+  categories: (Category & { count: number })[] | undefined;
+  companies: (Company & { count: number })[] | undefined;
 }) {
   const search = Route.useSearch();
   const setSearch = useSetSearch();
@@ -70,7 +70,12 @@ export default function Filter({
                   checked={search.categories?.includes(c.id)}
                   onCheckedChange={() => handleCategoryChange(c.id)}
                 />
-                <Label htmlFor={c.name}>{c.name}</Label>
+                <Label htmlFor={c.name} className="flex-grow">
+                  {c.name}
+                </Label>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  ({c.count})
+                </span>
               </div>
             ))}
           </AccordionContent>
@@ -85,7 +90,12 @@ export default function Filter({
                   checked={search.companies?.includes(c.id)}
                   onCheckedChange={() => handleCompanyChange(c.id)}
                 />
-                <Label htmlFor={c.name}>{c.name}</Label>
+                <Label htmlFor={c.name} className="flex-grow">
+                  {c.name}
+                </Label>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  ({c.count})
+                </span>
               </div>
             ))}
           </AccordionContent>
