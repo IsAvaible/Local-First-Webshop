@@ -65,6 +65,9 @@ importers:
       "@tailwindcss/vite":
         specifier: ^4.1.15
         version: 4.1.15(rolldown-vite@7.1.14(@types/node@24.9.1)(esbuild@0.25.0)(jiti@2.6.1)(tsx@4.20.6)(yaml@2.8.1))
+      "@tanstack/db":
+        specifier: ^0.4.12
+        version: 0.4.12(typescript@5.9.3)
       "@tanstack/electric-db-collection":
         specifier: ^0.1.35
         version: 0.1.35(typescript@5.9.3)
@@ -80,6 +83,9 @@ importers:
       "@tanstack/react-start":
         specifier: ^1.133.22
         version: 1.133.22(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(rolldown-vite@7.1.14(@types/node@24.9.1)(esbuild@0.25.0)(jiti@2.6.1)(tsx@4.20.6)(yaml@2.8.1))
+      "@tanstack/zod-adapter":
+        specifier: ^1.133.22
+        version: 1.133.22(@tanstack/react-router@1.133.22(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(zod@4.1.12)
       "@trpc/client":
         specifier: ^11.6.0
         version: 11.6.0(@trpc/server@11.6.0(typescript@5.9.3))(typescript@5.9.3)
@@ -2142,10 +2148,26 @@ packages:
     peerDependencies:
       typescript: ">=4.7"
 
+  "@tanstack/db-ivm@0.1.12":
+    resolution:
+      {
+        integrity: sha512-QTs2dgrjTCkATZh12nb854K/Of80QyyR6URYyxnGPnJgXFchvw25Ve3TtFW51fHR5hheQltkbtpPgBjSZvoMVA==
+      }
+    peerDependencies:
+      typescript: ">=4.7"
+
   "@tanstack/db@0.4.11":
     resolution:
       {
         integrity: sha512-xFK2ltAqpoW4Nr30cSNFXI40ILy9jWrcg3l3od4vUuG0O/Xhc5B5rcwGNMKvKOGS8LN1E0kyFHgMTC/mRKigtQ==
+      }
+    peerDependencies:
+      typescript: ">=4.7"
+
+  "@tanstack/db@0.4.12":
+    resolution:
+      {
+        integrity: sha512-rDdXbH3AH/BTJnoyjT6y9jILUNM+SKCWrgP0Uf4q1UmdOPSX0IFiGhuQU2XYvwcEdwukXdDg6U3FLCOq8s52Dg==
       }
     peerDependencies:
       typescript: ">=4.7"
@@ -2356,6 +2378,16 @@ packages:
         integrity: sha512-IKwZENsK7owmW1Lm5FhuHegY/SyQ8KqtL/7mTSnzoKJgfzhrrf9qwKB1rmkKkt+svUuy/Zw3uVEpZtUzQruWtA==
       }
     engines: { node: ">=12" }
+
+  "@tanstack/zod-adapter@1.133.22":
+    resolution:
+      {
+        integrity: sha512-buU9pRkcQ3a4fVLy83Y7HsrComMAC7lMZlpgI3B8k6X1eTuMHSZ2Ov4Fl/0wmrLMnLYngAfm3/kavAxCHxosdg==
+      }
+    engines: { node: ">=12" }
+    peerDependencies:
+      "@tanstack/react-router": ">=1.43.2"
+      zod: ^3.23.8
 
   "@trpc/client@11.6.0":
     resolution:
@@ -7013,10 +7045,22 @@ snapshots:
       sorted-btree: 1.8.1
       typescript: 5.9.3
 
+  "@tanstack/db-ivm@0.1.12(typescript@5.9.3)":
+    dependencies:
+      fractional-indexing: 3.2.0
+      sorted-btree: 1.8.1
+      typescript: 5.9.3
+
   "@tanstack/db@0.4.11(typescript@5.9.3)":
     dependencies:
       "@standard-schema/spec": 1.0.0
       "@tanstack/db-ivm": 0.1.11(typescript@5.9.3)
+      typescript: 5.9.3
+
+  "@tanstack/db@0.4.12(typescript@5.9.3)":
+    dependencies:
+      "@standard-schema/spec": 1.0.0
+      "@tanstack/db-ivm": 0.1.12(typescript@5.9.3)
       typescript: 5.9.3
 
   "@tanstack/directive-functions-plugin@1.133.19(rolldown-vite@7.1.14(@types/node@24.9.1)(esbuild@0.25.0)(jiti@2.6.1)(tsx@4.20.6)(yaml@2.8.1))":
@@ -7296,6 +7340,11 @@ snapshots:
   "@tanstack/store@0.8.0": {}
 
   "@tanstack/virtual-file-routes@1.133.19": {}
+
+  "@tanstack/zod-adapter@1.133.22(@tanstack/react-router@1.133.22(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(zod@4.1.12)":
+    dependencies:
+      "@tanstack/react-router": 1.133.22(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      zod: 4.1.12
 
   "@trpc/client@11.6.0(@trpc/server@11.6.0(typescript@5.9.3))(typescript@5.9.3)":
     dependencies:
