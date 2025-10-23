@@ -20,10 +20,13 @@ import {
   productsCollection,
   pricingTiersCollection,
   customFieldValuesCollection,
-  customFieldDefinitionsCollection
+  customFieldDefinitionsCollection,
+  categoriesCollection,
+  companiesCollection
 } from "@/lib/collections.ts";
 import type { Product } from "@/db/schema.ts";
 import Browse from "@/components/Browse.tsx";
+import { useCallback } from "react";
 
 // --- 1. Zod Schema for Search Param Validation ---
 // This schema defines the "state" of our search page.
@@ -44,13 +47,12 @@ const productSearchSchema = z.object({
   custom_fields: z.record(z.string(), z.any()).optional().catch({})
 });
 
-type ProductSearch = z.infer<typeof productSearchSchema>;
+export type ProductSearch = z.infer<typeof productSearchSchema>;
 
 // --- 2. Route Definition ---
 export const Route = createFileRoute("/search")({
   validateSearch: zodValidator(productSearchSchema),
-
-  component: ProductsComponent
+  component: RouteComponent
 });
 
 // --- 3. Reusable Query Builder Function ---
@@ -101,13 +103,11 @@ function getFilteredProductsQuery(search: ProductSearch) {
       min_price: min(pt.price_per_unit)
     }));
 
-  // LEFT JOIN our main query to the minimum price subquery
   let price_query = base_query.leftJoin(
     { price: minPriceSubquery },
     ({ p, price }) => eq(p.id, price.product_id)
   );
 
-  // Add price conditions (must check for undefined/null from LEFT JOIN)
   if (price_min !== undefined) {
     price_query = price_query.where(({ price }) => {
       return and(not(isUndefined(price)), gte(price!.min_price, price_min));
@@ -135,16 +135,11 @@ function getFilteredProductsQuery(search: ProductSearch) {
         eq(cfv.field_definition_id, cfd.id)
       )
       .where(({ cfd, cfv }) =>
-        and(
-          eq(cfd.field_name, fieldName),
-          eq(cfv.value, fieldValue) // `value` is jsonb, `eq` works
-        )
+        and(eq(cfd.field_name, fieldName), eq(cfv.value, fieldValue))
       )
       .select(({ cfv }) => ({ product_id: cfv.product_id }))
       .distinct();
 
-    // INNER JOIN the main query with this subquery of matching IDs
-    // This ensures the product matches *all* specified custom fields
     property_query = price_query.innerJoin(
       { [alias]: matchingProductIdsSubquery },
       ({ p, [alias]: cfAlias }) => eq(p.id, cfAlias.product_id)
@@ -155,53 +150,62 @@ function getFilteredProductsQuery(search: ProductSearch) {
 }
 
 // --- 4. Route Component ---
-function ProductsComponent() {
-  // Get the validated search params from the route
+function RouteComponent() {
   const search = Route.useSearch();
-  const { order, dir } = search;
-  const navigate = useNavigate({ from: Route.fullPath });
 
-  // --- Data Query: Get the products for the current page ---
-  const productsLiveQuery = useLiveQuery(() => {
-    // 1. Get the base filtered query
+  const { data: products, isLoading } = useLiveQuery(() => {
     let query = getFilteredProductsQuery(search);
-
-    // 2. Apply Sorting
-    query.orderBy(({ p }) => {
-      return [p[order as keyof Product], dir];
+    query = query.orderBy(({ p, price }) => {
+      const orderKey =
+        search.order === "price"
+          ? price?.min_price
+          : p[search.order as keyof Product];
+      return [orderKey, search.dir];
     });
 
-    // 3. Apply Final Select
-    query = query.select(({ p, price }) => ({
+    return query.select(({ p, price }) => ({
       ...p,
       min_price: price?.min_price
     }));
-
-    return query;
   }, [search]);
 
-  // --- Count Query: Get the total number of matching products ---
-  // const countLiveQuery = useLiveQuery(() => {
-  //   // 1. Get the exact same base filtered query
-  //   let query = getFilteredProductsQuery(search);
-  //
-  //   // 2. Apply Count Aggregation
-  //   query = query.select(({ p }) => ({ total: count(p.id) }));
-  //
-  //   return query;
-  // }, [search]);
-
-  const { data: products, isLoading } = productsLiveQuery;
-
-  // Helper for navigation
-  const setSearch = (newSearch: Partial<ProductSearch>) => {
-    void navigate({
-      search: (prev) => ({ ...prev, ...newSearch }),
-      replace: true
-    });
-  };
+  const { data: categories } = useLiveQuery((q) =>
+    q.from({ categoriesCollection })
+  );
+  const { data: companies } = useLiveQuery((q) =>
+    q.from({ companiesCollection })
+  );
 
   return (
-    <Browse loading={isLoading} products={products} setSearch={setSearch} />
+    <Browse
+      loading={isLoading}
+      products={products}
+      categories={categories}
+      companies={companies}
+    />
   );
 }
+
+/**
+ * A custom hook that provides a function to update
+ * the URL search parameters for the current route.
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const useSetSearch = () => {
+  const navigate = useNavigate({ from: Route.fullPath });
+
+  const setSearch = useCallback(
+    (newSearch: Partial<ProductSearch>) => {
+      void navigate({
+        search: (prev) => ({
+          ...prev,
+          ...newSearch
+        }),
+        replace: true
+      });
+    },
+    [navigate]
+  );
+
+  return setSearch;
+};

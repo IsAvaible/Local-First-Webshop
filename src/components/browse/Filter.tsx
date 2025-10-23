@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -7,71 +8,116 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Route, useSetSearch } from "@/routes/search.tsx";
+import type { Category, Company } from "@/db/schema.ts";
+import { useNavigate } from "@tanstack/react-router";
 
-const conditions = ["New", "Very Good", "Good", "Used"];
-const shippingOptions = ["Free", "Express", "Standard"];
+export default function Filter({
+  categories,
+  companies
+}: {
+  categories: Category[] | undefined;
+  companies: Company[] | undefined;
+}) {
+  const search = Route.useSearch();
+  const setSearch = useSetSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const [minPrice, setMinPrice] = useState(search.price_min);
+  const [maxPrice, setMaxPrice] = useState(search.price_max);
 
-export default function Filter() {
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearch({ price_min: minPrice, price_max: maxPrice });
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [minPrice, maxPrice, setSearch]);
+
+  const handleCategoryChange = (categoryId: number) => {
+    const currentCategories = search.categories ?? [];
+    const newCategories = currentCategories.includes(categoryId)
+      ? currentCategories.filter((id) => id !== categoryId)
+      : [...currentCategories, categoryId];
+    setSearch({ categories: newCategories });
+  };
+
+  const handleCompanyChange = (companyId: number) => {
+    const currentCompanies = search.companies ?? [];
+    const newCompanies = currentCompanies.includes(companyId)
+      ? currentCompanies.filter((id) => id !== companyId)
+      : [...currentCompanies, companyId];
+    setSearch({ companies: newCompanies });
+  };
+
+  const resetFilters = () => {
+    void navigate({ search: (prev) => ({ q: prev.q }) });
+  };
+
   return (
     <div className="sticky h-fit w-80 space-y-6 rounded-lg bg-white p-4 shadow-md dark:bg-slate-800">
       <h3 className="text-xl font-semibold">Filters</h3>
-      <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3"]}>
-        <AccordionItem value="item-1">
-          <AccordionTrigger>Condition</AccordionTrigger>
-          <AccordionContent className="space-y-2">
-            {conditions.map((c) => (
-              <div key={c} className="flex items-center gap-2">
-                <Checkbox id={c} />
-                <Label htmlFor={c}>{c}</Label>
-              </div>
-            ))}
-          </AccordionContent>
-        </AccordionItem>
+      <Accordion
+        type="multiple"
+        defaultValue={["item-1", "item-2", "item-3", "item-4"]}
+      >
         <AccordionItem value="item-2">
           <AccordionTrigger>Categories</AccordionTrigger>
-          <AccordionContent>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cars">Cars</SelectItem>
-                <SelectItem value="parts">Parts</SelectItem>
-              </SelectContent>
-            </Select>
+          <AccordionContent className="space-y-2">
+            {categories?.map((c) => (
+              <div key={c.id} className="flex items-center gap-2">
+                <Checkbox
+                  id={c.name}
+                  checked={search.categories?.includes(c.id)}
+                  onCheckedChange={() => handleCategoryChange(c.id)}
+                />
+                <Label htmlFor={c.name}>{c.name}</Label>
+              </div>
+            ))}
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-3">
-          <AccordionTrigger>Price Range</AccordionTrigger>
-          <AccordionContent>
-            <div className="flex items-center gap-2">
-              <Input type="number" placeholder="Min" />
-              <span>-</span>
-              <Input type="number" placeholder="Max" />
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="item-4">
-          <AccordionTrigger>Shipping</AccordionTrigger>
+          <AccordionTrigger>Companies</AccordionTrigger>
           <AccordionContent className="space-y-2">
-            {shippingOptions.map((s) => (
-              <div key={s} className="flex items-center gap-2">
-                <Checkbox id={s} />
-                <Label htmlFor={s}>{s}</Label>
+            {companies?.map((c) => (
+              <div key={c.id} className="flex items-center gap-2">
+                <Checkbox
+                  id={c.name}
+                  checked={search.companies?.includes(c.id)}
+                  onCheckedChange={() => handleCompanyChange(c.id)}
+                />
+                <Label htmlFor={c.name}>{c.name}</Label>
               </div>
             ))}
           </AccordionContent>
         </AccordionItem>
+        <AccordionItem value="item-4">
+          <AccordionTrigger>Price Range</AccordionTrigger>
+          <AccordionContent>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                placeholder="Min"
+                value={minPrice ?? ""}
+                onChange={(e) =>
+                  setMinPrice(Number(e.target.value) || undefined)
+                }
+              />
+              <span>-</span>
+              <Input
+                type="number"
+                placeholder="Max"
+                value={maxPrice ?? ""}
+                onChange={(e) =>
+                  setMaxPrice(Number(e.target.value) || undefined)
+                }
+              />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
       </Accordion>
-      <Button className="w-full">Reset Filters</Button>
+      <Button className="w-full" onClick={resetFilters}>
+        Reset Filters
+      </Button>
     </div>
   );
 }

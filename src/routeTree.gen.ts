@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
@@ -29,6 +30,11 @@ import { Route as AuthenticatedIndexxRouteImport } from './routes/_authenticated
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
 import { Route as AuthenticatedProjectProjectIdRouteImport } from './routes/_authenticated/project/$projectId'
 
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -130,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/login': typeof LoginRoute
+  '/search': typeof SearchRoute
   '/indexx': typeof AuthenticatedIndexxRoute
   '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/login': typeof LoginRoute
+  '/search': typeof SearchRoute
   '/indexx': typeof AuthenticatedIndexxRoute
   '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
@@ -172,6 +180,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/cart': typeof CartRoute
   '/login': typeof LoginRoute
+  '/search': typeof SearchRoute
   '/_authenticated/indexx': typeof AuthenticatedIndexxRoute
   '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cart'
     | '/login'
+    | '/search'
     | '/indexx'
     | '/api/assets'
     | '/api/auth'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cart'
     | '/login'
+    | '/search'
     | '/indexx'
     | '/api/assets'
     | '/api/auth'
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/cart'
     | '/login'
+    | '/search'
     | '/_authenticated/indexx'
     | '/api/assets'
     | '/api/auth'
@@ -257,6 +269,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   CartRoute: typeof CartRoute
   LoginRoute: typeof LoginRoute
+  SearchRoute: typeof SearchRoute
   ApiAssetsRoute: typeof ApiAssetsRoute
   ApiAuthRoute: typeof ApiAuthRoute
   ApiCategoriesRoute: typeof ApiCategoriesRoute
@@ -274,6 +287,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -429,6 +449,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   CartRoute: CartRoute,
   LoginRoute: LoginRoute,
+  SearchRoute: SearchRoute,
   ApiAssetsRoute: ApiAssetsRoute,
   ApiAuthRoute: ApiAuthRoute,
   ApiCategoriesRoute: ApiCategoriesRoute,
