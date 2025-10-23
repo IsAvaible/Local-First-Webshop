@@ -1,4 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  stripSearchParams,
+  useNavigate
+} from "@tanstack/react-router";
 import { z } from "zod";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
@@ -29,23 +33,41 @@ import type { Product } from "@/db/schema.ts";
 import Browse from "@/components/Browse.tsx";
 import { useCallback } from "react";
 
+const defaultValues = {
+  q: "",
+  categories: [],
+  companies: [],
+  order: "price",
+  dir: "desc" as const,
+  custom_fields: {}
+};
+
 // --- 1. Zod Schema for Search Param Validation ---
 // This schema defines the "state" of our search page.
 // .catch() provides default values for missing and invalid params.
 const productSearchSchema = z.object({
   // Free text search
-  q: z.string().optional().catch(""),
+  q: z.string().optional().catch(defaultValues.q),
   // Filters
-  categories: z.array(z.number().int()).optional().catch([]),
-  companies: z.array(z.number().int()).optional().catch([]),
+  categories: z
+    .array(z.number().int())
+    .optional()
+    .catch(defaultValues.categories),
+  companies: z
+    .array(z.number().int())
+    .optional()
+    .catch(defaultValues.companies),
   // Price Range
   price_min: z.coerce.number().min(0).optional(),
   price_max: z.coerce.number().min(0).optional(),
   // Sorting
-  order: z.string().optional().catch("price"),
-  dir: z.enum(["asc", "desc"]).optional().catch("desc"),
+  order: z.string().optional().catch(defaultValues.order),
+  dir: z.enum(["asc", "desc"]).optional().catch(defaultValues.dir),
   // Advanced Filters (expects a JSON object from URL)
-  custom_fields: z.record(z.string(), z.any()).optional().catch({})
+  custom_fields: z
+    .record(z.string(), z.any())
+    .optional()
+    .catch(defaultValues.custom_fields)
 });
 
 export type ProductSearch = z.infer<typeof productSearchSchema>;
@@ -53,7 +75,10 @@ export type ProductSearch = z.infer<typeof productSearchSchema>;
 // --- 2. Route Definition ---
 export const Route = createFileRoute("/search")({
   validateSearch: zodValidator(productSearchSchema),
-  component: RouteComponent
+  component: RouteComponent,
+  search: {
+    middlewares: [stripSearchParams(defaultValues)]
+  }
 });
 
 // --- 3. Reusable Query Builder Function ---
@@ -81,14 +106,14 @@ function getFilteredProductsQuery(search: ProductSearch) {
   }
 
   // --- Category Filter ---
-  if (categories) {
+  if (categories && categories.length > 0) {
     base_query = base_query.where(({ p }) => {
       return inArray(p.category_id, categories);
     });
   }
 
   // --- Company Filter ---
-  if (companies) {
+  if (companies && companies.length > 0) {
     base_query = base_query.where(({ p }) => {
       return inArray(p.company_id, companies);
     });
