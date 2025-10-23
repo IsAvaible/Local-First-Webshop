@@ -13,10 +13,33 @@ export default function FilterChips({
   const search = Route.useSearch();
   const setSearch = useSetSearch();
 
-  if (search.price_min !== undefined || search.price_max !== undefined) {
+  const { price_min, price_max } = search;
+
+  if (price_min !== undefined || price_max !== undefined) {
+    const f = new Intl.NumberFormat("de-DE", {
+      style: "currency",
+      currency: "EUR",
+      maximumFractionDigits: 0
+    });
+
+    const minFormatted =
+      price_min !== undefined ? f.format(price_min) : undefined;
+    const maxFormatted =
+      price_max !== undefined ? f.format(price_max) : undefined;
+
+    let value = "";
+
+    if (minFormatted && maxFormatted) {
+      value = `${minFormatted} – ${maxFormatted}`;
+    } else if (minFormatted) {
+      value = `From ${minFormatted}`;
+    } else if (maxFormatted) {
+      value = `Up to ${maxFormatted}`;
+    }
+
     filters.push({
       name: "Price",
-      value: `${search.price_min ?? "min"} - ${search.price_max ?? "max"}`,
+      value: value,
       clear: () => setSearch({ price_min: undefined, price_max: undefined })
     });
   }
