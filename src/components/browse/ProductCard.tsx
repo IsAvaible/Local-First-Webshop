@@ -12,10 +12,13 @@ import { ShoppingCartIcon } from "lucide-react";
 import type { Product } from "@/db/schema.ts";
 import { Link } from "@tanstack/react-router";
 import type { JsonValue } from "@/lib/utils.ts";
+import { humanizeCustomFieldValue } from "@/lib/utils.ts";
 
 interface ProductCardProps {
   product: Product & { min_price: number | null };
-  customFields?: Record<string, JsonValue | undefined> | undefined;
+  customFields?:
+    | Record<string, { value: JsonValue; type?: string }>
+    | undefined;
 }
 
 export default function ProductCard({
@@ -42,15 +45,18 @@ export default function ProductCard({
 
           {customFields && Object.keys(customFields).length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
-              {Object.entries(customFields).map(([k, v]) => (
-                <span
-                  key={k}
-                  className="rounded bg-gray-100 px-2 py-1 text-xs font-medium"
-                  title={String(v)}
-                >
-                  {k}: {typeof v === "boolean" ? (v ? "Yes" : "No") : String(v)}
-                </span>
-              ))}
+              {Object.entries(customFields).map(([k, v]) => {
+                const humanized = humanizeCustomFieldValue(v?.value, v?.type);
+                return (
+                  <span
+                    key={k}
+                    className="rounded bg-gray-100 px-2 py-1 text-xs font-medium"
+                    title={humanized}
+                  >
+                    {k}: {humanized}
+                  </span>
+                );
+              })}
             </div>
           )}
         </CardContent>

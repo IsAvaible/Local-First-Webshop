@@ -13,6 +13,7 @@ import { Route, useSetSearch } from "@/routes/search.tsx";
 import type { Category, Company, CustomFieldDefinition } from "@/db/schema.ts";
 import { useNavigate } from "@tanstack/react-router";
 import type { JsonValue } from "@/lib/utils.ts";
+import { humanizeCustomFieldValue } from "@/lib/utils.ts";
 import {
   Popover,
   PopoverContent,
@@ -256,7 +257,7 @@ export default function Filter({
                               className="w-48 justify-between font-normal"
                             >
                               {dateValue
-                                ? dateValue.toLocaleDateString()
+                                ? humanizeCustomFieldValue(currentValue, "date")
                                 : "Select date"}
                               <ChevronDownIcon className="ml-2 h-4 w-4 opacity-50" />
                             </Button>

@@ -1,6 +1,7 @@
 import { Route, useSetSearch } from "@/routes/search.tsx";
 import { Link } from "@tanstack/react-router";
 import type { Category, Company, CustomFieldDefinition } from "@/db/schema.ts";
+import { humanizeCustomFieldLabel } from "@/lib/utils.ts";
 
 export default function FilterChips({
   categories,
@@ -95,28 +96,15 @@ export default function FilterChips({
 
   for (const [key, val] of customFieldEntries) {
     const def = customFieldDefinitions?.find((d) => d.field_name === key);
-    const formatter = Intl.NumberFormat("de-DE", {});
-    let value = "";
-    // pretty-format booleans
-    switch (def?.field_type) {
-      case "number":
-        value = formatter.format(val as number);
-        break;
-      case "date":
-        value = new Date(val as string).toLocaleDateString("de-DE");
-        break;
-      case "boolean":
-        value = val ? "Yes" : "No";
-        break;
-      case "select":
-      case "text":
-      default:
-        value = String(val);
-    }
+    const label = humanizeCustomFieldLabel(
+      def?.field_name ?? key,
+      val,
+      def?.field_type
+    );
 
     filters.push({
       name: def?.field_name ?? key,
-      value: `${def?.field_name ?? key}: ${value}`,
+      value: label,
       clear: () => {
         const prev = { ...(search.custom_fields ?? {}) };
         delete prev[key];

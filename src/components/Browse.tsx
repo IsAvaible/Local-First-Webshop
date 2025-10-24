@@ -53,9 +53,11 @@ export default function Browse({
     return () => window.removeEventListener("resize", handleScreenSizeChange);
   }, []);
 
-  // Build lookup: productId -> { fieldName: value }
   const productCustomFields = useMemo(() => {
-    const map = new Map<number, Record<string, JsonValue>>();
+    const map = new Map<
+      number,
+      Record<string, { value: JsonValue; type?: string }>
+    >();
     if (!customFieldValues || !customFieldDefinitions) return map;
     const defById = new Map<number, CustomFieldDefinition>();
     for (const def of customFieldDefinitions) defById.set(def.id, def);
@@ -64,8 +66,8 @@ export default function Browse({
       const def = defById.get(v.field_definition_id);
       if (!def) continue;
       const productEntry = map.get(v.product_id) ?? {};
-      // v.value is jsonb, keep as-is
-      productEntry[def.field_name] = v.value;
+      // store both value and type for consistent humanization downstream
+      productEntry[def.field_name] = { value: v.value, type: def.field_type };
       map.set(v.product_id, productEntry);
     }
     return map;
@@ -91,8 +93,8 @@ export default function Browse({
 
     const copy = [...products];
     copy.sort((a, b) => {
-      const av = productCustomFields.get(a.id)?.[order];
-      const bv = productCustomFields.get(b.id)?.[order];
+      const av = productCustomFields.get(a.id)?.[order]?.value;
+      const bv = productCustomFields.get(b.id)?.[order]?.value;
 
       // Handle undefineds
       if (av === undefined && bv === undefined) return 0;
@@ -107,7 +109,9 @@ export default function Browse({
       }
 
       // Fallback to locale string compare
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
       const as = String(av);
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
       const bs = String(bv);
       return dir === "asc"
         ? collator.compare(as, bs)
