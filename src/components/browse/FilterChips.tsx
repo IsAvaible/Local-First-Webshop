@@ -1,15 +1,17 @@
 import { Route, useSetSearch } from "@/routes/search.tsx";
 import { Link } from "@tanstack/react-router";
-import type { Category, Company } from "@/db/schema.ts";
+import type { Category, Company, CustomFieldDefinition } from "@/db/schema.ts";
 
 export default function FilterChips({
   categories,
-  companies
+  companies,
+  customFieldDefinitions
 }: {
   categories: (Category & { count: number })[] | undefined;
   companies: (Company & { count: number })[] | undefined;
+  customFieldDefinitions?: CustomFieldDefinition[] | undefined;
 }) {
-  const filters = [];
+  const filters: { name: string; value: string; clear: () => void }[] = [];
   const search = Route.useSearch();
   const setSearch = useSetSearch();
 
@@ -83,6 +85,43 @@ export default function FilterChips({
       name: "Companies",
       value: value,
       clear: () => setSearch({ companies: [] })
+    });
+  }
+
+  // Custom fields
+  const customFieldEntries = Object.entries(search.custom_fields ?? {}).filter(
+    ([_, v]) => v !== undefined && v !== null
+  );
+
+  for (const [key, val] of customFieldEntries) {
+    const def = customFieldDefinitions?.find((d) => d.field_name === key);
+    const formatter = Intl.NumberFormat("de-DE", {});
+    let value = "";
+    // pretty-format booleans
+    switch (def?.field_type) {
+      case "number":
+        value = formatter.format(val as number);
+        break;
+      case "date":
+        value = new Date(val as string).toLocaleDateString("de-DE");
+        break;
+      case "boolean":
+        value = val ? "Yes" : "No";
+        break;
+      case "select":
+      case "text":
+      default:
+        value = String(val);
+    }
+
+    filters.push({
+      name: def?.field_name ?? key,
+      value: `${def?.field_name ?? key}: ${value}`,
+      clear: () => {
+        const prev = { ...(search.custom_fields ?? {}) };
+        delete prev[key];
+        setSearch({ custom_fields: prev });
+      }
     });
   }
 

@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select.tsx";
-import { type Product } from "@/db/schema.ts";
+import type { Product, CustomFieldDefinition } from "@/db/schema.ts";
 import { useMemo } from "react";
 import {
   ArrowDown01Icon,
@@ -53,7 +53,11 @@ const DirComponent = ({
   }
 };
 
-export default function BrowseSortSelect() {
+export default function BrowseSortSelect({
+  customFieldDefinitions
+}: {
+  customFieldDefinitions?: CustomFieldDefinition[] | undefined;
+}) {
   const search: ProductSearch = Route.useSearch();
   const setSearch = useSetSearch();
 
@@ -112,6 +116,11 @@ export default function BrowseSortSelect() {
                 {sortableProperties.map((prop) => (
                   <SelectItem key={prop} value={prop}>
                     {capitalize(prop)}
+                  </SelectItem>
+                ))}
+                {customFieldDefinitions?.map((def) => (
+                  <SelectItem key={`cf-${def.id}`} value={def.field_name}>
+                    {capitalize(def.field_name)}
                   </SelectItem>
                 ))}
               </SelectContent>

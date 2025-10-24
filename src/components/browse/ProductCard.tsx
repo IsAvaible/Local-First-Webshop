@@ -11,12 +11,17 @@ import {
 import { ShoppingCartIcon } from "lucide-react";
 import type { Product } from "@/db/schema.ts";
 import { Link } from "@tanstack/react-router";
+import type { JsonValue } from "@/lib/utils.ts";
 
 interface ProductCardProps {
   product: Product & { min_price: number | null };
+  customFields?: Record<string, JsonValue | undefined> | undefined;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({
+  product,
+  customFields
+}: ProductCardProps) {
   const { addToCart } = useCart();
 
   return (
@@ -34,6 +39,20 @@ export default function ProductCard({ product }: ProductCardProps) {
           <CardDescription className="mt-2 text-sm">
             {product.description}
           </CardDescription>
+
+          {customFields && Object.keys(customFields).length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {Object.entries(customFields).map(([k, v]) => (
+                <span
+                  key={k}
+                  className="rounded bg-gray-100 px-2 py-1 text-xs font-medium"
+                  title={String(v)}
+                >
+                  {k}: {typeof v === "boolean" ? (v ? "Yes" : "No") : String(v)}
+                </span>
+              ))}
+            </div>
+          )}
         </CardContent>
         <CardFooter className="mt-auto flex items-center justify-between px-4">
           <p className="text-slate-600">

@@ -30,6 +30,7 @@ import {
   companiesCollection
 } from "@/lib/collections.ts";
 import type { Product } from "@/db/schema.ts";
+import type { CustomFieldValue } from "@/db/schema.ts";
 import Browse from "@/components/Browse.tsx";
 import { useCallback } from "react";
 
@@ -65,7 +66,7 @@ const productSearchSchema = z.object({
   dir: z.enum(["asc", "desc"]).optional().catch(defaultValues.dir),
   // Advanced Filters (expects a JSON object from URL)
   custom_fields: z
-    .record(z.string(), z.any())
+    .record(z.string(), z.json().optional())
     .optional()
     .catch(defaultValues.custom_fields)
 });
@@ -78,6 +79,17 @@ export const Route = createFileRoute("/search")({
   component: RouteComponent,
   search: {
     middlewares: [stripSearchParams(defaultValues)]
+  },
+  loader: async () => {
+    await Promise.all([
+      productsCollection.preload(),
+      pricingTiersCollection.preload(),
+      customFieldValuesCollection.preload(),
+      customFieldDefinitionsCollection.preload(),
+      categoriesCollection.preload(),
+      companiesCollection.preload()
+    ]);
+    return null;
   }
 });
 
@@ -179,21 +191,61 @@ function getFilteredProductsQuery(search: ProductSearch) {
 function RouteComponent() {
   const search = Route.useSearch();
 
+  const { data: customFieldDefinitions } = useLiveQuery((q) =>
+    q.from({ cfd: customFieldDefinitionsCollection })
+  );
+
   const { data: products, isLoading } = useLiveQuery(() => {
     let query = getFilteredProductsQuery(search);
-    query = query.orderBy(({ p, price }) => {
-      const orderKey =
-        search.order === "price"
-          ? price?.min_price
-          : p[search.order as keyof Product];
-      return [orderKey, search.dir];
-    });
+
+    // Only apply server-side ordering for product properties and price.
+    // Custom-field ordering is handled client-side in the Browse component.
+    const isCustomOrder = customFieldDefinitions?.some(
+      (cfd) => cfd.field_name === search.order
+    );
+
+    if (!isCustomOrder) {
+      query = query.orderBy(({ p, price }) => {
+        const orderKey =
+          search.order === "price"
+            ? price?.min_price
+            : p[search.order as keyof Product];
+        return [orderKey, search.dir];
+      });
+    }
 
     return query.select(({ p, price }) => ({
       ...p,
       min_price: price?.min_price
     }));
-  }, [search]);
+  }, [search, customFieldDefinitions]);
+
+  // Fetch custom field values for the currently returned products so the UI
+  // can show/filter/sort by custom properties on the client-side.
+  const { data: customFieldValues } = useLiveQuery((q) =>
+    q
+      .from({ cfv: customFieldValuesCollection })
+      .innerJoin({ p: productsCollection }, ({ cfv, p }) =>
+        eq(cfv.product_id, p.id)
+      )
+      .select(({ cfv }) => ({ ...cfv }))
+  );
+
+  // Normalize min_price to number | null for component consumers
+  type RawProductWithMinPrice = Product & {
+    min_price: number | null;
+  };
+
+  const normalizedProducts = (
+    products as RawProductWithMinPrice[] | undefined
+  )?.map((p) => ({
+    ...p,
+    min_price: p.min_price == null ? null : Number(p.min_price)
+  }));
+
+  const typedProducts = normalizedProducts as
+    | (Product & { min_price: number | null })[]
+    | undefined;
 
   // --- Category Counts ---
   const { categories: _c, ...searchForCategoryCounts } = search;
@@ -237,9 +289,11 @@ function RouteComponent() {
   return (
     <Browse
       loading={isLoading}
-      products={products}
+      products={typedProducts}
       categories={categories}
       companies={companies}
+      customFieldDefinitions={customFieldDefinitions}
+      customFieldValues={customFieldValues as CustomFieldValue[] | undefined}
     />
   );
 }
@@ -252,7 +306,7 @@ function RouteComponent() {
 export const useSetSearch = () => {
   const navigate = useNavigate({ from: Route.fullPath });
 
-  const setSearch = useCallback(
+  return useCallback(
     (newSearch: Partial<ProductSearch>) => {
       void navigate({
         search: (prev) => ({
@@ -264,6 +318,4 @@ export const useSetSearch = () => {
     },
     [navigate]
   );
-
-  return setSearch;
 };

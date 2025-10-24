@@ -113,8 +113,8 @@ export const assetsCollection = createCollection(
 // --- Custom Field Definitions Collection ---
 export const customFieldDefinitionsCollection = createCollection(
   electricCollectionOptions({
-    id: createApiUrl("custom_field_definitions"),
-    shapeOptions: { url: "/api/custom-field-definitions" },
+    id: "custom_field_definitions",
+    shapeOptions: { url: createApiUrl("/api/custom-field-definitions") },
     schema: selectCustomFieldDefinitionSchema,
     getKey: (item) => item.id
     // ... onInsert, onUpdate, onDelete
@@ -124,8 +124,8 @@ export const customFieldDefinitionsCollection = createCollection(
 // --- Custom Field Values Collection ---
 export const customFieldValuesCollection = createCollection(
   electricCollectionOptions({
-    id: createApiUrl("custom_field_values"),
-    shapeOptions: { url: "/api/custom-field-values" },
+    id: "custom_field_values",
+    shapeOptions: { url: createApiUrl("/api/custom-field-values") },
     schema: selectCustomFieldValueSchema,
     getKey: (item) => item.id
     // ... onInsert, onUpdate, onDelete

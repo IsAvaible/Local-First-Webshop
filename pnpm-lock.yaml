@@ -65,9 +65,6 @@ importers:
       "@tailwindcss/vite":
         specifier: ^4.1.15
         version: 4.1.15(rolldown-vite@7.1.14(@types/node@24.9.1)(esbuild@0.25.0)(jiti@2.6.1)(tsx@4.20.6)(yaml@2.8.1))
-      "@tanstack/db":
-        specifier: ^0.4.12
-        version: 0.4.12(typescript@5.9.3)
       "@tanstack/electric-db-collection":
         specifier: ^0.1.35
         version: 0.1.35(typescript@5.9.3)
@@ -104,6 +101,9 @@ importers:
       cmdk:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
@@ -128,6 +128,9 @@ importers:
       react:
         specifier: ^19.2.0
         version: 19.2.0
+      react-day-picker:
+        specifier: ^9.11.1
+        version: 9.11.1(react@19.2.0)
       react-dom:
         specifier: ^19.2.0
         version: 19.2.0(react@19.2.0)
@@ -150,6 +153,9 @@ importers:
       "@eslint/js":
         specifier: ^9.38.0
         version: 9.38.0
+      "@faker-js/faker":
+        specifier: ^10.1.0
+        version: 10.1.0
       "@tanstack/router-plugin":
         specifier: ^1.133.22
         version: 1.133.22(@tanstack/react-router@1.133.22(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(rolldown-vite@7.1.14(@types/node@24.9.1)(esbuild@0.25.0)(jiti@2.6.1)(tsx@4.20.6)(yaml@2.8.1))
@@ -620,6 +626,12 @@ packages:
       }
     engines: { node: ">=v18" }
 
+  "@date-fns/tz@1.4.1":
+    resolution:
+      {
+        integrity: sha512-P5LUNhtbj6YfI3iJjw5EL9eUAG6OitD0W3fWQcpQjDRc/QIsL0tRNuO1PcDvPccWL1fSTXXdE1ds+l95DV/OFA==
+      }
+
   "@dnd-kit/accessibility@3.1.1":
     resolution:
       {
@@ -1031,6 +1043,13 @@ packages:
         integrity: sha512-sB5uyeq+dwCWyPi31B2gQlVlo+j5brPlWx4yZBrEaRo/nhdDE8Xke1gsGgtiBdaBTxuTkceLVuVt/pclrasb0A==
       }
     engines: { node: ^18.18.0 || ^20.9.0 || >=21.1.0 }
+
+  "@faker-js/faker@10.1.0":
+    resolution:
+      {
+        integrity: sha512-C3mrr3b5dRVlKPJdfrAXS8+dq+rq8Qm5SNRazca0JKgw1HQERFmrVb0towvMmw5uu8hHKNiQasMaR/tydf3Zsg==
+      }
+    engines: { node: ^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0, npm: ">=10" }
 
   "@floating-ui/core@1.7.3":
     resolution:
@@ -2148,26 +2167,10 @@ packages:
     peerDependencies:
       typescript: ">=4.7"
 
-  "@tanstack/db-ivm@0.1.12":
-    resolution:
-      {
-        integrity: sha512-QTs2dgrjTCkATZh12nb854K/Of80QyyR6URYyxnGPnJgXFchvw25Ve3TtFW51fHR5hheQltkbtpPgBjSZvoMVA==
-      }
-    peerDependencies:
-      typescript: ">=4.7"
-
   "@tanstack/db@0.4.11":
     resolution:
       {
         integrity: sha512-xFK2ltAqpoW4Nr30cSNFXI40ILy9jWrcg3l3od4vUuG0O/Xhc5B5rcwGNMKvKOGS8LN1E0kyFHgMTC/mRKigtQ==
-      }
-    peerDependencies:
-      typescript: ">=4.7"
-
-  "@tanstack/db@0.4.12":
-    resolution:
-      {
-        integrity: sha512-rDdXbH3AH/BTJnoyjT6y9jILUNM+SKCWrgP0Uf4q1UmdOPSX0IFiGhuQU2XYvwcEdwukXdDg6U3FLCOq8s52Dg==
       }
     peerDependencies:
       typescript: ">=4.7"
@@ -3084,6 +3087,18 @@ packages:
         integrity: sha512-wAV9QHOsNbwnWdNW2FYvE1P56wtgSbM+3SZcdGiWQILwVjACCXDCI3Ai8QlCjMDB8YK5zySiXZYBiwGmNY3lnw==
       }
     engines: { node: ">=12" }
+
+  date-fns-jalali@4.1.0-0:
+    resolution:
+      {
+        integrity: sha512-hTIP/z+t+qKwBDcmmsnmjWTduxCg+5KfdqWQvb2X/8C9+knYY6epN/pfxdDuyVlSVeFz0sM5eEfwIUQ70U4ckg==
+      }
+
+  date-fns@4.1.0:
+    resolution:
+      {
+        integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==
+      }
 
   debug@4.4.3:
     resolution:
@@ -4822,6 +4837,15 @@ packages:
       }
     hasBin: true
 
+  react-day-picker@9.11.1:
+    resolution:
+      {
+        integrity: sha512-l3ub6o8NlchqIjPKrRFUCkTUEq6KwemQlfv3XZzzwpUeGwmDJ+0u0Upmt38hJyd7D/vn2dQoOoLV/qAp0o3uUw==
+      }
+    engines: { node: ">=18" }
+    peerDependencies:
+      react: ">=16.8.0"
+
   react-dom@19.2.0:
     resolution:
       {
@@ -6036,6 +6060,8 @@ snapshots:
       "@types/conventional-commits-parser": 5.0.1
       chalk: 5.6.2
 
+  "@date-fns/tz@1.4.1": {}
+
   "@dnd-kit/accessibility@3.1.1(react@19.2.0)":
     dependencies:
       react: 19.2.0
@@ -6276,6 +6302,8 @@ snapshots:
     dependencies:
       "@eslint/core": 0.16.0
       levn: 0.4.1
+
+  "@faker-js/faker@10.1.0": {}
 
   "@floating-ui/core@1.7.3":
     dependencies:
@@ -7045,22 +7073,10 @@ snapshots:
       sorted-btree: 1.8.1
       typescript: 5.9.3
 
-  "@tanstack/db-ivm@0.1.12(typescript@5.9.3)":
-    dependencies:
-      fractional-indexing: 3.2.0
-      sorted-btree: 1.8.1
-      typescript: 5.9.3
-
   "@tanstack/db@0.4.11(typescript@5.9.3)":
     dependencies:
       "@standard-schema/spec": 1.0.0
       "@tanstack/db-ivm": 0.1.11(typescript@5.9.3)
-      typescript: 5.9.3
-
-  "@tanstack/db@0.4.12(typescript@5.9.3)":
-    dependencies:
-      "@standard-schema/spec": 1.0.0
-      "@tanstack/db-ivm": 0.1.12(typescript@5.9.3)
       typescript: 5.9.3
 
   "@tanstack/directive-functions-plugin@1.133.19(rolldown-vite@7.1.14(@types/node@24.9.1)(esbuild@0.25.0)(jiti@2.6.1)(tsx@4.20.6)(yaml@2.8.1))":
@@ -7842,6 +7858,10 @@ snapshots:
   csstype@3.1.3: {}
 
   dargs@8.1.0: {}
+
+  date-fns-jalali@4.1.0-0: {}
+
+  date-fns@4.1.0: {}
 
   debug@4.4.3:
     dependencies:
@@ -8704,6 +8724,13 @@ snapshots:
       ini: 1.3.8
       minimist: 1.2.8
       strip-json-comments: 2.0.1
+
+  react-day-picker@9.11.1(react@19.2.0):
+    dependencies:
+      "@date-fns/tz": 1.4.1
+      date-fns: 4.1.0
+      date-fns-jalali: 4.1.0-0
+      react: 19.2.0
 
   react-dom@19.2.0(react@19.2.0):
     dependencies:

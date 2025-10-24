@@ -1,201 +1,230 @@
 import * as schema from "./schema";
 import "dotenv/config";
 import { db } from "@/db/connection.ts";
+import { reset } from "drizzle-seed";
+import { faker } from "@faker-js/faker";
+import type { Product } from "./schema";
+
+// --- Configuration ---
+const COMPANIES_TO_CREATE = 5;
+const CATEGORIES_TO_CREATE = 4;
+const PRODUCTS_PER_CATEGORY = 10; // Each category will have this many products
+const VARIANT_CHANCE = 0.2; // 20% chance a product is a variant of the previous one
+// ---------------------
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
   throw new Error("DATABASE_URL environment variable is not set.");
 }
 
+// Helper type for the custom field definitions
+type FieldDef = typeof schema.customFieldDefinitionsTable.$inferSelect;
+
 async function main() {
-  console.log("Seeding database...");
+  console.log("Seeding database... 🌱");
+
+  // 1. Reset the database
+  await reset(db, schema);
 
   await db.transaction(async (tx) => {
-    // 1. Clear existing data (in reverse order of dependencies)
-    console.log("Clearing existing data...");
-    await tx.delete(schema.customFieldValuesTable);
-    await tx.delete(schema.customFieldDefinitionsTable);
-    await tx.delete(schema.assetsTable);
-    await tx.delete(schema.pricingTiersTable);
-    await tx.delete(schema.productsTable);
-    await tx.delete(schema.categoriesTable);
-    await tx.delete(schema.companiesTable);
+    console.log("Cleared old data.");
 
     // 2. Insert Companies
-    console.log("Inserting companies...");
-    const [company1] = await tx
+    console.log(`Inserting ${COMPANIES_TO_CREATE} companies...`);
+    const companyData = Array.from({ length: COMPANIES_TO_CREATE }, () => ({
+      name: faker.company.name()
+    }));
+    const insertedCompanies = await tx
       .insert(schema.companiesTable)
-      .values({ name: "GadgetCo" })
-      .returning();
-    const [company2] = await tx
-      .insert(schema.companiesTable)
-      .values({ name: "KitchenWorks" })
+      .values(companyData)
       .returning();
 
     // 3. Insert Categories
-    console.log("Inserting categories...");
-    const [cat1] = await tx
+    console.log(`Inserting ${CATEGORIES_TO_CREATE} categories...`);
+    const categoryData = Array.from({ length: CATEGORIES_TO_CREATE }, () => ({
+      name: faker.commerce.department(),
+      description: faker.commerce.productDescription().slice(0, 250) // Truncate to avoid errors
+    }));
+    const insertedCategories = await tx
       .insert(schema.categoriesTable)
-      .values({
-        name: "Electronics",
-        description: "Digital gadgets and accessories"
-      })
-      .returning();
-    const [cat2] = await tx
-      .insert(schema.categoriesTable)
-      .values({
-        name: "Home Appliances",
-        description: "Tools and appliances for your home"
-      })
+      .values(categoryData)
       .returning();
 
     // 4. Insert Custom Field Definitions (linked to categories)
     console.log("Inserting custom field definitions...");
-    // Electronics fields
-    const [field1] = await tx
+    const fieldDefData = [];
+    const fieldTypes: ("text" | "number" | "boolean" | "date" | "select")[] = [
+      "text",
+      "number",
+      "boolean",
+      "date",
+      "select"
+    ];
+
+    for (const category of insertedCategories) {
+      // Create 2-4 fields for each category
+      const numFields = faker.number.int({ min: 2, max: 4 });
+      for (let i = 0; i < numFields; i++) {
+        const fieldType = faker.helpers.arrayElement(fieldTypes);
+        let options: string[] | null = null;
+
+        if (fieldType === "select") {
+          options = Array.from(
+            { length: faker.number.int({ min: 3, max: 5 }) },
+            () => faker.word.noun()
+          );
+        }
+
+        fieldDefData.push({
+          category_id: category.id,
+          field_name: `${faker.commerce.productAdjective()} ${faker.word.noun()}`,
+          field_type: fieldType,
+          options: options
+        });
+      }
+    }
+    const insertedFieldDefs = await tx
       .insert(schema.customFieldDefinitionsTable)
-      .values({
-        category_id: cat1.id,
-        field_name: "Warranty",
-        field_type: "text"
-      })
+      .values(fieldDefData)
       .returning();
-    const [field2] = await tx
-      .insert(schema.customFieldDefinitionsTable)
-      .values({
-        category_id: cat1.id,
-        field_name: "Screen Size (in)",
-        field_type: "number"
-      })
-      .returning();
-    // Home Appliance fields
-    const [field3] = await tx
-      .insert(schema.customFieldDefinitionsTable)
-      .values({
-        category_id: cat2.id,
-        field_name: "Material",
-        field_type: "text"
-      })
-      .returning();
-    const [field4] = await tx
-      .insert(schema.customFieldDefinitionsTable)
-      .values({
-        category_id: cat2.id,
-        field_name: "Energy Rating",
-        field_type: "text"
-      })
-      .returning();
+
+    // Create a map for easy lookup: { categoryId: [fieldDef1, fieldDef2] }
+    const categoryFieldDefs = insertedFieldDefs.reduce(
+      (acc, def) => {
+        if (!acc[def.category_id]) {
+          acc[def.category_id] = [];
+        }
+        acc[def.category_id].push(def);
+        return acc;
+      },
+      {} as Record<string, FieldDef[]>
+    );
 
     // 5. Insert Products
-    console.log("Inserting products...");
-    // Product 1: A base product
-    const [prod1] = await tx
-      .insert(schema.productsTable)
-      .values({
-        name: "Hyperion Laptop",
-        description: "A powerful laptop for professionals.",
-        category_id: cat1.id,
-        company_id: company1.id
-      })
-      .returning();
+    console.log("Inserting products (with variants)...");
+    const insertedProducts = [];
+    const customValueData = [];
+    const assetData = [];
+    const pricingTierData = [];
 
-    // Product 2: A variant of Product 1
-    const [prod2] = await tx
-      .insert(schema.productsTable)
-      .values({
-        name: "Hyperion Laptop (16GB RAM)",
-        description: "A 16GB RAM variant of the Hyperion.",
-        category_id: cat1.id,
-        company_id: company1.id,
-        base_product_id: prod1.id // <-- Inherits from prod1
-      })
-      .returning();
+    // We pass the whole FieldDef to access options for 'select'
+    const generateValue = (
+      fieldDef: FieldDef
+    ): string | number | boolean | Date => {
+      const options = fieldDef.options ?? [];
 
-    // Product 3: Another product in a different category
-    const [prod3] = await tx
-      .insert(schema.productsTable)
-      .values({
-        name: "Smart Blender X1000",
-        description: "The last blender you will ever need.",
-        category_id: cat2.id,
-        company_id: company2.id
-      })
-      .returning();
-
-    // 6. Insert Pricing Tiers (tiered for prod1, flat for others)
-    console.log("Inserting pricing tiers...");
-    await tx.insert(schema.pricingTiersTable).values([
-      // Tiered pricing for Hyperion Laptop
-      { product_id: prod1.id, min_quantity: 1, price_per_unit: "1299.99" },
-      { product_id: prod1.id, min_quantity: 5, price_per_unit: "1249.99" },
-      { product_id: prod1.id, min_quantity: 20, price_per_unit: "1199.99" },
-      // Flat pricing for the variant
-      { product_id: prod2.id, min_quantity: 1, price_per_unit: "1499.99" },
-      // Flat pricing for the blender
-      { product_id: prod3.id, min_quantity: 1, price_per_unit: "89.50" }
-    ]);
-
-    // 7. Insert Assets
-    console.log("Inserting assets...");
-    await tx.insert(schema.assetsTable).values([
-      {
-        product_id: prod1.id,
-        url: "https://placehold.co/600x600?text=Laptop",
-        file_extension: "png",
-        mime_type: "image/png",
-        file_size: 204800,
-        alt: `${prod1.name} Image`
-      },
-      {
-        product_id: prod2.id,
-        url: "https://placehold.co/600x600?text=Laptop+16GB",
-        file_extension: "png",
-        mime_type: "image/png",
-        file_size: 204800,
-        alt: `${prod2.name} Image`
-      },
-      {
-        product_id: prod3.id,
-        url: "https://placehold.co/600x600?text=Blender",
-        file_extension: "png",
-        mime_type: "image/png",
-        file_size: 204800,
-        alt: `${prod3.name} Image`
-      },
-      {
-        product_id: prod3.id,
-        url: "https://placehold.co/600x600?text=Blender+Detail",
-        file_extension: "png",
-        mime_type: "image/png",
-        file_size: 204800,
-        alt: `${prod3.name} Image`
+      switch (fieldDef.field_type) {
+        case "text":
+          return faker.lorem.words(3);
+        case "number":
+          return faker.number.int({ min: 1, max: 1000 });
+        case "boolean":
+          return faker.datatype.boolean();
+        case "date":
+          return faker.date.future(); // Generates a Date object
+        case "select":
+          // Pick a random value from the defined options
+          if (options.length > 0) {
+            return faker.helpers.arrayElement(options);
+          }
+          return faker.word.noun(); // Fallback if no options
+        default:
+          return faker.lorem.word(); // Fallback for any unknown type
       }
-    ]);
+    };
 
-    // 8. Insert Custom Field Values (linked to products and definitions)
-    console.log("Inserting custom field values...");
-    await tx.insert(schema.customFieldValuesTable).values([
-      // Values for Prod 1 (Laptop)
-      { product_id: prod1.id, field_definition_id: field1.id, value: "1 Year" },
-      { product_id: prod1.id, field_definition_id: field2.id, value: 14 },
-      // Values for Prod 2 (Laptop Variant)
-      {
-        product_id: prod2.id,
-        field_definition_id: field1.id,
-        value: "2 Year Pro"
-      },
-      { product_id: prod2.id, field_definition_id: field2.id, value: 15.6 },
-      // Values for Prod 3 (Blender)
-      {
-        product_id: prod3.id,
-        field_definition_id: field3.id,
-        value: "Brushed Steel"
-      },
-      { product_id: prod3.id, field_definition_id: field4.id, value: "A++" }
-    ]);
+    for (const category of insertedCategories) {
+      let lastBaseProductId: number | null = null;
+      const fieldsForThisCategory = categoryFieldDefs[category.id] || [];
+
+      for (let i = 0; i < PRODUCTS_PER_CATEGORY; i++) {
+        const isVariant = !!(
+          lastBaseProductId && Math.random() < VARIANT_CHANCE
+        );
+        const productName = faker.commerce.productName();
+
+        const productData: Omit<Product, "id" | "created_at"> = {
+          name: isVariant ? `${productName} (Variant)` : productName,
+          description: faker.commerce.productDescription(),
+          category_id: category.id,
+          company_id: faker.helpers.arrayElement(insertedCompanies).id,
+          base_product_id: isVariant ? lastBaseProductId : null
+        };
+
+        // We insert one-by-one here to get the 'id' for variants.
+        const [product] = await tx
+          .insert(schema.productsTable)
+          .values(productData)
+          .returning();
+
+        insertedProducts.push(product);
+
+        if (!isVariant) {
+          lastBaseProductId = product.id; // This is a new base product
+        }
+
+        // 6. Insert Pricing Tiers (while we have the product)
+        const numTiers = faker.number.int({ min: 1, max: 3 });
+        const basePrice = parseFloat(
+          faker.commerce.price({ min: 10, max: 2000 })
+        );
+        const minQuantities = [1, 10, 50];
+
+        for (let t = 0; t < numTiers; t++) {
+          const price = basePrice * (1 - t * 0.1); // 10% discount per tier
+          pricingTierData.push({
+            product_id: product.id,
+            min_quantity: minQuantities[t],
+            price_per_unit: price.toFixed(2)
+          });
+        }
+
+        // 7. Insert Assets (while we have the product)
+        const numImages = faker.number.int({ min: 1, max: 3 });
+        for (let a = 0; a < numImages; a++) {
+          assetData.push({
+            product_id: product.id,
+            url: faker.image.urlPicsumPhotos({
+              width: 600,
+              height: 600,
+              blur: 0
+            }),
+            file_extension: "jpg",
+            mime_type: "image/jpeg",
+            file_size: faker.number.int({ min: 50000, max: 500000 }),
+            alt: `${product.name} Image ${a + 1}`
+          });
+        }
+
+        // 8. Insert Custom Field Values (while we have product and fields)
+        for (const fieldDef of fieldsForThisCategory) {
+          customValueData.push({
+            product_id: product.id,
+            field_definition_id: fieldDef.id,
+            value: generateValue(fieldDef)
+          });
+        }
+      }
+    }
+
+    // Now, bulk-insert all the dependent data
+    if (pricingTierData.length > 0) {
+      console.log(`Inserting ${pricingTierData.length} pricing tiers...`);
+      await tx.insert(schema.pricingTiersTable).values(pricingTierData);
+    }
+
+    if (assetData.length > 0) {
+      console.log(`Inserting ${assetData.length} assets...`);
+      await tx.insert(schema.assetsTable).values(assetData);
+    }
+
+    if (customValueData.length > 0) {
+      console.log(`Inserting ${customValueData.length} custom field values...`);
+      await tx.insert(schema.customFieldValuesTable).values(customValueData);
+    }
   });
 
-  console.log("Database seeding complete! 🌱");
+  console.log("Database seeding complete! 🚀");
 }
 
 main().catch((err) => {

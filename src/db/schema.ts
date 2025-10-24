@@ -8,7 +8,9 @@ import {
   jsonb,
   decimal,
   index,
-  type AnyPgColumn
+  type AnyPgColumn,
+  pgEnum,
+  uniqueIndex
 } from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
@@ -130,6 +132,14 @@ export const updateAssetSchema = createUpdateSchema(assetsTable).omit({
   created_at: true
 });
 
+export const customFieldTypeEnum = pgEnum("custom_field_type", [
+  "text",
+  "number",
+  "boolean",
+  "date",
+  "select"
+]);
+
 // --- CUSTOM FIELDS SCHEMA (PART 1: DEFINITIONS) ---
 export const customFieldDefinitionsTable = pgTable("custom_field_definitions", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -137,7 +147,8 @@ export const customFieldDefinitionsTable = pgTable("custom_field_definitions", {
     .notNull()
     .references(() => categoriesTable.id, { onDelete: "cascade" }),
   field_name: varchar({ length: 100 }).notNull(),
-  field_type: varchar({ length: 50 }).notNull().default("text") // e.g., 'text', 'number', 'boolean'
+  field_type: customFieldTypeEnum("field_type").notNull().default("text"),
+  options: jsonb("options").$type<string[]>()
 });
 
 export const selectCustomFieldDefinitionSchema = createSelectSchema(
@@ -151,16 +162,31 @@ export const updateCustomFieldDefinitionSchema = createUpdateSchema(
 );
 
 // --- CUSTOM FIELDS SCHEMA (PART 2: VALUES) ---
-export const customFieldValuesTable = pgTable("custom_field_values", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  product_id: integer()
-    .notNull()
-    .references(() => productsTable.id, { onDelete: "cascade" }),
-  field_definition_id: integer()
-    .notNull()
-    .references(() => customFieldDefinitionsTable.id, { onDelete: "cascade" }),
-  value: jsonb("value")
-});
+export const customFieldValuesTable = pgTable(
+  "custom_field_values",
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    product_id: integer()
+      .notNull()
+      .references(() => productsTable.id, { onDelete: "cascade" }),
+    field_definition_id: integer()
+      .notNull()
+      .references(() => customFieldDefinitionsTable.id, {
+        onDelete: "cascade"
+      }),
+    value: jsonb("value")
+  },
+  (table) => ({
+    // 1. Speeds up finding all values for one product
+    productIdIdx: index("value_product_id_idx").on(table.product_id),
+
+    // 2. Enforces that a product can only have ONE value for any given field
+    productFieldUnique: uniqueIndex("product_field_unique_idx").on(
+      table.product_id,
+      table.field_definition_id
+    )
+  })
+);
 
 export const selectCustomFieldValueSchema = createSelectSchema(
   customFieldValuesTable
