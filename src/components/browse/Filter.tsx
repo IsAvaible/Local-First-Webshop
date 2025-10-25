@@ -8,26 +8,12 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Route, useSetSearch } from "@/routes/search.tsx";
 import type { Category, Company, CustomFieldDefinition } from "@/db/schema.ts";
 import { useNavigate } from "@tanstack/react-router";
 import type { JsonValue } from "@/lib/utils.ts";
-import { humanizeCustomFieldValue } from "@/lib/utils.ts";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover.tsx";
-import { ChevronDownIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectTrigger,
-  SelectValue,
-  SelectItem
-} from "@/components/ui/select.tsx";
+import CustomFieldInput from "@/components/browse/CustomFieldInput.tsx";
+import { Button } from "@/components/ui/button.tsx";
 
 export default function Filter({
   categories,
@@ -43,9 +29,6 @@ export default function Filter({
   const navigate = useNavigate({ from: Route.fullPath });
   const [minPrice, setMinPrice] = useState(search.price_min);
   const [maxPrice, setMaxPrice] = useState(search.price_max);
-  const [openDatePickers, setOpenDatePickers] = useState<
-    Record<string, boolean>
-  >({});
 
   useEffect(() => {
     setMinPrice(search.price_min);
@@ -184,164 +167,15 @@ export default function Filter({
             <AccordionContent className="space-y-2">
               {visibleCustomFields.map((def) => {
                 const currentValue = search.custom_fields?.[def.field_name];
-                switch (def.field_type) {
-                  case "number":
-                    return (
-                      <div key={def.id} className="flex items-center gap-2">
-                        <Label className="w-40">{def.field_name}</Label>
-                        <Input
-                          type="number"
-                          value={(currentValue as number) ?? ""}
-                          onChange={(e) =>
-                            setCustomFieldValue(
-                              def.field_name,
-                              e.target.value === ""
-                                ? undefined
-                                : Number(e.target.value)
-                            )
-                          }
-                        />
-                        {currentValue !== undefined && (
-                          <Button
-                            variant="ghost"
-                            onClick={() => clearCustomField(def.field_name)}
-                          >
-                            Clear
-                          </Button>
-                        )}
-                      </div>
-                    );
-
-                  case "boolean":
-                    return (
-                      <div key={def.id} className="flex items-center gap-2">
-                        <Checkbox
-                          id={def.field_name}
-                          checked={!!currentValue}
-                          onCheckedChange={(v) =>
-                            setCustomFieldValue(def.field_name, !!v)
-                          }
-                        />
-                        <Label htmlFor={def.field_name}>{def.field_name}</Label>
-                        {currentValue !== undefined && (
-                          <Button
-                            variant="ghost"
-                            onClick={() => clearCustomField(def.field_name)}
-                          >
-                            Clear
-                          </Button>
-                        )}
-                      </div>
-                    );
-
-                  case "date": {
-                    const dateValue = currentValue
-                      ? new Date(currentValue as string)
-                      : undefined;
-
-                    return (
-                      <div key={def.id} className="flex items-center gap-2">
-                        <Label className="w-40">{def.field_name}</Label>
-                        <Popover
-                          open={openDatePickers[def.field_name] ?? false}
-                          onOpenChange={(isOpen) =>
-                            setOpenDatePickers((prev) => ({
-                              ...prev,
-                              [def.field_name]: isOpen
-                            }))
-                          }
-                        >
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className="w-48 justify-between font-normal"
-                            >
-                              {dateValue
-                                ? humanizeCustomFieldValue(currentValue, "date")
-                                : "Select date"}
-                              <ChevronDownIcon className="ml-2 h-4 w-4 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={dateValue}
-                              onSelect={(date) => {
-                                setCustomFieldValue(
-                                  def.field_name,
-                                  date ? date.toISOString() : undefined
-                                );
-                                setOpenDatePickers((prev) => ({
-                                  ...prev,
-                                  [def.field_name]: false
-                                }));
-                              }}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        {currentValue !== undefined && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => clearCustomField(def.field_name)}
-                          >
-                            Clear
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  }
-
-                  case "select":
-                    return (
-                      <div key={def.id} className="flex items-center gap-2">
-                        <Label className="w-40">{def.field_name}</Label>
-                        <Select>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Value" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {def.options?.map((option) => (
-                              <SelectItem
-                                key={option}
-                                value={option}
-                                onClick={() =>
-                                  setCustomFieldValue(def.field_name, option)
-                                }
-                              >
-                                {option}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    );
-
-                  case "text":
-                    return (
-                      <div key={def.id} className="flex items-center gap-2">
-                        <Label className="w-40">{def.field_name}</Label>
-                        <Input
-                          type="text"
-                          value={(currentValue as string) ?? ""}
-                          onChange={(e) =>
-                            setCustomFieldValue(
-                              def.field_name,
-                              e.target.value || undefined
-                            )
-                          }
-                        />
-                        {currentValue !== undefined && (
-                          <Button
-                            variant="ghost"
-                            onClick={() => clearCustomField(def.field_name)}
-                          >
-                            Clear
-                          </Button>
-                        )}
-                      </div>
-                    );
-                }
+                return (
+                  <CustomFieldInput
+                    key={def.id}
+                    def={def}
+                    currentValue={currentValue}
+                    onChange={(v) => setCustomFieldValue(def.field_name, v)}
+                    onClear={() => clearCustomField(def.field_name)}
+                  />
+                );
               })}
               <div className="flex justify-end">
                 <Button variant="outline" onClick={clearAllCustomFields}>
