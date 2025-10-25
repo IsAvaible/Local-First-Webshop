@@ -35,11 +35,12 @@ export default function CustomFieldInput({
   onClear
 }: Props) {
   const [open, setOpen] = useState(false);
+  let fieldContent: React.ReactNode;
 
   switch (def.field_type) {
     case "number": {
-      return (
-        <div className="flex items-center gap-2">
+      fieldContent = (
+        <>
           <Label className="w-40">{def.field_name}</Label>
           <Input
             type="number"
@@ -55,34 +56,38 @@ export default function CustomFieldInput({
               Clear
             </Button>
           )}
-        </div>
+        </>
       );
+      break;
     }
 
     case "boolean": {
-      return (
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id={def.field_name}
-            checked={!!currentValue}
-            onCheckedChange={(v) => onChange(!!v)}
-          />
+      fieldContent = (
+        <>
           <Label htmlFor={def.field_name}>{def.field_name}</Label>
-          {currentValue !== undefined && (
-            <Button variant="ghost" onClick={onClear}>
-              Clear
-            </Button>
-          )}
-        </div>
+          <div>
+            <Checkbox
+              id={def.field_name}
+              checked={!!currentValue}
+              onCheckedChange={(v) => onChange(!!v)}
+            />
+            {currentValue !== undefined && (
+              <Button variant="ghost" onClick={onClear}>
+                Clear
+              </Button>
+            )}
+          </div>
+        </>
       );
+      break;
     }
 
     case "date": {
       const dateValue = currentValue
         ? new Date(currentValue as string)
         : undefined;
-      return (
-        <div className="flex items-center gap-2">
+      fieldContent = (
+        <>
           <Label className="w-40">{def.field_name}</Label>
           <Popover open={open} onOpenChange={(isOpen) => setOpen(isOpen)}>
             <PopoverTrigger asChild>
@@ -112,13 +117,14 @@ export default function CustomFieldInput({
               Clear
             </Button>
           )}
-        </div>
+        </>
       );
+      break;
     }
 
     case "select": {
-      return (
-        <div className="flex items-center gap-2">
+      fieldContent = (
+        <>
           <Label className="w-40">{def.field_name}</Label>
           <Select onValueChange={onChange}>
             <SelectTrigger>
@@ -132,13 +138,14 @@ export default function CustomFieldInput({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </>
       );
+      break;
     }
 
     case "text": {
-      return (
-        <div className="flex items-center gap-2">
+      fieldContent = (
+        <>
           <Label className="w-40">{def.field_name}</Label>
           <Input
             type="text"
@@ -150,11 +157,14 @@ export default function CustomFieldInput({
               Clear
             </Button>
           )}
-        </div>
+        </>
       );
+      break;
     }
 
     default:
       return null;
   }
+
+  return <div className="flex flex-col gap-1 [&>*]:w-full">{fieldContent}</div>;
 }

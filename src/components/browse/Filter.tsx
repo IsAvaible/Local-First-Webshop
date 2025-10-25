@@ -65,11 +65,13 @@ export default function Filter({
   // --- Custom Field Handling ---
   // Show custom field inputs filtered to selected categories (if any)
   const selectedCategoryIds = search.categories ?? [];
-  const visibleCustomFields = customFieldDefinitions?.filter((def) =>
-    selectedCategoryIds.length > 0
-      ? selectedCategoryIds.includes(def.category_id)
-      : true
-  );
+  const visibleCustomFields = customFieldDefinitions
+    ?.filter((def) =>
+      selectedCategoryIds.length > 0
+        ? selectedCategoryIds.includes(def.category_id)
+        : true
+    )
+    .sort((a, b) => a.field_name.localeCompare(b.field_name));
 
   const setCustomFieldValue = (
     fieldName: string,
@@ -164,7 +166,7 @@ export default function Filter({
         {visibleCustomFields && visibleCustomFields.length > 0 && (
           <AccordionItem value="item-5">
             <AccordionTrigger>Additional Properties</AccordionTrigger>
-            <AccordionContent className="space-y-2">
+            <AccordionContent className="space-y-3">
               {visibleCustomFields.map((def) => {
                 const currentValue = search.custom_fields?.[def.field_name];
                 return (
