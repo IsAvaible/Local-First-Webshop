@@ -17,7 +17,8 @@ import type {
   Category,
   Company,
   CustomFieldDefinition,
-  CustomFieldValue
+  CustomFieldValue,
+  Asset
 } from "@/db/schema.ts";
 import BrowseSortSelect from "@/components/browse/BrowseSortSelect.tsx";
 import { Route } from "@/routes/search.tsx";
@@ -32,7 +33,9 @@ export default function Browse({
   customFieldValues
 }: {
   loading: boolean;
-  products: (Product & { min_price: number | null })[] | undefined;
+  products:
+    | (Product & { min_price: number | null; asset?: Asset })[]
+    | undefined;
   categories: (Category & { count: number })[] | undefined;
   companies: (Company & { count: number })[] | undefined;
   customFieldDefinitions?: CustomFieldDefinition[] | undefined;
@@ -206,6 +209,7 @@ export default function Browse({
                       key={product.id}
                       product={product}
                       customFields={productCustomFields.get(product.id)}
+                      imageUrl={product.asset?.url}
                     />
                   ))}
                 </section>

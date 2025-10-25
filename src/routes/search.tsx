@@ -22,15 +22,15 @@ import {
 } from "@tanstack/react-db";
 
 import {
-  productsCollection,
-  pricingTiersCollection,
-  customFieldValuesCollection,
-  customFieldDefinitionsCollection,
+  assetsCollection,
   categoriesCollection,
-  companiesCollection
+  companiesCollection,
+  customFieldDefinitionsCollection,
+  customFieldValuesCollection,
+  pricingTiersCollection,
+  productsCollection
 } from "@/lib/collections.ts";
-import type { Product } from "@/db/schema.ts";
-import type { CustomFieldValue } from "@/db/schema.ts";
+import type { Asset, CustomFieldValue, Product } from "@/db/schema.ts";
 import Browse from "@/components/Browse.tsx";
 import { useCallback } from "react";
 
@@ -184,7 +184,22 @@ function getFilteredProductsQuery(search: ProductSearch) {
     );
   });
 
-  return property_query;
+  return property_query
+    .leftJoin(
+      {
+        fa_id: new Query()
+          .from({ a: assetsCollection })
+          .groupBy(({ a }) => a.product_id)
+          .select(({ a }) => ({
+            product_id: a.product_id,
+            first_asset_id: min(a.id)
+          }))
+      },
+      ({ p, fa_id }) => eq(p.id, fa_id.product_id)
+    )
+    .leftJoin({ asset: assetsCollection }, ({ asset, fa_id }) =>
+      eq(asset.id, fa_id?.first_asset_id)
+    );
 }
 
 // --- 4. Route Component ---
@@ -214,9 +229,10 @@ function RouteComponent() {
       });
     }
 
-    return query.select(({ p, price }) => ({
+    return query.select(({ p, price, asset }) => ({
       ...p,
-      min_price: price?.min_price
+      min_price: price?.min_price,
+      asset: asset
     }));
   }, [search, customFieldDefinitions]);
 
@@ -231,20 +247,8 @@ function RouteComponent() {
       .select(({ cfv }) => ({ ...cfv }))
   );
 
-  // Normalize min_price to number | null for component consumers
-  type RawProductWithMinPrice = Product & {
-    min_price: number | null;
-  };
-
-  const normalizedProducts = (
-    products as RawProductWithMinPrice[] | undefined
-  )?.map((p) => ({
-    ...p,
-    min_price: p.min_price == null ? null : Number(p.min_price)
-  }));
-
-  const typedProducts = normalizedProducts as
-    | (Product & { min_price: number | null })[]
+  const typedProducts = products as
+    | (Product & { min_price: number | null; asset?: Asset })[]
     | undefined;
 
   // --- Category Counts ---

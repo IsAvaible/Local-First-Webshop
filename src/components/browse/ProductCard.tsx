@@ -19,20 +19,22 @@ interface ProductCardProps {
   customFields?:
     | Record<string, { value: JsonValue; type?: string }>
     | undefined;
+  imageUrl?: string | undefined;
 }
 
 export default function ProductCard({
   product,
-  customFields
+  customFields,
+  imageUrl
 }: ProductCardProps) {
   const { addToCart } = useCart();
 
   return (
     <Link to={"/products/$productId"} params={{ productId: product.id }}>
-      <Card className="flex flex-col overflow-hidden pt-0">
+      <Card className="flex h-full flex-col overflow-hidden pt-0">
         <CardHeader className="relative p-0">
           <img
-            src={"https://placehold.co/600x400"}
+            src={imageUrl}
             alt={product.name}
             className="aspect-square w-full rounded-t-lg object-cover"
           />
