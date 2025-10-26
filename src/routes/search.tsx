@@ -253,12 +253,41 @@ function RouteComponent() {
     let query = buildFilteredProductQuery(search);
 
     // Check if sorting by a custom field.
-    // If so, skip server-side sort (it will be handled on the client).
+    // We'll attempt to perform the sort on the DB by joining the single
+    // custom field's values per-product and ordering by that value.
     const isCustomFieldSort = customFieldDefinitions?.some(
       (cfd) => cfd.field_name === search.order
     );
 
-    if (!isCustomFieldSort) {
+    if (isCustomFieldSort) {
+      // Build a subquery that selects the value for the chosen field per product.
+      // We select a single value per (product, field) pair. If a product doesn't
+      // have a value for that field, the leftJoin will leave sort_value undefined.
+      const sortValueSubquery = new Query()
+        .from({ cfv: customFieldValuesCollection })
+        .innerJoin({ cfd: customFieldDefinitionsCollection }, ({ cfv, cfd }) =>
+          eq(cfv.field_definition_id, cfd.id)
+        )
+        .where(({ cfd }) => eq(cfd.field_name, search.order))
+        .select(({ cfv }) => ({
+          product_id: cfv.product_id,
+          sort_value: cfv.value
+        }));
+
+      const query_with_sort = query.leftJoin(
+        { sort_val: sortValueSubquery },
+        ({ p, sort_val }) => eq(p.id, sort_val.product_id)
+      );
+
+      // Order by the custom field value (if present). Fall back to id
+      // to stabilize ordering.
+      query = query_with_sort
+        .orderBy(({ sort_val }) => sort_val?.sort_value, {
+          direction: search.dir,
+          nulls: "last"
+        })
+        .orderBy(({ p }) => p.id, search.dir);
+    } else {
       query = query.orderBy(({ p, price }) => {
         const orderKey =
           search.order === "price"

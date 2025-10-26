@@ -21,7 +21,6 @@ import type {
   Asset
 } from "@/db/schema.ts";
 import BrowseSortSelect from "@/components/browse/BrowseSortSelect.tsx";
-import { Route } from "@/routes/search.tsx";
 import type { JsonValue } from "@/lib/utils.ts";
 
 export default function Browse({
@@ -75,60 +74,6 @@ export default function Browse({
     }
     return map;
   }, [customFieldValues, customFieldDefinitions]);
-
-  // Apply client-side sorting when ordering by a custom field
-  const search = Route.useSearch();
-  const sortedProducts = useMemo(() => {
-    if (!products) return products;
-    const order = search.order ?? "price";
-    const dir = search.dir ?? "desc";
-
-    // If order is a defined custom field, sort client-side
-    const isCustom = customFieldDefinitions?.some(
-      (d) => d.field_name === order
-    );
-    if (!isCustom) return products;
-
-    const collator = new Intl.Collator(undefined, {
-      numeric: true,
-      sensitivity: "base"
-    });
-
-    const copy = [...products];
-    copy.sort((a, b) => {
-      const av = productCustomFields.get(a.id)?.[order]?.value;
-      const bv = productCustomFields.get(b.id)?.[order]?.value;
-
-      // Handle undefineds
-      if (av === undefined && bv === undefined) return 0;
-      if (av === undefined) return dir === "asc" ? -1 : 1;
-      if (bv === undefined) return dir === "asc" ? 1 : -1;
-
-      // Try numeric compare if both are numbers
-      const an = typeof av === "number" ? av : Number(av);
-      const bn = typeof bv === "number" ? bv : Number(bv);
-      if (!Number.isNaN(an) && !Number.isNaN(bn)) {
-        return dir === "asc" ? an - bn : bn - an;
-      }
-
-      // Fallback to locale string compare
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
-      const as = String(av);
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
-      const bs = String(bv);
-      return dir === "asc"
-        ? collator.compare(as, bs)
-        : collator.compare(bs, as);
-    });
-
-    return copy;
-  }, [
-    products,
-    search.order,
-    search.dir,
-    customFieldDefinitions,
-    productCustomFields
-  ]);
 
   return (
     <div className="mx-auto px-4 py-8">
@@ -204,7 +149,7 @@ export default function Browse({
                   aria-description="List of articles"
                   className="col-span-full grid grid-cols-[inherit] gap-[inherit] 2xl:min-w-[1024px]"
                 >
-                  {sortedProducts!.map((product) => (
+                  {products.map((product) => (
                     <ProductCard
                       key={product.id}
                       product={product}
