@@ -24,7 +24,8 @@ import {
   productsCollection,
   pricingTiersCollection,
   assetsCollection,
-  categoriesCollection
+  categoriesCollection,
+  companiesCollection
 } from "@/lib/collections.ts";
 
 // --- Main Component ---
@@ -114,6 +115,21 @@ export function SearchBar() {
     return q.select(({ c }) => ({ ...c }));
   }, [search]);
 
+  // --- Live matching companies ---
+  const { data: matchingCompanies } = useLiveQuery(() => {
+    const term = (search ?? "").trim();
+    if (!term) return undefined;
+
+    let q = new Query().from({ co: companiesCollection });
+    const words = term.split(" ").filter(Boolean);
+    for (const w of words) {
+      q = q.where(({ co }) =>
+        or(ilike(co.name, `%${w}%`), ilike(co.description, `%${w}%`))
+      );
+    }
+    return q.select(({ co }) => ({ ...co }));
+  }, [search]);
+
   const clearSearch = () => {
     setSearch("");
     inputRef.current?.focus();
@@ -145,10 +161,23 @@ export function SearchBar() {
         search: (prev) => ({
           ...prev,
           q: undefined,
-          categories: categoryIds
+          categories: categoryIds,
+          companies: []
         })
       });
-      setSearch("");
+    } else if (suggestions.length == 0 && matchingCompanies?.length) {
+      // if there are no product suggestions but there are matching companies,
+      // navigate to search with those companies selected
+      const companyIds = matchingCompanies?.map((c) => c.id) ?? [];
+      void navigate({
+        to: "/search",
+        search: (prev) => ({
+          ...prev,
+          q: undefined,
+          companies: companyIds,
+          categories: []
+        })
+      });
     } else {
       // else navigate to search with the current search term
       void navigate({
@@ -156,7 +185,8 @@ export function SearchBar() {
         search: (prev) => ({
           ...prev,
           q: search,
-          categories: []
+          categories: [],
+          companies: []
         })
       });
     }
@@ -302,7 +332,8 @@ export function SearchBar() {
                         search: (prev) => ({
                           ...prev,
                           q: undefined,
-                          categories: [c.id]
+                          categories: [c.id],
+                          companies: []
                         })
                       });
                       setOpen(false);
@@ -311,6 +342,31 @@ export function SearchBar() {
                     <div className="flex flex-col">
                       <span className="font-medium">{c.name}</span>
                       <span className="text-sm text-slate-500">Category</span>
+                    </div>
+                  </CommandItem>
+                ))}
+
+                {/* Show matching companies as separate items */}
+                {matchingCompanies?.map((co) => (
+                  <CommandItem
+                    key={`co-${co.id}`}
+                    onSelect={() => {
+                      // navigate directly to search with this single company
+                      void navigate({
+                        to: "/search",
+                        search: (prev) => ({
+                          ...prev,
+                          q: undefined,
+                          companies: [co.id],
+                          categories: []
+                        })
+                      });
+                      setOpen(false);
+                    }}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium">{co.name}</span>
+                      <span className="text-sm text-slate-500">Company</span>
                     </div>
                   </CommandItem>
                 ))}
