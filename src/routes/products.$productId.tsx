@@ -5,7 +5,9 @@ import {
   categoriesCollection,
   companiesCollection,
   assetsCollection,
-  pricingTiersCollection
+  pricingTiersCollection,
+  customFieldDefinitionsCollection,
+  customFieldValuesCollection
 } from "@/lib/collections";
 import Product from "@/components/Product.tsx";
 
@@ -50,8 +52,26 @@ function ProductPageComponent() {
         .orderBy(({ pricingTier }) => [pricingTier.min_quantity, "asc"])
     );
 
+  // Fetch custom field values and their definitions for this product
+  const { data: customFieldData, isLoading: isCustomFieldsLoading } =
+    useLiveQuery((q) =>
+      q
+        .from({ cfv: customFieldValuesCollection })
+        .innerJoin({ cfd: customFieldDefinitionsCollection }, ({ cfv, cfd }) =>
+          eq(cfv.field_definition_id, cfd.id)
+        )
+        .where(({ cfv }) => eq(cfv.product_id, productId))
+        .select(({ cfv, cfd }) => ({
+          ...cfv,
+          ...cfd
+        }))
+    );
+
   const isLoading =
-    isProductLoading || isAssetsLoading || isPricingTiersLoading;
+    isProductLoading ||
+    isAssetsLoading ||
+    isPricingTiersLoading ||
+    isCustomFieldsLoading;
 
   const { product, category, company } = productData[0] || {};
 
@@ -63,6 +83,7 @@ function ProductPageComponent() {
       company={company}
       assets={assetsData}
       pricingTiers={pricingTiersData}
+      customFields={customFieldData}
     />
   );
 }

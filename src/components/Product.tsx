@@ -8,6 +8,8 @@ import {
   type Asset,
   type Category,
   type Company,
+  type CustomFieldDefinition,
+  type CustomFieldValue,
   type PricingTier,
   type Product
 } from "@/db/schema";
@@ -97,7 +99,8 @@ export default function Product({
   category,
   company,
   assets,
-  pricingTiers
+  pricingTiers,
+  customFields
 }: {
   loading: boolean;
   product?: Product;
@@ -105,6 +108,7 @@ export default function Product({
   company?: Company;
   assets?: Asset[];
   pricingTiers?: PricingTier[];
+  customFields?: (CustomFieldValue & CustomFieldDefinition)[];
 }) {
   const [relatedProducts] = useState<typeof products>([]);
 
@@ -136,7 +140,11 @@ export default function Product({
           />
         </div>
         <div>
-          <ProductDetails product={product} pricingTiers={pricingTiers} />
+          <ProductDetails
+            product={product}
+            pricingTiers={pricingTiers}
+            customFields={customFields}
+          />
         </div>
       </div>
       <div className="mt-16">

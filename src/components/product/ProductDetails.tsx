@@ -2,14 +2,22 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingCart } from "lucide-react";
 import ProductConfigurator from "@/components/product/ProductConfigurator";
-import type { PricingTier, Product } from "@/db/schema.ts";
+import type {
+  CustomFieldDefinition,
+  CustomFieldValue,
+  PricingTier,
+  Product
+} from "@/db/schema.ts";
+import { humanizeCustomFieldValue } from "@/lib/utils.ts";
 
 export default function ProductDetails({
   product,
-  pricingTiers
+  pricingTiers,
+  customFields
 }: {
   product: Product;
   pricingTiers: PricingTier[];
+  customFields?: (CustomFieldValue & CustomFieldDefinition)[];
 }) {
   return (
     <div className="flex h-full flex-col">
@@ -20,6 +28,27 @@ export default function ProductDetails({
         <p className="mt-4 text-lg text-gray-600 dark:text-slate-300">
           {product.description}
         </p>
+
+        {customFields && Object.keys(customFields).length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {customFields?.map((customField) => {
+              const humanized = humanizeCustomFieldValue(
+                customField.value,
+                customField.field_type
+              );
+              return (
+                <span
+                  key={customField.field_name}
+                  className="rounded bg-gray-100 px-2 py-1 text-xs font-medium"
+                  title={humanized}
+                >
+                  {customField.field_name}: {humanized}
+                </span>
+              );
+            })}
+          </div>
+        )}
+
         <div className="mt-6">
           <p className="text-3xl text-gray-900 dark:text-slate-100">
             {pricingTiers[0].price_per_unit.toLocaleString()}€
