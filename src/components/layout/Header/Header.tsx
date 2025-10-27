@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { SearchBar } from "@/components/layout/Header/SearchBar.tsx";
 import { CartHeaderButton } from "@/components/cart/CartHeaderButton.tsx";
+import { ClientOnly } from "@tanstack/react-router";
 
 export default function Header() {
   return (
@@ -31,7 +32,9 @@ export default function Header() {
             Home
           </a>
 
-          <SearchBar />
+          <ClientOnly>
+            <SearchBar />
+          </ClientOnly>
 
           <a href="#" className="transition-transform hover:scale-110">
             <HeartIcon className="h-6 w-6" />

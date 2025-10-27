@@ -18,29 +18,88 @@ import {
   UserIcon
 } from "lucide-react";
 import * as React from "react";
-
-// --- Props Definition ---
-interface SearchBarProps {
-  search?: string | null;
-}
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useLiveQuery, Query, or, ilike, min, eq } from "@tanstack/react-db";
+import {
+  productsCollection,
+  pricingTiersCollection,
+  assetsCollection
+} from "@/lib/collections.ts";
 
 // --- Main Component ---
-export function SearchBar({ search: initialSearch }: SearchBarProps) {
+export function SearchBar() {
+  const navigate = useNavigate();
+
   // --- State and Refs ---
   const [search, setSearch] = useState<string>(() => {
-    // Initialize search state from props or URL search params on first render
-    if (initialSearch) return initialSearch;
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      return params.get("search") ?? "";
-    }
-    return "";
+    return new URLSearchParams(window.location.search).get("q") ?? "";
   });
   const [searching] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const commandRef = useRef<HTMLDivElement>(null);
+
+  // --- Live suggestions ---
+  const { data: suggestions, isEnabled } = useLiveQuery(() => {
+    let query = new Query().from({ p: productsCollection });
+    const term = (search ?? "").trim();
+
+    // There is some issue with this
+    // if (term.length < 3) {
+    //   return undefined;
+    // }
+
+    const words = term.split(" ").filter(Boolean);
+    for (const w of words) {
+      query = query.where(({ p }) =>
+        or(ilike(p.name, `%${w}%`), ilike(p.description, `%${w}%`))
+      );
+    }
+
+    // Join min price subquery
+    const minPriceSubquery = new Query()
+      .from({ pt: pricingTiersCollection })
+      .groupBy(({ pt }) => pt.product_id)
+      .select(({ pt }) => ({
+        product_id: pt.product_id,
+        min_price: min(pt.price_per_unit)
+      }));
+
+    const queryWithPrice = query.leftJoin(
+      { price: minPriceSubquery },
+      ({ p, price }) => eq(p.id, price.product_id)
+    );
+
+    // Join first asset
+    const firstAssetIdSubquery = new Query()
+      .from({ a: assetsCollection })
+      .groupBy(({ a }) => a.product_id)
+      .select(({ a }) => ({
+        product_id: a.product_id,
+        first_asset_id: min(a.id)
+      }));
+
+    const queryWithAsset = queryWithPrice
+      .leftJoin({ fa_id: firstAssetIdSubquery }, ({ p, fa_id }) =>
+        eq(p.id, fa_id.product_id)
+      )
+      .leftJoin({ asset: assetsCollection }, ({ asset, fa_id }) =>
+        eq(asset.id, fa_id?.first_asset_id)
+      )
+      .orderBy(({ price }) => price?.min_price, {
+        direction: "asc",
+        nulls: "last"
+      })
+      // select the same shape as on the search page
+      .select(({ p, price, asset }) => ({
+        ...p,
+        min_price: price?.min_price,
+        asset
+      }));
+
+    return queryWithAsset;
+  }, [search]);
 
   const clearSearch = () => {
     setSearch("");
@@ -62,6 +121,16 @@ export function SearchBar({ search: initialSearch }: SearchBarProps) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const submitSearch = () => {
+    // navigate to search page with the query param
+    void navigate({
+      to: "/search",
+      search: (prev) => ({ ...prev, q: search })
+    });
+    setOpen(false);
+    inputRef.current?.blur();
+  };
 
   const handleFocus = () => {
     setOpen(true);
@@ -111,6 +180,7 @@ export function SearchBar({ search: initialSearch }: SearchBarProps) {
         type="submit"
         aria-label="Search"
         className="cursor-pointer transition-transform hover:scale-110"
+        onClick={submitSearch}
       >
         <SearchIcon className="h-6 w-6" />
       </button>
@@ -121,6 +191,14 @@ export function SearchBar({ search: initialSearch }: SearchBarProps) {
         placeholder="Search"
         autoComplete="off"
         pattern=".{0,12}"
+        value={search}
+        onValueChange={(value) => setSearch(value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            submitSearch();
+          }
+        }}
         className={cn(
           "peer flex w-40 bg-[inherit] text-[inherit] focus:outline-none", // Base & Styling
           "transition-[width] duration-[inherit]", // Transitions
@@ -151,31 +229,65 @@ export function SearchBar({ search: initialSearch }: SearchBarProps) {
       {open && (
         <CommandList className="absolute top-11 left-0 z-10 w-full rounded-md border bg-white text-slate-900 shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50">
           <CommandEmpty>No results found.</CommandEmpty>
-          <CommandGroup heading="Suggestions">
-            <ProductCommandItem
-              imgUrl={"./src/assets/react.svg"}
-              name={"Test Product"}
-              price={"14.99 €"}
-            />
-          </CommandGroup>
-          <CommandSeparator />
-          <CommandGroup heading="Settings">
-            <CommandItem>
-              <UserIcon />
-              <span>Profile</span>
-              <CommandShortcut>⌘P</CommandShortcut>
-            </CommandItem>
-            <CommandItem>
-              <CreditCard />
-              <span>Billing</span>
-              <CommandShortcut>⌘B</CommandShortcut>
-            </CommandItem>
-            <CommandItem>
-              <SettingsIcon />
-              <span>Settings</span>
-              <CommandShortcut>⌘S</CommandShortcut>
-            </CommandItem>
-          </CommandGroup>
+          {/* When there is a search term, show suggestions, else show default empty/settings */}
+          {isEnabled ? (
+            <>
+              <CommandGroup heading="Suggestions">
+                {suggestions?.map((p) => (
+                  <Link
+                    to={"/products/$productId"}
+                    params={{ productId: p.id }}
+                    key={p.id}
+                  >
+                    <CommandItem
+                      key={p.id}
+                      onSelect={() => {
+                        setOpen(false);
+                      }}
+                    >
+                      <ProductCommandItem
+                        imgUrl={p.asset?.url ?? "/src/assets/react.svg"}
+                        name={p.name}
+                        price={
+                          p.min_price != null
+                            ? `${p.min_price as number} €`
+                            : "-"
+                        }
+                      />
+                    </CommandItem>
+                  </Link>
+                ))}
+              </CommandGroup>
+            </>
+          ) : (
+            <>
+              <CommandGroup heading="Suggestions">
+                <ProductCommandItem
+                  imgUrl={"/src/assets/react.svg"}
+                  name={"Test Product"}
+                  price={"14.99 €"}
+                />
+              </CommandGroup>
+              <CommandSeparator />
+              <CommandGroup heading="Settings">
+                <CommandItem>
+                  <UserIcon />
+                  <span>Profile</span>
+                  <CommandShortcut>⌘P</CommandShortcut>
+                </CommandItem>
+                <CommandItem>
+                  <CreditCard />
+                  <span>Billing</span>
+                  <CommandShortcut>⌘B</CommandShortcut>
+                </CommandItem>
+                <CommandItem>
+                  <SettingsIcon />
+                  <span>Settings</span>
+                  <CommandShortcut>⌘S</CommandShortcut>
+                </CommandItem>
+              </CommandGroup>
+            </>
+          )}
         </CommandList>
       )}
     </Command>
