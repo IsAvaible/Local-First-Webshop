@@ -1,4 +1,4 @@
-import { useState, useRef, type FocusEvent, useEffect } from "react";
+import { useState, useRef, type FocusEvent, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import {
   Command,
@@ -18,7 +18,7 @@ import {
   UserIcon
 } from "lucide-react";
 import * as React from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery, Query, or, ilike, min, eq } from "@tanstack/react-db";
 import {
   productsCollection,
@@ -31,104 +31,128 @@ import {
 // --- Main Component ---
 export function SearchBar() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // --- State and Refs ---
   const [search, setSearch] = useState<string>(() => {
-    return new URLSearchParams(window.location.search).get("q") ?? "";
+    if (location.pathname === "/search") {
+      return new URLSearchParams(window.location.search).get("q") ?? "";
+    }
+    return "";
   });
-  const [searching] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
+
+  // Clear search when navigating away from /search
+  useEffect(() => {
+    if (location.pathname !== "/search") {
+      setSearch("");
+    }
+  }, [location.pathname]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const commandRef = useRef<HTMLDivElement>(null);
 
+  // --- Centralized search logic ---
+  const trimmedSearch = search.trim();
+  const minSearchLength = 2;
+  const isSearchActive = trimmedSearch.length >= minSearchLength;
+  const searchWords = useMemo(() => {
+    return isSearchActive ? trimmedSearch.split(" ").filter(Boolean) : [];
+  }, [isSearchActive, trimmedSearch]);
+
   // --- Live suggestions ---
-  const { data: suggestions, isEnabled } = useLiveQuery(() => {
-    let query = new Query().from({ p: productsCollection });
-    const term = (search ?? "").trim();
+  const { data: suggestions, isLoading: isFetchingProducts } =
+    useLiveQuery(() => {
+      if (!isSearchActive) return undefined;
 
-    // There is some issue with this
-    // if (term.length < 3) {
-    //   return undefined;
-    // }
+      let query = new Query().from({ p: productsCollection });
+      for (const w of searchWords) {
+        query = query.where(({ p }) =>
+          or(ilike(p.name, `%${w}%`), ilike(p.description, `%${w}%`))
+        );
+      }
 
-    const words = term.split(" ").filter(Boolean);
-    for (const w of words) {
-      query = query.where(({ p }) =>
-        or(ilike(p.name, `%${w}%`), ilike(p.description, `%${w}%`))
+      // Join min price subquery
+      const minPriceSubquery = new Query()
+        .from({ pt: pricingTiersCollection })
+        .groupBy(({ pt }) => pt.product_id)
+        .select(({ pt }) => ({
+          product_id: pt.product_id,
+          min_price: min(pt.price_per_unit)
+        }));
+
+      const queryWithPrice = query.leftJoin(
+        { price: minPriceSubquery },
+        ({ p, price }) => eq(p.id, price.product_id)
       );
-    }
 
-    // Join min price subquery
-    const minPriceSubquery = new Query()
-      .from({ pt: pricingTiersCollection })
-      .groupBy(({ pt }) => pt.product_id)
-      .select(({ pt }) => ({
-        product_id: pt.product_id,
-        min_price: min(pt.price_per_unit)
-      }));
+      // Join first asset
+      const firstAssetIdSubquery = new Query()
+        .from({ a: assetsCollection })
+        .groupBy(({ a }) => a.product_id)
+        .select(({ a }) => ({
+          product_id: a.product_id,
+          first_asset_id: min(a.id)
+        }));
 
-    const queryWithPrice = query.leftJoin(
-      { price: minPriceSubquery },
-      ({ p, price }) => eq(p.id, price.product_id)
-    );
-
-    // Join first asset
-    const firstAssetIdSubquery = new Query()
-      .from({ a: assetsCollection })
-      .groupBy(({ a }) => a.product_id)
-      .select(({ a }) => ({
-        product_id: a.product_id,
-        first_asset_id: min(a.id)
-      }));
-
-    return queryWithPrice
-      .leftJoin({ fa_id: firstAssetIdSubquery }, ({ p, fa_id }) =>
-        eq(p.id, fa_id.product_id)
-      )
-      .leftJoin({ asset: assetsCollection }, ({ asset, fa_id }) =>
-        eq(asset.id, fa_id?.first_asset_id)
-      )
-      .orderBy(({ price }) => price?.min_price, {
-        direction: "asc",
-        nulls: "last"
-      })
-      .select(({ p, price, asset }) => ({
-        ...p,
-        min_price: price?.min_price,
-        asset
-      }));
-  }, [search]);
+      return queryWithPrice
+        .leftJoin({ fa_id: firstAssetIdSubquery }, ({ p, fa_id }) =>
+          eq(p.id, fa_id?.product_id)
+        )
+        .leftJoin({ asset: assetsCollection }, ({ asset, fa_id }) =>
+          eq(asset.id, fa_id?.first_asset_id)
+        )
+        .orderBy(({ price }) => price?.min_price, {
+          direction: "asc",
+          nulls: "last"
+        })
+        .select(({ p, price, asset }) => ({
+          ...p,
+          min_price: price?.min_price,
+          asset
+        }))
+        .limit(3);
+    }, [searchWords, isSearchActive]);
 
   // --- Live matching categories ---
-  const { data: matchingCategories } = useLiveQuery(() => {
-    const term = (search ?? "").trim();
-    if (!term) return undefined;
+  const { data: matchingCategories, isLoading: isFetchingCategories } =
+    useLiveQuery(() => {
+      if (!isSearchActive) return undefined;
 
-    let q = new Query().from({ c: categoriesCollection });
-    const words = term.split(" ").filter(Boolean);
-    for (const w of words) {
-      q = q.where(({ c }) =>
-        or(ilike(c.name, `%${w}%`), ilike(c.description, `%${w}%`))
-      );
-    }
-    return q.select(({ c }) => ({ ...c }));
-  }, [search]);
+      let q = new Query().from({ ca: categoriesCollection });
+      for (const w of searchWords) {
+        q = q.where(({ ca }) =>
+          or(ilike(ca.name, `%${w}%`), ilike(ca.description, `%${w}%`))
+        );
+      }
+      return q
+        .orderBy(({ ca }) => ca.name)
+        .select(({ ca }) => ({ ...ca }))
+        .limit(3);
+    }, [searchWords, isSearchActive]);
 
   // --- Live matching companies ---
-  const { data: matchingCompanies } = useLiveQuery(() => {
-    const term = (search ?? "").trim();
-    if (!term) return undefined;
+  const { data: matchingCompanies, isLoading: isFetchingCompanies } =
+    useLiveQuery(() => {
+      if (!isSearchActive) return undefined;
 
-    let q = new Query().from({ co: companiesCollection });
-    const words = term.split(" ").filter(Boolean);
-    for (const w of words) {
-      q = q.where(({ co }) =>
-        or(ilike(co.name, `%${w}%`), ilike(co.description, `%${w}%`))
-      );
-    }
-    return q.select(({ co }) => ({ ...co }));
-  }, [search]);
+      let q = new Query().from({ co: companiesCollection });
+      for (const w of searchWords) {
+        q = q.where(({ co }) =>
+          or(ilike(co.name, `%${w}%`), ilike(co.description, `%${w}%`))
+        );
+      }
+      return q
+        .orderBy(({ co }) => co.name)
+        .select(({ co }) => ({ ...co }))
+        .limit(3);
+    }, [searchWords, isSearchActive]);
+
+  // --- Combined loading state ---
+  const isSearching =
+    isFetchingProducts || isFetchingCategories || isFetchingCompanies;
+
+  // --- Event Handlers ---
 
   const clearSearch = () => {
     setSearch("");
@@ -152,7 +176,7 @@ export function SearchBar() {
   }, []);
 
   const submitSearch = () => {
-    if (suggestions.length == 0 && matchingCategories?.length) {
+    if (suggestions?.length === 0 && matchingCategories?.length) {
       // if there are no product suggestions but there are matching categories,
       // navigate to search with those categories selected
       const categoryIds = matchingCategories?.map((c) => c.id) ?? [];
@@ -165,7 +189,7 @@ export function SearchBar() {
           companies: []
         })
       });
-    } else if (suggestions.length == 0 && matchingCompanies?.length) {
+    } else if (suggestions?.length === 0 && matchingCompanies?.length) {
       // if there are no product suggestions but there are matching companies,
       // navigate to search with those companies selected
       const companyIds = matchingCompanies?.map((c) => c.id) ?? [];
@@ -177,6 +201,12 @@ export function SearchBar() {
           companies: companyIds,
           categories: []
         })
+      });
+    } else if (suggestions?.length == 1) {
+      // if there is only one suggestion, navigate directly to the product
+      void navigate({
+        to: "/products/$productId",
+        params: { productId: suggestions[0].id }
       });
     } else {
       // else navigate to search with the current search term
@@ -224,10 +254,10 @@ export function SearchBar() {
     }
   };
 
-  // --- JSX ---
   return (
     <Command
-      unstyled
+      unstyled={true}
+      shouldFilter={false}
       ref={commandRef}
       className={cn(
         "group relative -mr-4 flex max-w-full flex-row items-center gap-x-2 rounded-full py-1 ring-1 ring-transparent duration-500",
@@ -283,7 +313,7 @@ export function SearchBar() {
         tabIndex={search.length ? 0 : -1}
         onClick={clearSearch}
       >
-        {searching ? (
+        {isSearching ? (
           <Loader2Icon className="h-5 w-5 animate-spin" />
         ) : (
           <XCircleIcon className="h-5 w-5" />
@@ -292,88 +322,100 @@ export function SearchBar() {
       {open && (
         <CommandList className="absolute top-11 left-0 z-10 w-full rounded-md border bg-white text-slate-900 shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50">
           <CommandEmpty>No results found.</CommandEmpty>
-          {/* When there is a search term, show suggestions, else show default empty/settings */}
-          {isEnabled ? (
+
+          {/* When search is active (2+ chars), show suggestions */}
+          {isSearchActive ? (
             <>
-              <CommandGroup heading="Suggestions">
-                {suggestions?.map((p) => (
-                  <Link
-                    to={"/products/$productId"}
-                    params={{ productId: p.id }}
-                    key={p.id}
-                  >
-                    <CommandItem
+              {(suggestions?.length ?? 0) > 0 && (
+                <CommandGroup heading="Suggestions">
+                  {suggestions?.map((p) => (
+                    <Link
+                      to={"/products/$productId"}
+                      params={{ productId: p.id }}
                       key={p.id}
+                    >
+                      <CommandItem
+                        key={p.id}
+                        onSelect={() => {
+                          setOpen(false);
+                        }}
+                      >
+                        <ProductCommandItem
+                          imgUrl={p.asset?.url ?? "/src/assets/react.svg"}
+                          name={p.name}
+                          price={
+                            p.min_price != null
+                              ? `${p.min_price as number} €`
+                              : "-"
+                          }
+                        />
+                      </CommandItem>
+                    </Link>
+                  ))}
+                </CommandGroup>
+              )}
+
+              {/* Show matching categories as separate items */}
+              {(matchingCategories?.length ?? 0) > 0 && (
+                <CommandGroup heading="Categories">
+                  {matchingCategories?.map((c) => (
+                    <CommandItem
+                      key={`cat-${c.id}`}
                       onSelect={() => {
+                        // navigate directly to search with this single category
+                        void navigate({
+                          to: "/search",
+                          search: (prev) => ({
+                            ...prev,
+                            q: undefined,
+                            categories: [c.id],
+                            companies: []
+                          })
+                        });
                         setOpen(false);
                       }}
                     >
-                      <ProductCommandItem
-                        imgUrl={p.asset?.url ?? "/src/assets/react.svg"}
-                        name={p.name}
-                        price={
-                          p.min_price != null
-                            ? `${p.min_price as number} €`
-                            : "-"
-                        }
-                      />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{c.name}</span>
+                        <span className="text-sm text-slate-500">Category</span>
+                      </div>
                     </CommandItem>
-                  </Link>
-                ))}
+                  ))}
+                </CommandGroup>
+              )}
 
-                {/* Show matching categories as separate items */}
-                {matchingCategories?.map((c) => (
-                  <CommandItem
-                    key={`cat-${c.id}`}
-                    onSelect={() => {
-                      // navigate directly to search with this single category
-                      void navigate({
-                        to: "/search",
-                        search: (prev) => ({
-                          ...prev,
-                          q: undefined,
-                          categories: [c.id],
-                          companies: []
-                        })
-                      });
-                      setOpen(false);
-                    }}
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-medium">{c.name}</span>
-                      <span className="text-sm text-slate-500">Category</span>
-                    </div>
-                  </CommandItem>
-                ))}
-
-                {/* Show matching companies as separate items */}
-                {matchingCompanies?.map((co) => (
-                  <CommandItem
-                    key={`co-${co.id}`}
-                    onSelect={() => {
-                      // navigate directly to search with this single company
-                      void navigate({
-                        to: "/search",
-                        search: (prev) => ({
-                          ...prev,
-                          q: undefined,
-                          companies: [co.id],
-                          categories: []
-                        })
-                      });
-                      setOpen(false);
-                    }}
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-medium">{co.name}</span>
-                      <span className="text-sm text-slate-500">Company</span>
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+              {/* Show matching companies as separate items */}
+              {(matchingCompanies?.length ?? 0) > 0 && (
+                <CommandGroup heading="Companies">
+                  {matchingCompanies?.map((co) => (
+                    <CommandItem
+                      key={`co-${co.id}`}
+                      onSelect={() => {
+                        // navigate directly to search with this single company
+                        void navigate({
+                          to: "/search",
+                          search: (prev) => ({
+                            ...prev,
+                            q: undefined,
+                            companies: [co.id],
+                            categories: []
+                          })
+                        });
+                        setOpen(false);
+                      }}
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium">{co.name}</span>
+                        <span className="text-sm text-slate-500">Company</span>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
             </>
           ) : (
             <>
+              {/* Default content when search is not active */}
               <CommandGroup heading="Suggestions">
                 <ProductCommandItem
                   imgUrl={"/src/assets/react.svg"}
