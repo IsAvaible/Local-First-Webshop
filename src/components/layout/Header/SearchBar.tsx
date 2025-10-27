@@ -23,7 +23,8 @@ import { useLiveQuery, Query, or, ilike, min, eq } from "@tanstack/react-db";
 import {
   productsCollection,
   pricingTiersCollection,
-  assetsCollection
+  assetsCollection,
+  categoriesCollection
 } from "@/lib/collections.ts";
 
 // --- Main Component ---
@@ -80,7 +81,7 @@ export function SearchBar() {
         first_asset_id: min(a.id)
       }));
 
-    const queryWithAsset = queryWithPrice
+    return queryWithPrice
       .leftJoin({ fa_id: firstAssetIdSubquery }, ({ p, fa_id }) =>
         eq(p.id, fa_id.product_id)
       )
@@ -91,14 +92,26 @@ export function SearchBar() {
         direction: "asc",
         nulls: "last"
       })
-      // select the same shape as on the search page
       .select(({ p, price, asset }) => ({
         ...p,
         min_price: price?.min_price,
         asset
       }));
+  }, [search]);
 
-    return queryWithAsset;
+  // --- Live matching categories ---
+  const { data: matchingCategories } = useLiveQuery(() => {
+    const term = (search ?? "").trim();
+    if (!term) return undefined;
+
+    let q = new Query().from({ c: categoriesCollection });
+    const words = term.split(" ").filter(Boolean);
+    for (const w of words) {
+      q = q.where(({ c }) =>
+        or(ilike(c.name, `%${w}%`), ilike(c.description, `%${w}%`))
+      );
+    }
+    return q.select(({ c }) => ({ ...c }));
   }, [search]);
 
   const clearSearch = () => {
@@ -123,11 +136,31 @@ export function SearchBar() {
   }, []);
 
   const submitSearch = () => {
-    // navigate to search page with the query param
-    void navigate({
-      to: "/search",
-      search: (prev) => ({ ...prev, q: search })
-    });
+    if (suggestions.length == 0 && matchingCategories?.length) {
+      // if there are no product suggestions but there are matching categories,
+      // navigate to search with those categories selected
+      const categoryIds = matchingCategories?.map((c) => c.id) ?? [];
+      void navigate({
+        to: "/search",
+        search: (prev) => ({
+          ...prev,
+          q: undefined,
+          categories: categoryIds
+        })
+      });
+      setSearch("");
+    } else {
+      // else navigate to search with the current search term
+      void navigate({
+        to: "/search",
+        search: (prev) => ({
+          ...prev,
+          q: search,
+          categories: []
+        })
+      });
+    }
+
     setOpen(false);
     inputRef.current?.blur();
   };
@@ -256,6 +289,30 @@ export function SearchBar() {
                       />
                     </CommandItem>
                   </Link>
+                ))}
+
+                {/* Show matching categories as separate items */}
+                {matchingCategories?.map((c) => (
+                  <CommandItem
+                    key={`cat-${c.id}`}
+                    onSelect={() => {
+                      // navigate directly to search with this single category
+                      void navigate({
+                        to: "/search",
+                        search: (prev) => ({
+                          ...prev,
+                          q: undefined,
+                          categories: [c.id]
+                        })
+                      });
+                      setOpen(false);
+                    }}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium">{c.name}</span>
+                      <span className="text-sm text-slate-500">Category</span>
+                    </div>
+                  </CommandItem>
                 ))}
               </CommandGroup>
             </>
