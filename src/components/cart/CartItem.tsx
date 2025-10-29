@@ -1,8 +1,12 @@
-import { type CartItem, useCart } from "@/contexts/useCartContext.ts";
+import { type EnrichedCartItem, useCart } from "@/contexts/useCartContext.ts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { GripVerticalIcon, Trash2Icon, CornerLeftUpIcon } from "lucide-react";
-import { useState, useEffect } from "react";
+import {
+  GripVerticalIcon,
+  Trash2Icon,
+  CornerLeftUpIcon,
+  XIcon
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -11,6 +15,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea.tsx";
+import { Badge } from "@/components/ui/badge";
 import * as React from "react";
 import { cn } from "@/lib/utils.ts";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
@@ -20,38 +25,56 @@ export function CartItemComponent({
   className,
   dragHandleProps
 }: {
-  item: CartItem;
+  item: EnrichedCartItem;
   dragHandleProps?: SyntheticListenerMap;
 } & React.ComponentProps<"div">) {
-  const { cart, dispatch } = useCart();
-  const [notes, setNotes] = useState(item.notes ?? "");
+  // --- Destructure new context data and functions ---
+  const {
+    tags,
+    itemTags,
+    updateItemNotes,
+    removeItem,
+    updateItemQuantity,
+    updateItemFolderAndSort,
+    addTagToItem,
+    removeTagFromItem
+  } = useCart();
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (notes !== item.notes) {
-        dispatch({
-          type: "UPDATE_ITEM_NOTES",
-          payload: { itemId: item.id, notes }
-        });
-      }
-    }, 500);
+  // --- Derive this item's tags from global lists ---
+  const thisItemsTagLinks =
+    itemTags?.filter((it) => it.cart_item_id === item.id) ?? [];
+  const thisItemsTagIds = new Set(
+    thisItemsTagLinks.map((link) => link.cart_tag_id)
+  );
+  const thisItemsTags = tags?.filter((t) => thisItemsTagIds.has(t.id)) ?? [];
 
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [notes, item.id, item.notes, dispatch]);
-
-  const handleAddTag = (tag: string) => {
-    dispatch({ type: "ADD_TAG_TO_ITEM", payload: { itemId: item.id, tag } });
+  // --- Updated Tag Handlers ---
+  const handleAddTag = (tagIdStr: string) => {
+    addTagToItem(item.id, Number(tagIdStr));
   };
 
-  // @ts-expect-error Function is not used currently, remove this comment once in use
-  const _handleRemoveTag = (tag: string) => {
-    dispatch({
-      type: "REMOVE_TAG_FROM_ITEM",
-      payload: { itemId: item.id, tag }
-    });
+  const handleRemoveTag = (tagId: number) => {
+    const linkToRemove = thisItemsTagLinks.find((l) => l.cart_tag_id === tagId);
+    if (linkToRemove) {
+      removeTagFromItem(linkToRemove.id);
+    }
   };
+
+  // --- Updated Quantity Handler ---
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newQuantity = parseInt(e.target.value, 10);
+    if (newQuantity > 0) {
+      updateItemQuantity(item.id, newQuantity);
+    }
+  };
+
+  // --- Product name and image (joined in provider) ---
+  const product = item.product;
+  const asset = item.asset;
+
+  const imageSrc =
+    asset?.url ?? `https://placehold.co/200x200.png?text=${item.product_id}`;
+  const productName = product?.name ?? `Product ${item.product_id}`;
 
   return (
     <div
@@ -61,43 +84,69 @@ export function CartItemComponent({
       )}
     >
       <img
-        src={`https://placehold.co/200x200.png?text=${item.productId}`}
-        alt={item.productId}
+        src={imageSrc}
+        alt={productName}
         className="my-auto aspect-3/4 w-20 rounded-md object-cover"
       />
-      <div className="flex justify-between">
-        <div className="flex flex-col justify-between">
+      <div className="flex flex-1 justify-between">
+        <div className="flex flex-1 flex-col justify-between gap-y-2">
           <h3 className="flex items-center justify-between text-sm font-semibold">
-            <span className="inline-block max-w-16 truncate">
-              Product {item.productId}
+            <span className="inline-block max-w-20 truncate">
+              {productName}
             </span>
-            ⋅<span>199.999$</span>
+            <span>
+              {item.price_snapshot ? `${item.price_snapshot}$` : "N/A"}
+            </span>
           </h3>
+
           <Textarea
             placeholder="Add a note..."
             className="min-h-8 resize-y"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={(e) => updateItemNotes(item.id, e.target.value)}
           />
+
+          {/* --- Display current tags with remove button --- */}
+          <div className="flex flex-wrap gap-1">
+            {thisItemsTags.map((tag) => (
+              <Badge
+                key={tag.id}
+                variant="secondary"
+                className="flex items-center"
+              >
+                {tag.name}
+                <button
+                  onClick={() => handleRemoveTag(tag.id)}
+                  className="ml-1 rounded-full p-0.5 hover:bg-gray-300"
+                  aria-label={`Remove tag ${tag.name}`}
+                >
+                  <XIcon className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+
           <div className="flex items-center gap-2 text-xs">
             <Input
               type="number"
               value={item.quantity}
-              className="h-8 w-10 px-2"
-              readOnly
+              className="h-8 w-12 px-2"
+              min={1}
+              onChange={handleQuantityChange}
+              aria-label="Quantity"
             />
+            {/* --- Updated Tag Select --- */}
             <Select onValueChange={handleAddTag}>
               <SelectTrigger className="h-8!">
                 <SelectValue placeholder="+ Tag" />
               </SelectTrigger>
               <SelectContent>
-                {cart.tags.map((tag) => (
+                {tags?.map((tag) => (
                   <SelectItem
-                    key={tag}
-                    value={tag}
-                    disabled={item.tags?.includes(tag)}
+                    key={tag.id}
+                    value={String(tag.id)}
+                    disabled={thisItemsTagIds.has(tag.id)}
                   >
-                    {tag}
+                    {tag.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -106,6 +155,7 @@ export function CartItemComponent({
         </div>
       </div>
       <div className="flex flex-col justify-between self-stretch">
+        {/* --- Drag Handle --- */}
         <Button
           variant="ghost"
           size="icon"
@@ -114,12 +164,30 @@ export function CartItemComponent({
         >
           <GripVerticalIcon className="text-muted-foreground w-4 cursor-grab" />
         </Button>
-        <Button variant="outline" size="icon" className="h-8 w-8">
+
+        {/* --- Remove Item Button --- */}
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => removeItem(item.id)}
+        >
           <Trash2Icon className="h-4 w-4" />
         </Button>
-        <Button variant="outline" size="icon" className="h-8 w-8">
-          <CornerLeftUpIcon className="h-4 w-4" />
-        </Button>
+
+        {/* --- Move out of Folder Button (conditional) --- */}
+        {item.folder_id && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() =>
+              updateItemFolderAndSort(item.id, { folder_id: null })
+            }
+          >
+            <CornerLeftUpIcon className="h-4 w-4" />
+          </Button>
+        )}
       </div>
     </div>
   );

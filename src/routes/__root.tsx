@@ -2,7 +2,8 @@ import {
   HeadContent,
   Outlet,
   Scripts,
-  createRootRoute
+  createRootRoute,
+  ClientOnly
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import * as React from "react";
@@ -63,14 +64,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <CartProvider>
-          <div className="flex min-h-screen flex-col bg-gray-50 text-slate-800 dark:bg-gray-900 dark:text-slate-200">
-            <Header />
-            <main className="flex-grow">{children}</main>
-            <Footer />
-          </div>
-          <TanStackRouterDevtools />
-        </CartProvider>
+        <ClientOnly>
+          <CartProvider>
+            <div className="flex min-h-screen flex-col bg-gray-50 text-slate-800 dark:bg-gray-900 dark:text-slate-200">
+              <Header />
+              <main className="flex-grow">{children}</main>
+              <Footer />
+            </div>
+            <TanStackRouterDevtools />
+          </CartProvider>
+        </ClientOnly>
         <TanStackRouterDevtools position="bottom-right" />
         <Scripts />
       </body>

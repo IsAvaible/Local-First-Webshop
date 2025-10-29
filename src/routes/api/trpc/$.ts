@@ -6,11 +6,23 @@ import { todosRouter } from "@/lib/trpc/todos";
 import { usersRouter } from "@/lib/trpc/users";
 import { db } from "@/db/connection";
 import { auth } from "@/lib/auth";
+import { cartsRouter } from "@/lib/trpc/carts.ts";
+import { cartItemsRouter } from "@/lib/trpc/cartItems";
+import { cartCollaboratorsRouter } from "@/lib/trpc/cartCollaborators";
+import { cartItemTagsRouter } from "@/lib/trpc/cartItemTags.ts";
+import { cartFoldersRouter } from "@/lib/trpc/cartFolders.ts";
+import { cartTagsRouter } from "@/lib/trpc/cartTags.ts";
 
 export const appRouter = router({
   projects: projectsRouter,
   todos: todosRouter,
-  users: usersRouter
+  users: usersRouter,
+  carts: cartsRouter,
+  cartItems: cartItemsRouter,
+  cartCollaborators: cartCollaboratorsRouter,
+  cartFolders: cartFoldersRouter,
+  cartTags: cartTagsRouter,
+  cartItemTags: cartItemTagsRouter
 });
 
 export type AppRouter = typeof appRouter;

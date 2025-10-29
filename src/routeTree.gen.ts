@@ -24,6 +24,12 @@ import { Route as ApiCustomFieldValuesRouteImport } from './routes/api/custom-fi
 import { Route as ApiCustomFieldDefinitionsRouteImport } from './routes/api/custom-field-definitions'
 import { Route as ApiCompaniesRouteImport } from './routes/api/companies'
 import { Route as ApiCategoriesRouteImport } from './routes/api/categories'
+import { Route as ApiCartsRouteImport } from './routes/api/carts'
+import { Route as ApiCartTagsRouteImport } from './routes/api/cart-tags'
+import { Route as ApiCartMergeRouteImport } from './routes/api/cart-merge'
+import { Route as ApiCartItemsRouteImport } from './routes/api/cart-items'
+import { Route as ApiCartFoldersRouteImport } from './routes/api/cart-folders'
+import { Route as ApiCartCollaboratorsRouteImport } from './routes/api/cart-collaborators'
 import { Route as ApiAuthRouteImport } from './routes/api/auth'
 import { Route as ApiAssetsRouteImport } from './routes/api/assets'
 import { Route as AuthenticatedIndexxRouteImport } from './routes/_authenticated/indexx'
@@ -105,6 +111,36 @@ const ApiCategoriesRoute = ApiCategoriesRouteImport.update({
   path: '/api/categories',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCartsRoute = ApiCartsRouteImport.update({
+  id: '/api/carts',
+  path: '/api/carts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCartTagsRoute = ApiCartTagsRouteImport.update({
+  id: '/api/cart-tags',
+  path: '/api/cart-tags',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCartMergeRoute = ApiCartMergeRouteImport.update({
+  id: '/api/cart-merge',
+  path: '/api/cart-merge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCartItemsRoute = ApiCartItemsRouteImport.update({
+  id: '/api/cart-items',
+  path: '/api/cart-items',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCartFoldersRoute = ApiCartFoldersRouteImport.update({
+  id: '/api/cart-folders',
+  path: '/api/cart-folders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCartCollaboratorsRoute = ApiCartCollaboratorsRouteImport.update({
+  id: '/api/cart-collaborators',
+  path: '/api/cart-collaborators',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthRoute = ApiAuthRouteImport.update({
   id: '/api/auth',
   path: '/api/auth',
@@ -140,6 +176,12 @@ export interface FileRoutesByFullPath {
   '/indexx': typeof AuthenticatedIndexxRoute
   '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
+  '/api/cart-collaborators': typeof ApiCartCollaboratorsRoute
+  '/api/cart-folders': typeof ApiCartFoldersRoute
+  '/api/cart-items': typeof ApiCartItemsRoute
+  '/api/cart-merge': typeof ApiCartMergeRoute
+  '/api/cart-tags': typeof ApiCartTagsRoute
+  '/api/carts': typeof ApiCartsRoute
   '/api/categories': typeof ApiCategoriesRoute
   '/api/companies': typeof ApiCompaniesRoute
   '/api/custom-field-definitions': typeof ApiCustomFieldDefinitionsRoute
@@ -161,6 +203,12 @@ export interface FileRoutesByTo {
   '/indexx': typeof AuthenticatedIndexxRoute
   '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
+  '/api/cart-collaborators': typeof ApiCartCollaboratorsRoute
+  '/api/cart-folders': typeof ApiCartFoldersRoute
+  '/api/cart-items': typeof ApiCartItemsRoute
+  '/api/cart-merge': typeof ApiCartMergeRoute
+  '/api/cart-tags': typeof ApiCartTagsRoute
+  '/api/carts': typeof ApiCartsRoute
   '/api/categories': typeof ApiCategoriesRoute
   '/api/companies': typeof ApiCompaniesRoute
   '/api/custom-field-definitions': typeof ApiCustomFieldDefinitionsRoute
@@ -184,6 +232,12 @@ export interface FileRoutesById {
   '/_authenticated/indexx': typeof AuthenticatedIndexxRoute
   '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
+  '/api/cart-collaborators': typeof ApiCartCollaboratorsRoute
+  '/api/cart-folders': typeof ApiCartFoldersRoute
+  '/api/cart-items': typeof ApiCartItemsRoute
+  '/api/cart-merge': typeof ApiCartMergeRoute
+  '/api/cart-tags': typeof ApiCartTagsRoute
+  '/api/carts': typeof ApiCartsRoute
   '/api/categories': typeof ApiCategoriesRoute
   '/api/companies': typeof ApiCompaniesRoute
   '/api/custom-field-definitions': typeof ApiCustomFieldDefinitionsRoute
@@ -207,6 +261,12 @@ export interface FileRouteTypes {
     | '/indexx'
     | '/api/assets'
     | '/api/auth'
+    | '/api/cart-collaborators'
+    | '/api/cart-folders'
+    | '/api/cart-items'
+    | '/api/cart-merge'
+    | '/api/cart-tags'
+    | '/api/carts'
     | '/api/categories'
     | '/api/companies'
     | '/api/custom-field-definitions'
@@ -228,6 +288,12 @@ export interface FileRouteTypes {
     | '/indexx'
     | '/api/assets'
     | '/api/auth'
+    | '/api/cart-collaborators'
+    | '/api/cart-folders'
+    | '/api/cart-items'
+    | '/api/cart-merge'
+    | '/api/cart-tags'
+    | '/api/carts'
     | '/api/categories'
     | '/api/companies'
     | '/api/custom-field-definitions'
@@ -250,6 +316,12 @@ export interface FileRouteTypes {
     | '/_authenticated/indexx'
     | '/api/assets'
     | '/api/auth'
+    | '/api/cart-collaborators'
+    | '/api/cart-folders'
+    | '/api/cart-items'
+    | '/api/cart-merge'
+    | '/api/cart-tags'
+    | '/api/carts'
     | '/api/categories'
     | '/api/companies'
     | '/api/custom-field-definitions'
@@ -272,6 +344,12 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   ApiAssetsRoute: typeof ApiAssetsRoute
   ApiAuthRoute: typeof ApiAuthRoute
+  ApiCartCollaboratorsRoute: typeof ApiCartCollaboratorsRoute
+  ApiCartFoldersRoute: typeof ApiCartFoldersRoute
+  ApiCartItemsRoute: typeof ApiCartItemsRoute
+  ApiCartMergeRoute: typeof ApiCartMergeRoute
+  ApiCartTagsRoute: typeof ApiCartTagsRoute
+  ApiCartsRoute: typeof ApiCartsRoute
   ApiCategoriesRoute: typeof ApiCategoriesRoute
   ApiCompaniesRoute: typeof ApiCompaniesRoute
   ApiCustomFieldDefinitionsRoute: typeof ApiCustomFieldDefinitionsRoute
@@ -392,6 +470,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCategoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/carts': {
+      id: '/api/carts'
+      path: '/api/carts'
+      fullPath: '/api/carts'
+      preLoaderRoute: typeof ApiCartsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cart-tags': {
+      id: '/api/cart-tags'
+      path: '/api/cart-tags'
+      fullPath: '/api/cart-tags'
+      preLoaderRoute: typeof ApiCartTagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cart-merge': {
+      id: '/api/cart-merge'
+      path: '/api/cart-merge'
+      fullPath: '/api/cart-merge'
+      preLoaderRoute: typeof ApiCartMergeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cart-items': {
+      id: '/api/cart-items'
+      path: '/api/cart-items'
+      fullPath: '/api/cart-items'
+      preLoaderRoute: typeof ApiCartItemsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cart-folders': {
+      id: '/api/cart-folders'
+      path: '/api/cart-folders'
+      fullPath: '/api/cart-folders'
+      preLoaderRoute: typeof ApiCartFoldersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cart-collaborators': {
+      id: '/api/cart-collaborators'
+      path: '/api/cart-collaborators'
+      fullPath: '/api/cart-collaborators'
+      preLoaderRoute: typeof ApiCartCollaboratorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth': {
       id: '/api/auth'
       path: '/api/auth'
@@ -452,6 +572,12 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   ApiAssetsRoute: ApiAssetsRoute,
   ApiAuthRoute: ApiAuthRoute,
+  ApiCartCollaboratorsRoute: ApiCartCollaboratorsRoute,
+  ApiCartFoldersRoute: ApiCartFoldersRoute,
+  ApiCartItemsRoute: ApiCartItemsRoute,
+  ApiCartMergeRoute: ApiCartMergeRoute,
+  ApiCartTagsRoute: ApiCartTagsRoute,
+  ApiCartsRoute: ApiCartsRoute,
   ApiCategoriesRoute: ApiCategoriesRoute,
   ApiCompaniesRoute: ApiCompaniesRoute,
   ApiCustomFieldDefinitionsRoute: ApiCustomFieldDefinitionsRoute,

@@ -27,11 +27,11 @@ export default function ProductCard({
   customFields,
   imageUrl
 }: ProductCardProps) {
-  const { addToCart } = useCart();
+  const { addItem } = useCart();
 
   return (
-    <Link to={"/products/$productId"} params={{ productId: product.id }}>
-      <Card className="flex h-full flex-col overflow-hidden pt-0">
+    <Card className="flex h-full flex-col overflow-hidden pt-0">
+      <Link to={"/products/$productId"} params={{ productId: product.id }}>
         <CardHeader className="relative p-0">
           <img
             src={imageUrl}
@@ -62,18 +62,23 @@ export default function ProductCard({
             </div>
           )}
         </CardContent>
-        <CardFooter className="mt-auto flex items-center justify-between px-4">
-          <p className="text-slate-600">
-            {new Intl.NumberFormat("de-DE", {
-              style: "currency",
-              currency: "EUR"
-            }).format(product.min_price ?? 0)}
-          </p>
-          <Button size="icon" onClick={() => addToCart(product.id.toString())}>
-            <ShoppingCartIcon />
-          </Button>
-        </CardFooter>
-      </Card>
-    </Link>
+      </Link>
+      <CardFooter className="mt-auto flex items-center justify-between px-4">
+        <p className="text-slate-600">
+          {new Intl.NumberFormat("de-DE", {
+            style: "currency",
+            currency: "EUR"
+          }).format(product.min_price ?? 0)}
+        </p>
+        <Button
+          size="icon"
+          onClick={() => {
+            addItem(product.id, (product.min_price ?? 0).toFixed(2));
+          }}
+        >
+          <ShoppingCartIcon />
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }

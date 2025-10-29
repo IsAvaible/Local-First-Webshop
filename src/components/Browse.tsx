@@ -22,6 +22,7 @@ import type {
 } from "@/db/schema.ts";
 import BrowseSortSelect from "@/components/browse/BrowseSortSelect.tsx";
 import type { JsonValue } from "@/lib/utils.ts";
+import { Link } from "@tanstack/react-router";
 
 export default function Browse({
   loading,
@@ -141,7 +142,7 @@ export default function Browse({
                 <div className="col-span-full flex aspect-[2/1] items-center justify-center">
                   <div className="alert alert-info flex flex-col">
                     No articles found. Please try change your search or filters.
-                    <a href="/search">Reset search & filters</a>
+                    <Link to="/search">Reset search & filters</Link>
                   </div>
                 </div>
               ) : (
