@@ -11,7 +11,7 @@ import {
 import type { Product, CustomFieldDefinition } from "@/db/schema.ts";
 import { useMemo } from "react";
 import {
-  ArrowDown01Icon,
+  ArrowDown10Icon,
   ArrowDownAZIcon,
   ArrowDownIcon,
   ArrowUp10Icon,
@@ -46,7 +46,7 @@ const DirComponent = ({
 
     case "price":
     case "id":
-      return dir === "asc" ? <ArrowUp10Icon /> : <ArrowDown01Icon />;
+      return dir === "asc" ? <ArrowUp10Icon /> : <ArrowDown10Icon />;
 
     default:
       return dir === "asc" ? <ArrowUpIcon /> : <ArrowDownIcon />;
