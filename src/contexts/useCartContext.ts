@@ -15,6 +15,7 @@ import {
 export interface EnrichedCartItem extends CartItem {
   product?: Product | null;
   asset?: Asset | null;
+  price?: string | null;
 }
 
 export interface CartContextType {

@@ -94,9 +94,7 @@ export function CartItemComponent({
             <span className="inline-block max-w-20 truncate">
               {productName}
             </span>
-            <span>
-              {item.price_snapshot ? `${item.price_snapshot}$` : "N/A"}
-            </span>
+            <span>{`${item.price ?? item.price_snapshot ?? "N/A"}€`}</span>
           </h3>
 
           <Textarea

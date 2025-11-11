@@ -19,7 +19,8 @@ import {
   min,
   not,
   isUndefined,
-  count
+  count,
+  max
 } from "@tanstack/react-db";
 
 import {
@@ -147,16 +148,16 @@ function buildFilteredProductQuery(search: ProductSearch) {
   }
 
   // --- Price Filter (via Subquery) ---
-  // 1. Create a subquery to find the minimum price for each product.
+  // 1. Create a subquery to find the maximum price for each product.
   const minPriceSubquery = new Query()
     .from({ pt: pricingTiersCollection })
     .groupBy(({ pt }) => pt.product_id)
     .select(({ pt }) => ({
       product_id: pt.product_id,
-      min_price: min(pt.price_per_unit)
+      min_price: max(pt.price_per_unit)
     }));
 
-  // 2. Join the minimum price onto the main query.
+  // 2. Join the max price onto the main query.
   let queryWithPrice = query.leftJoin(
     { price: minPriceSubquery },
     ({ p, price }) => eq(p.id, price.product_id)

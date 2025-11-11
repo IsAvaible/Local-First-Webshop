@@ -1,7 +1,15 @@
 import { type ReactNode, useCallback, useEffect, useMemo } from "react";
 import { CartContext } from "./useCartContext";
 import { authClient } from "@/lib/auth-client.ts";
-import { and, eq, useLiveQuery, Query, min } from "@tanstack/react-db";
+import {
+  and,
+  eq,
+  useLiveQuery,
+  Query,
+  min,
+  lte,
+  max
+} from "@tanstack/react-db";
 import {
   cartCollaboratorsCollection,
   cartItemsCollection,
@@ -11,7 +19,8 @@ import {
   cartItemTagsCollection,
   cartTagsCollection,
   productsCollection,
-  assetsCollection
+  assetsCollection,
+  pricingTiersCollection
 } from "@/lib/collections.ts";
 import type { CartRole } from "@/db/schema.ts";
 
@@ -40,35 +49,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
     // - The query for the cart is finished (!isCartPending)
     // - No default cart was found (!cart)
     if (userId && !isCartPending && !cart) {
-      const createDefaultCart = () => {
-        try {
-          cartsCollection.insert({
-            id: Math.floor(Math.random() * 1000000), // Client-gen ID
-            name: "Cart",
-            owner_user_id: userId,
-            is_default: true,
-            guest_session_id: null,
-            created_at: new Date(),
-            updated_at: new Date()
-          });
-          console.log(`Created default cart for user: ${userId}`);
-        } catch (error) {
-          console.error("Failed to create default cart:", error);
-        }
-      };
-
-      createDefaultCart();
+      cartsCollection.insert({
+        id: Math.floor(Math.random() * 1000000),
+        name: "Cart",
+        owner_user_id: userId,
+        is_default: true,
+        guest_session_id: null,
+        created_at: new Date(),
+        updated_at: new Date()
+      });
     }
   }, [userId, isCartPending, cart]);
 
   const cartId = cart?.id;
 
-  // 2. Get items for that cart (enriched with product and first asset)
+  // 2. Get items for that cart (enriched with product, asset, and pricing)
   const { data: items, isLoading: isItemsPending } = useLiveQuery(
     (q) => {
       if (!cartId) return undefined;
 
-      // Build a subquery to find the first asset id per product
+      // Subquery: first asset id per product
       const firstAssetIdSubquery = new Query()
         .from({ a: assetsCollection })
         .groupBy(({ a }) => a.product_id)
@@ -77,7 +77,38 @@ export function CartProvider({ children }: { children: ReactNode }) {
           first_asset_id: min(a.id)
         }));
 
-      // Main query: cart items joined to product and asset
+      // 1. Find the value of the best min_quantity for each cart item
+      const bestMinQuantitySubquery = new Query()
+        .from({ i: cartItemsCollection })
+        .where(({ i }) => eq(i.cart_id, cartId))
+        .join({ pt: pricingTiersCollection }, ({ i, pt }) =>
+          eq(pt.product_id, i.product_id)
+        )
+        .where(({ i, pt }) => lte(pt?.min_quantity, i.quantity))
+        .groupBy(({ i }) => i.id)
+        .select(({ i, pt }) => ({
+          cart_item_id: i.id,
+          best_min_quantity: max(pt?.min_quantity)
+        }));
+
+      // 2. Use the "best_min_quantity" value to find the price of that tier
+      const bestPriceIdSubquery = new Query()
+        .from({ i: cartItemsCollection })
+        .where(({ i }) => eq(i.cart_id, cartId))
+        .join({ bmq: bestMinQuantitySubquery }, ({ i, bmq }) =>
+          eq(i.id, bmq.cart_item_id)
+        )
+        .join({ pt: pricingTiersCollection }, ({ i, pt }) =>
+          eq(pt.product_id, i.product_id)
+        )
+        // Filter the pricing table to find the row that matches the best value
+        .where(({ pt, bmq }) => eq(pt?.min_quantity, bmq?.best_min_quantity))
+        .select(({ i, pt }) => ({
+          cart_item_id: i.id,
+          best_pricing_tier_id: pt?.id
+        }));
+
+      // Main query: cart items joined to product, asset, and best price
       return q
         .from({ i: cartItemsCollection })
         .where(({ i }) => eq(i.cart_id, cartId))
@@ -90,15 +121,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
         .leftJoin({ asset: assetsCollection }, ({ asset, fa_id }) =>
           eq(asset.id, fa_id?.first_asset_id)
         )
+        .leftJoin({ bpi: bestPriceIdSubquery }, ({ i, bpi }) =>
+          eq(i.id, bpi.cart_item_id)
+        )
+        .leftJoin({ price: pricingTiersCollection }, ({ price, bpi }) =>
+          eq(price.id, bpi?.best_pricing_tier_id)
+        )
         .orderBy(({ i }) => i.created_at)
-        .select(({ i, p, asset }) => ({
+        .select(({ i, p, asset, price }) => ({
           ...i,
           product: p,
-          asset: asset
+          asset: asset,
+          price: price?.price_per_unit
         }));
     },
     [cartId]
   );
+
   const itemIds = useMemo(() => items?.map((i) => i.id) ?? [], [items]);
 
   // 3. Get collaborators for that cart

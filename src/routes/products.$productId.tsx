@@ -49,7 +49,7 @@ function ProductPageComponent() {
       q
         .from({ pricingTier: pricingTiersCollection })
         .where(({ pricingTier }) => eq(pricingTier.product_id, productId))
-        .orderBy(({ pricingTier }) => [pricingTier.min_quantity, "asc"])
+        .orderBy(({ pricingTier }) => [pricingTier.min_quantity, "desc"])
     );
 
   // Fetch custom field values and their definitions for this product
