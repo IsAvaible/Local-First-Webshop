@@ -76,7 +76,7 @@ export default function BrowseSortSelect({
 
   const handleCustomPropertyChange = (val: string) => {
     setSearch({
-      order: val as ProductSearch["order"],
+      order: val,
       dir: customOrder ?? "desc"
     });
   };
