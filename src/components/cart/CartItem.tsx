@@ -28,7 +28,6 @@ export function CartItemComponent({
   item: EnrichedCartItem;
   dragHandleProps?: SyntheticListenerMap;
 } & React.ComponentProps<"div">) {
-  // --- Destructure new context data and functions ---
   const {
     tags,
     itemTags,

@@ -10,7 +10,9 @@ import {
   index,
   type AnyPgColumn,
   pgEnum,
-  uniqueIndex
+  uniqueIndex,
+  customType,
+  primaryKey
 } from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
@@ -19,6 +21,46 @@ import { users } from "./auth-schema";
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
   createSchemaFactory({ zodInstance: z });
+
+// Y-Electric Tables
+// Custom type for Postgres bytea
+const bytea = customType<{ data: Buffer; driverData: string }>({
+  dataType() {
+    return "bytea";
+  },
+  toDriver(value: Buffer): string {
+    // Convert Buffer to hex string for the driver
+    return `\\x${value.toString("hex")}`;
+  },
+  fromDriver(value: string): Buffer {
+    // Convert hex string (e.g., \x... or just ...) back to Buffer
+    const hex = value.startsWith("\\x") ? value.substring(2) : value;
+    return Buffer.from(hex, "hex");
+  }
+});
+
+// Table for Yjs document updates
+export const ydocUpdatesTable = pgTable("ydoc_updates", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  room: text("room").notNull(),
+  update: bytea("update").notNull()
+});
+
+export const updateYdocSchema = createInsertSchema(ydocUpdatesTable);
+
+// Table for Yjs awareness updates
+export const ydocAwarenessTable = pgTable(
+  "ydoc_awareness",
+  {
+    client_id: text("client_id").notNull(),
+    room: text("room").notNull(),
+    update: bytea("update").notNull(),
+    updated_at: timestamp({ withTimezone: true }).notNull().defaultNow()
+  },
+  (table) => [primaryKey({ columns: [table.client_id, table.room] })]
+);
+
+export const updateYdocAwarenessSchema = createInsertSchema(ydocAwarenessTable);
 
 // --- COMPANY SCHEMA ---
 
@@ -446,6 +488,8 @@ export const updateCartItemSchema = createUpdateSchema(cartItemsTable).omit({
 });
 
 // --- Export Types ---
+export type YdocUpdate = z.infer<typeof updateYdocSchema>;
+export type YdocAwarenessUpdate = z.infer<typeof updateYdocAwarenessSchema>;
 export type Project = z.infer<typeof selectProjectSchema>;
 export type UpdateProject = z.infer<typeof updateProjectSchema>;
 export type Todo = z.infer<typeof selectTodoSchema>;

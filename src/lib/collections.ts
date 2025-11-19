@@ -25,7 +25,7 @@ import { trpc } from "@/lib/trpc-client";
  * @param path - The API path
  * @returns Full URL as a string
  */
-const createApiUrl = (path: string) => {
+export const createApiUrl = (path: string) => {
   return new URL(
     path,
     typeof window !== "undefined"

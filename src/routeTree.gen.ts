@@ -9,12 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as YjsRouteImport } from './routes/yjs'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
+import { Route as ApiYdocUpdatesRouteImport } from './routes/api/ydoc-updates'
+import { Route as ApiYdocAwarenessRouteImport } from './routes/api/ydoc-awareness'
 import { Route as ApiUsersRouteImport } from './routes/api/users'
 import { Route as ApiTodosRouteImport } from './routes/api/todos'
 import { Route as ApiProjectsRouteImport } from './routes/api/projects'
@@ -36,6 +39,11 @@ import { Route as AuthenticatedIndexxRouteImport } from './routes/_authenticated
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
 import { Route as AuthenticatedProjectProjectIdRouteImport } from './routes/_authenticated/project/$projectId'
 
+const YjsRoute = YjsRouteImport.update({
+  id: '/yjs',
+  path: '/yjs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -63,6 +71,16 @@ const IndexRoute = IndexRouteImport.update({
 const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
   id: '/products/$productId',
   path: '/products/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiYdocUpdatesRoute = ApiYdocUpdatesRouteImport.update({
+  id: '/api/ydoc-updates',
+  path: '/api/ydoc-updates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiYdocAwarenessRoute = ApiYdocAwarenessRouteImport.update({
+  id: '/api/ydoc-awareness',
+  path: '/api/ydoc-awareness',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiUsersRoute = ApiUsersRouteImport.update({
@@ -173,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/login': typeof LoginRoute
   '/search': typeof SearchRoute
+  '/yjs': typeof YjsRoute
   '/indexx': typeof AuthenticatedIndexxRoute
   '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
@@ -191,6 +210,8 @@ export interface FileRoutesByFullPath {
   '/api/projects': typeof ApiProjectsRoute
   '/api/todos': typeof ApiTodosRoute
   '/api/users': typeof ApiUsersRoute
+  '/api/ydoc-awareness': typeof ApiYdocAwarenessRoute
+  '/api/ydoc-updates': typeof ApiYdocUpdatesRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/project/$projectId': typeof AuthenticatedProjectProjectIdRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
@@ -200,6 +221,7 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/login': typeof LoginRoute
   '/search': typeof SearchRoute
+  '/yjs': typeof YjsRoute
   '/indexx': typeof AuthenticatedIndexxRoute
   '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
@@ -218,6 +240,8 @@ export interface FileRoutesByTo {
   '/api/projects': typeof ApiProjectsRoute
   '/api/todos': typeof ApiTodosRoute
   '/api/users': typeof ApiUsersRoute
+  '/api/ydoc-awareness': typeof ApiYdocAwarenessRoute
+  '/api/ydoc-updates': typeof ApiYdocUpdatesRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/project/$projectId': typeof AuthenticatedProjectProjectIdRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
@@ -229,6 +253,7 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/login': typeof LoginRoute
   '/search': typeof SearchRoute
+  '/yjs': typeof YjsRoute
   '/_authenticated/indexx': typeof AuthenticatedIndexxRoute
   '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
@@ -247,6 +272,8 @@ export interface FileRoutesById {
   '/api/projects': typeof ApiProjectsRoute
   '/api/todos': typeof ApiTodosRoute
   '/api/users': typeof ApiUsersRoute
+  '/api/ydoc-awareness': typeof ApiYdocAwarenessRoute
+  '/api/ydoc-updates': typeof ApiYdocUpdatesRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/_authenticated/project/$projectId': typeof AuthenticatedProjectProjectIdRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
@@ -258,6 +285,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/login'
     | '/search'
+    | '/yjs'
     | '/indexx'
     | '/api/assets'
     | '/api/auth'
@@ -276,6 +304,8 @@ export interface FileRouteTypes {
     | '/api/projects'
     | '/api/todos'
     | '/api/users'
+    | '/api/ydoc-awareness'
+    | '/api/ydoc-updates'
     | '/products/$productId'
     | '/project/$projectId'
     | '/api/trpc/$'
@@ -285,6 +315,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/login'
     | '/search'
+    | '/yjs'
     | '/indexx'
     | '/api/assets'
     | '/api/auth'
@@ -303,6 +334,8 @@ export interface FileRouteTypes {
     | '/api/projects'
     | '/api/todos'
     | '/api/users'
+    | '/api/ydoc-awareness'
+    | '/api/ydoc-updates'
     | '/products/$productId'
     | '/project/$projectId'
     | '/api/trpc/$'
@@ -313,6 +346,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/login'
     | '/search'
+    | '/yjs'
     | '/_authenticated/indexx'
     | '/api/assets'
     | '/api/auth'
@@ -331,6 +365,8 @@ export interface FileRouteTypes {
     | '/api/projects'
     | '/api/todos'
     | '/api/users'
+    | '/api/ydoc-awareness'
+    | '/api/ydoc-updates'
     | '/products/$productId'
     | '/_authenticated/project/$projectId'
     | '/api/trpc/$'
@@ -342,6 +378,7 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   LoginRoute: typeof LoginRoute
   SearchRoute: typeof SearchRoute
+  YjsRoute: typeof YjsRoute
   ApiAssetsRoute: typeof ApiAssetsRoute
   ApiAuthRoute: typeof ApiAuthRoute
   ApiCartCollaboratorsRoute: typeof ApiCartCollaboratorsRoute
@@ -359,12 +396,21 @@ export interface RootRouteChildren {
   ApiProjectsRoute: typeof ApiProjectsRoute
   ApiTodosRoute: typeof ApiTodosRoute
   ApiUsersRoute: typeof ApiUsersRoute
+  ApiYdocAwarenessRoute: typeof ApiYdocAwarenessRoute
+  ApiYdocUpdatesRoute: typeof ApiYdocUpdatesRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/yjs': {
+      id: '/yjs'
+      path: '/yjs'
+      fullPath: '/yjs'
+      preLoaderRoute: typeof YjsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
@@ -405,6 +451,20 @@ declare module '@tanstack/react-router' {
       path: '/products/$productId'
       fullPath: '/products/$productId'
       preLoaderRoute: typeof ProductsProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ydoc-updates': {
+      id: '/api/ydoc-updates'
+      path: '/api/ydoc-updates'
+      fullPath: '/api/ydoc-updates'
+      preLoaderRoute: typeof ApiYdocUpdatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ydoc-awareness': {
+      id: '/api/ydoc-awareness'
+      path: '/api/ydoc-awareness'
+      fullPath: '/api/ydoc-awareness'
+      preLoaderRoute: typeof ApiYdocAwarenessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/users': {
@@ -570,6 +630,7 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   LoginRoute: LoginRoute,
   SearchRoute: SearchRoute,
+  YjsRoute: YjsRoute,
   ApiAssetsRoute: ApiAssetsRoute,
   ApiAuthRoute: ApiAuthRoute,
   ApiCartCollaboratorsRoute: ApiCartCollaboratorsRoute,
@@ -587,6 +648,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiProjectsRoute: ApiProjectsRoute,
   ApiTodosRoute: ApiTodosRoute,
   ApiUsersRoute: ApiUsersRoute,
+  ApiYdocAwarenessRoute: ApiYdocAwarenessRoute,
+  ApiYdocUpdatesRoute: ApiYdocUpdatesRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
 }

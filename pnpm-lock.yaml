@@ -7,10 +7,20 @@ settings:
 overrides:
   vite: npm:rolldown-vite@7.1.14
   esbuild: 0.25.0
+  js-yaml: 4.1.1
 
 importers:
   .:
     dependencies:
+      "@codemirror/lang-javascript":
+        specifier: ^6.2.4
+        version: 6.2.4
+      "@codemirror/state":
+        specifier: ^6.5.2
+        version: 6.5.2
+      "@codemirror/view":
+        specifier: ^6.38.7
+        version: 6.38.7
       "@dnd-kit/core":
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -26,6 +36,9 @@ importers:
       "@electric-sql/client":
         specifier: ^1.0.14
         version: 1.0.14
+      "@electric-sql/y-electric":
+        specifier: ^0.1.16
+        version: 0.1.16
       "@radix-ui/react-accordion":
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -101,6 +114,9 @@ importers:
       cmdk:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      codemirror:
+        specifier: ^6.0.2
+        version: 6.0.2
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -119,6 +135,9 @@ importers:
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.2.0)
+      lib0:
+        specifier: ^0.2.114
+        version: 0.2.114
       lucide-react:
         specifier: ^0.545.0
         version: 0.545.0(react@19.2.0)
@@ -140,6 +159,18 @@ importers:
       tailwindcss:
         specifier: ^4.1.15
         version: 4.1.15
+      y-codemirror.next:
+        specifier: ^0.3.5
+        version: 0.3.5(@codemirror/state@6.5.2)(@codemirror/view@6.38.7)(yjs@13.6.27)
+      y-indexeddb:
+        specifier: ^9.0.12
+        version: 9.0.12(yjs@13.6.27)
+      y-protocols:
+        specifier: ^1.0.6
+        version: 1.0.6(yjs@13.6.27)
+      yjs:
+        specifier: ^13.6.27
+        version: 13.6.27
       zod:
         specifier: ^4.1.12
         version: 4.1.12
@@ -506,6 +537,54 @@ packages:
         integrity: sha512-rEFOE1MYIsBmoMJtQbl32PGHHXuG2hDxvEd7rUHE0vCBoFQVSDqaVs9hkZEtHCxRoY+CljXKFCOuJ8uxqw1LcA==
       }
 
+  "@codemirror/autocomplete@6.19.1":
+    resolution:
+      {
+        integrity: sha512-q6NenYkEy2fn9+JyjIxMWcNjzTL/IhwqfzOut1/G3PrIFkrbl4AL7Wkse5tLrQUUyqGoAKU5+Pi5jnnXxH5HGw==
+      }
+
+  "@codemirror/commands@6.10.0":
+    resolution:
+      {
+        integrity: sha512-2xUIc5mHXQzT16JnyOFkh8PvfeXuIut3pslWGfsGOhxP/lpgRm9HOl/mpzLErgt5mXDovqA0d11P21gofRLb9w==
+      }
+
+  "@codemirror/lang-javascript@6.2.4":
+    resolution:
+      {
+        integrity: sha512-0WVmhp1QOqZ4Rt6GlVGwKJN3KW7Xh4H2q8ZZNGZaP6lRdxXJzmjm4FqvmOojVj6khWJHIb9sp7U/72W7xQgqAA==
+      }
+
+  "@codemirror/language@6.11.3":
+    resolution:
+      {
+        integrity: sha512-9HBM2XnwDj7fnu0551HkGdrUrrqmYq/WC5iv6nbY2WdicXdGbhR/gfbZOH73Aqj4351alY1+aoG9rCNfiwS1RA==
+      }
+
+  "@codemirror/lint@6.9.2":
+    resolution:
+      {
+        integrity: sha512-sv3DylBiIyi+xKwRCJAAsBZZZWo82shJ/RTMymLabAdtbkV5cSKwWDeCgtUq3v8flTaXS2y1kKkICuRYtUswyQ==
+      }
+
+  "@codemirror/search@6.5.11":
+    resolution:
+      {
+        integrity: sha512-KmWepDE6jUdL6n8cAAqIpRmLPBZ5ZKnicE8oGU/s3QrAVID+0VhLFrzUucVKHG5035/BSykhExDL/Xm7dHthiA==
+      }
+
+  "@codemirror/state@6.5.2":
+    resolution:
+      {
+        integrity: sha512-FVqsPqtPWKVVL3dPSxy8wEF/ymIEuVzF1PK3VbUgrxXpJUSHQWWZz4JMToquRxnkw+36LTamCZG2iua2Ptq0fA==
+      }
+
+  "@codemirror/view@6.38.7":
+    resolution:
+      {
+        integrity: sha512-+b0imJTgzehmMToqT9DWPBdeRj7/qDsJj7MzQ+1+do2KK2UkxKuLaHlUVeZk855wO6my6cfbF1c+Qozs8B3YqA==
+      }
+
   "@commitlint/cli@20.1.0":
     resolution:
       {
@@ -685,6 +764,18 @@ packages:
     resolution:
       {
         integrity: sha512-LtPAfeMxXRiYS0hyDQ5hue2PjljUiK9stvzsVyVb4nwxWQxfOWTSF42bHTs/o5i3x1T4kAQ7mwHpxa4A+f8X7Q==
+      }
+
+  "@electric-sql/client@1.1.4":
+    resolution:
+      {
+        integrity: sha512-88M2iEg5LYSE388wNWjrQMpsIgLzwge60cCN5znQSDEnUEprJZ13vB3r+S8IRNYbmOtUSNVEODuXn+nlqEhEGw==
+      }
+
+  "@electric-sql/y-electric@0.1.16":
+    resolution:
+      {
+        integrity: sha512-W23d0yAdG6osfG6cBDQol26NDEiEPm7wUrMKaAkRjWe4b59dY6JUB0c6h5/3FgdP6s4T94yZuxf3x8lUH0uZ+g==
       }
 
   "@emnapi/core@1.5.0":
@@ -1147,6 +1238,36 @@ packages:
     resolution:
       {
         integrity: sha512-llBRm4dT4Z89aRsm6u2oEZ8tfwL/2l6BwpZ7JcyieouniDECM5AqNgr/y08zalEIvW3RSK4upYyybDcmjXqAow==
+      }
+
+  "@lezer/common@1.3.0":
+    resolution:
+      {
+        integrity: sha512-L9X8uHCYU310o99L3/MpJKYxPzXPOS7S0NmBaM7UO/x2Kb2WbmMLSkfvdr1KxRIFYOpbY0Jhn7CfLSUDzL8arQ==
+      }
+
+  "@lezer/highlight@1.2.3":
+    resolution:
+      {
+        integrity: sha512-qXdH7UqTvGfdVBINrgKhDsVTJTxactNNxLk7+UMwZhU13lMHaOBlJe9Vqp907ya56Y3+ed2tlqzys7jDkTmW0g==
+      }
+
+  "@lezer/javascript@1.5.4":
+    resolution:
+      {
+        integrity: sha512-vvYx3MhWqeZtGPwDStM2dwgljd5smolYD2lR2UyFcHfxbBQebqx8yjmFmxtJ/E6nN6u1D9srOiVWm3Rb4tmcUA==
+      }
+
+  "@lezer/lr@1.4.3":
+    resolution:
+      {
+        integrity: sha512-yenN5SqAxAPv/qMnpWW0AT7l+SxVrgG+u0tNsRQWqbrz66HIl8DnEbBObvy21J5K7+I1v7gsAnlE2VQ5yYVSeA==
+      }
+
+  "@marijn/find-cluster-break@1.0.2":
+    resolution:
+      {
+        integrity: sha512-l0h88YhZFyKdXIFNfSWpyjStDjGHwZ/U7iobcK1cQQD8sejsONdQtTVU+1wVN1PBw40PiiHB1vA5S7VTfQiP9g==
       }
 
   "@microsoft/fetch-event-source@2.0.1":
@@ -2665,12 +2786,6 @@ packages:
       }
     engines: { node: ">= 8" }
 
-  argparse@1.0.10:
-    resolution:
-      {
-        integrity: sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==
-      }
-
   argparse@2.0.1:
     resolution:
       {
@@ -2946,6 +3061,12 @@ packages:
       react: ^18 || ^19 || ^19.0.0-rc
       react-dom: ^18 || ^19 || ^19.0.0-rc
 
+  codemirror@6.0.2:
+    resolution:
+      {
+        integrity: sha512-VhydHotNW5w1UGK0Qj96BwSk/Zqbp9WbnyK2W/eVMv4QyF41INRGpjUhFJY7/uDNuudSc33a/PKr4iDqRduvHw==
+      }
+
   color-convert@2.0.1:
     resolution:
       {
@@ -3054,6 +3175,12 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  crelt@1.0.6:
+    resolution:
+      {
+        integrity: sha512-VQ2MBenTq1fWZUH9DJNGti7kKv6EeAuYr3cLwxUWhIu1baTaXh4Ib5W2CqHVqib4/MqbYGJqiL3Zb8GJZr3l4g==
+      }
 
   cross-spawn@7.0.6:
     resolution:
@@ -4016,6 +4143,12 @@ packages:
         integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==
       }
 
+  isomorphic.js@0.2.5:
+    resolution:
+      {
+        integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==
+      }
+
   jiti@2.6.1:
     resolution:
       {
@@ -4035,17 +4168,10 @@ packages:
         integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==
       }
 
-  js-yaml@3.14.1:
+  js-yaml@4.1.1:
     resolution:
       {
-        integrity: sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g==
-      }
-    hasBin: true
-
-  js-yaml@4.1.0:
-    resolution:
-      {
-        integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==
+        integrity: sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==
       }
     hasBin: true
 
@@ -4121,6 +4247,14 @@ packages:
         integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==
       }
     engines: { node: ">= 0.8.0" }
+
+  lib0@0.2.114:
+    resolution:
+      {
+        integrity: sha512-gcxmNFzA4hv8UYi8j43uPlQ7CGcyMJ2KQb5kZASw6SnAKAf10hK12i2fjrS3Cl/ugZa5Ui6WwIu1/6MIXiHttQ==
+      }
+    engines: { node: ">=16" }
+    hasBin: true
 
   lightningcss-android-arm64@1.30.2:
     resolution:
@@ -5211,12 +5345,6 @@ packages:
       }
     engines: { node: ">= 10.x" }
 
-  sprintf-js@1.0.3:
-    resolution:
-      {
-        integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==
-      }
-
   srvx@0.8.16:
     resolution:
       {
@@ -5292,6 +5420,12 @@ packages:
         integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==
       }
     engines: { node: ">=8" }
+
+  style-mod@4.1.3:
+    resolution:
+      {
+        integrity: sha512-i/n8VsZydrugj3Iuzll8+x/00GH2vnYsk1eomD8QiRrSAeW6ItbCQDtfXCeJHd0iwiNagqjQkvpvREEPtW3IoQ==
+      }
 
   supports-color@7.2.0:
     resolution:
@@ -5590,6 +5724,12 @@ packages:
       vite:
         optional: true
 
+  w3c-keyname@2.2.8:
+    resolution:
+      {
+        integrity: sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==
+      }
+
   webpack-virtual-modules@0.6.2:
     resolution:
       {
@@ -5659,6 +5799,34 @@ packages:
       }
     engines: { node: ">=0.4" }
 
+  y-codemirror.next@0.3.5:
+    resolution:
+      {
+        integrity: sha512-VluNu3e5HfEXybnypnsGwKAj+fKLd4iAnR7JuX1Sfyydmn1jCBS5wwEL/uS04Ch2ib0DnMAOF6ZRR/8kK3wyGw==
+      }
+    peerDependencies:
+      "@codemirror/state": ^6.0.0
+      "@codemirror/view": ^6.0.0
+      yjs: ^13.5.6
+
+  y-indexeddb@9.0.12:
+    resolution:
+      {
+        integrity: sha512-9oCFRSPPzBK7/w5vOkJBaVCQZKHXB/v6SIT+WYhnJxlEC61juqG0hBrAf+y3gmSMLFLwICNH9nQ53uscuse6Hg==
+      }
+    engines: { node: ">=16.0.0", npm: ">=8.0.0" }
+    peerDependencies:
+      yjs: ^13.0.0
+
+  y-protocols@1.0.6:
+    resolution:
+      {
+        integrity: sha512-vHRF2L6iT3rwj1jub/K5tYcTT/mEYDUppgNPXwp8fmLpui9f7Yeq3OEtTLVF012j39QnV+KEQpNqoN7CWU7Y9Q==
+      }
+    engines: { node: ">=16.0.0", npm: ">=8.0.0" }
+    peerDependencies:
+      yjs: ^13.0.0
+
   y18n@5.0.8:
     resolution:
       {
@@ -5693,6 +5861,13 @@ packages:
         integrity: sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w==
       }
     engines: { node: ">=12" }
+
+  yjs@13.6.27:
+    resolution:
+      {
+        integrity: sha512-OIDwaflOaq4wC6YlPBy2L6ceKeKuF7DeTxx+jPzv1FHn9tCZ0ZwSRnUBxD05E3yed46fv/FWJbvR+Ud7x0L7zw==
+      }
+    engines: { node: ">=16.0.0", npm: ">=8.0.0" }
 
   yocto-queue@0.1.0:
     resolution:
@@ -5950,6 +6125,62 @@ snapshots:
 
   "@better-fetch/fetch@1.1.18": {}
 
+  "@codemirror/autocomplete@6.19.1":
+    dependencies:
+      "@codemirror/language": 6.11.3
+      "@codemirror/state": 6.5.2
+      "@codemirror/view": 6.38.7
+      "@lezer/common": 1.3.0
+
+  "@codemirror/commands@6.10.0":
+    dependencies:
+      "@codemirror/language": 6.11.3
+      "@codemirror/state": 6.5.2
+      "@codemirror/view": 6.38.7
+      "@lezer/common": 1.3.0
+
+  "@codemirror/lang-javascript@6.2.4":
+    dependencies:
+      "@codemirror/autocomplete": 6.19.1
+      "@codemirror/language": 6.11.3
+      "@codemirror/lint": 6.9.2
+      "@codemirror/state": 6.5.2
+      "@codemirror/view": 6.38.7
+      "@lezer/common": 1.3.0
+      "@lezer/javascript": 1.5.4
+
+  "@codemirror/language@6.11.3":
+    dependencies:
+      "@codemirror/state": 6.5.2
+      "@codemirror/view": 6.38.7
+      "@lezer/common": 1.3.0
+      "@lezer/highlight": 1.2.3
+      "@lezer/lr": 1.4.3
+      style-mod: 4.1.3
+
+  "@codemirror/lint@6.9.2":
+    dependencies:
+      "@codemirror/state": 6.5.2
+      "@codemirror/view": 6.38.7
+      crelt: 1.0.6
+
+  "@codemirror/search@6.5.11":
+    dependencies:
+      "@codemirror/state": 6.5.2
+      "@codemirror/view": 6.38.7
+      crelt: 1.0.6
+
+  "@codemirror/state@6.5.2":
+    dependencies:
+      "@marijn/find-cluster-break": 1.0.2
+
+  "@codemirror/view@6.38.7":
+    dependencies:
+      "@codemirror/state": 6.5.2
+      crelt: 1.0.6
+      style-mod: 4.1.3
+      w3c-keyname: 2.2.8
+
   "@commitlint/cli@20.1.0(@types/node@24.9.1)(typescript@5.9.3)":
     dependencies:
       "@commitlint/format": 20.0.0
@@ -6101,6 +6332,19 @@ snapshots:
       "@microsoft/fetch-event-source": 2.0.1
     optionalDependencies:
       "@rollup/rollup-darwin-arm64": 4.52.5
+
+  "@electric-sql/client@1.1.4":
+    dependencies:
+      "@microsoft/fetch-event-source": 2.0.1
+    optionalDependencies:
+      "@rollup/rollup-darwin-arm64": 4.52.5
+
+  "@electric-sql/y-electric@0.1.16":
+    dependencies:
+      "@electric-sql/client": 1.1.4
+      lib0: 0.2.114
+      y-protocols: 1.0.6(yjs@13.6.27)
+      yjs: 13.6.27
 
   "@emnapi/core@1.5.0":
     dependencies:
@@ -6288,7 +6532,7 @@ snapshots:
       globals: 14.0.0
       ignore: 5.3.2
       import-fresh: 3.3.1
-      js-yaml: 4.1.0
+      js-yaml: 4.1.1
       minimatch: 3.1.2
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
@@ -6355,6 +6599,24 @@ snapshots:
       "@jridgewell/sourcemap-codec": 1.5.5
 
   "@levischuck/tiny-cbor@0.2.11": {}
+
+  "@lezer/common@1.3.0": {}
+
+  "@lezer/highlight@1.2.3":
+    dependencies:
+      "@lezer/common": 1.3.0
+
+  "@lezer/javascript@1.5.4":
+    dependencies:
+      "@lezer/common": 1.3.0
+      "@lezer/highlight": 1.2.3
+      "@lezer/lr": 1.4.3
+
+  "@lezer/lr@1.4.3":
+    dependencies:
+      "@lezer/common": 1.3.0
+
+  "@marijn/find-cluster-break@1.0.2": {}
 
   "@microsoft/fetch-event-source@2.0.1": {}
 
@@ -7574,10 +7836,6 @@ snapshots:
       normalize-path: 3.0.0
       picomatch: 2.3.1
 
-  argparse@1.0.10:
-    dependencies:
-      sprintf-js: 1.0.3
-
   argparse@2.0.1: {}
 
   aria-hidden@1.2.6:
@@ -7776,6 +8034,16 @@ snapshots:
       - "@types/react"
       - "@types/react-dom"
 
+  codemirror@6.0.2:
+    dependencies:
+      "@codemirror/autocomplete": 6.19.1
+      "@codemirror/commands": 6.10.0
+      "@codemirror/language": 6.11.3
+      "@codemirror/lint": 6.9.2
+      "@codemirror/search": 6.5.11
+      "@codemirror/state": 6.5.2
+      "@codemirror/view": 6.38.7
+
   color-convert@2.0.1:
     dependencies:
       color-name: 1.1.4
@@ -7834,10 +8102,12 @@ snapshots:
     dependencies:
       env-paths: 2.2.1
       import-fresh: 3.3.1
-      js-yaml: 4.1.0
+      js-yaml: 4.1.1
       parse-json: 5.2.0
     optionalDependencies:
       typescript: 5.9.3
+
+  crelt@1.0.6: {}
 
   cross-spawn@7.0.6:
     dependencies:
@@ -8343,18 +8613,15 @@ snapshots:
 
   isexe@2.0.0: {}
 
+  isomorphic.js@0.2.5: {}
+
   jiti@2.6.1: {}
 
   jose@6.1.0: {}
 
   js-tokens@4.0.0: {}
 
-  js-yaml@3.14.1:
-    dependencies:
-      argparse: 1.0.10
-      esprima: 4.0.1
-
-  js-yaml@4.1.0:
+  js-yaml@4.1.1:
     dependencies:
       argparse: 2.0.1
 
@@ -8384,6 +8651,10 @@ snapshots:
     dependencies:
       prelude-ls: 1.2.1
       type-check: 0.4.0
+
+  lib0@0.2.114:
+    dependencies:
+      isomorphic.js: 0.2.5
 
   lightningcss-android-arm64@1.30.2:
     optional: true
@@ -8919,8 +9190,6 @@ snapshots:
 
   split2@4.2.0: {}
 
-  sprintf-js@1.0.3: {}
-
   srvx@0.8.16: {}
 
   string-argv@0.3.2: {}
@@ -8959,6 +9228,8 @@ snapshots:
   strip-json-comments@2.0.1: {}
 
   strip-json-comments@3.1.1: {}
+
+  style-mod@4.1.3: {}
 
   supports-color@7.2.0:
     dependencies:
@@ -9115,6 +9386,8 @@ snapshots:
     optionalDependencies:
       vite: rolldown-vite@7.1.14(@types/node@24.9.1)(esbuild@0.25.0)(jiti@2.6.1)(tsx@4.20.6)(yaml@2.8.1)
 
+  w3c-keyname@2.2.8: {}
+
   webpack-virtual-modules@0.6.2: {}
 
   whatwg-encoding@3.1.1:
@@ -9148,9 +9421,26 @@ snapshots:
       "@oozcitak/dom": 1.15.10
       "@oozcitak/infra": 1.0.8
       "@oozcitak/util": 8.3.8
-      js-yaml: 3.14.1
+      js-yaml: 4.1.1
 
   xtend@4.0.2: {}
+
+  y-codemirror.next@0.3.5(@codemirror/state@6.5.2)(@codemirror/view@6.38.7)(yjs@13.6.27):
+    dependencies:
+      "@codemirror/state": 6.5.2
+      "@codemirror/view": 6.38.7
+      lib0: 0.2.114
+      yjs: 13.6.27
+
+  y-indexeddb@9.0.12(yjs@13.6.27):
+    dependencies:
+      lib0: 0.2.114
+      yjs: 13.6.27
+
+  y-protocols@1.0.6(yjs@13.6.27):
+    dependencies:
+      lib0: 0.2.114
+      yjs: 13.6.27
 
   y18n@5.0.8: {}
 
@@ -9169,6 +9459,10 @@ snapshots:
       string-width: 4.2.3
       y18n: 5.0.8
       yargs-parser: 21.1.1
+
+  yjs@13.6.27:
+    dependencies:
+      lib0: 0.2.114
 
   yocto-queue@0.1.0: {}
 

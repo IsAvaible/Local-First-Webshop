@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { DrizzleQueryError } from "drizzle-orm/errors";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -82,4 +83,19 @@ export function humanizeCustomFieldLabel(
 ) {
   const human = humanizeCustomFieldValue(value, fieldType, locale);
   return fieldName ? `${fieldName}: ${human}` : human;
+}
+
+/**
+ * Type guard to check if an error is a DrizzleQueryError with a database error code.
+ * @param error The error to check.
+ */
+export function isDatabaseError(
+  error: unknown
+): error is DrizzleQueryError & { cause: { code: string } } {
+  return (
+    error instanceof DrizzleQueryError &&
+    typeof error.cause === "object" &&
+    error.cause !== null &&
+    "code" in error.cause
+  );
 }
