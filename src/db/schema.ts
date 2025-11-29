@@ -12,12 +12,14 @@ import {
   pgEnum,
   uniqueIndex,
   customType,
-  primaryKey
+  primaryKey,
+  uuid
 } from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 export * from "./auth-schema";
 import { users } from "./auth-schema";
+import { sql } from "drizzle-orm";
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
   createSchemaFactory({ zodInstance: z });
@@ -286,7 +288,7 @@ export const cartRoleEnum = pgEnum("cart_role", [
 export const cartsTable = pgTable(
   "carts",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid("id").primaryKey().defaultRandom(),
     name: varchar({ length: 255 }).notNull(),
     owner_user_id: text("owner_user_id").references(() => users.id, {
       onDelete: "cascade"
@@ -298,15 +300,19 @@ export const cartsTable = pgTable(
   },
   (table) => ({
     ownerIdx: index("carts_owner_idx").on(table.owner_user_id),
-    guestIdx: index("carts_guest_idx").on(table.guest_session_id)
+    guestIdx: index("carts_guest_idx").on(table.guest_session_id),
+
+    oneDefaultCartPerUser: uniqueIndex("one_default_cart_per_user_idx")
+      .on(table.owner_user_id)
+      .where(sql`${table.is_default} = true`)
   })
 );
 
 export const cartCollaboratorsTable = pgTable(
   "cart_collaborators",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    cart_id: integer("cart_id")
+    id: uuid("id").primaryKey().defaultRandom(),
+    cart_id: uuid("cart_id")
       .notNull()
       .references(() => cartsTable.id, { onDelete: "cascade" }),
     user_id: text("user_id")
@@ -323,111 +329,6 @@ export const cartCollaboratorsTable = pgTable(
     cartIdx: index("collab_cart_idx").on(table.cart_id)
   })
 );
-
-// --- CART FOLDERS TABLE ---
-export const cartFoldersTable = pgTable(
-  "cart_folders",
-  {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    cart_id: integer("cart_id")
-      .notNull()
-      .references(() => cartsTable.id, { onDelete: "cascade" }),
-    name: varchar({ length: 255 }).notNull(),
-    // sort_order is relative to other folders and root items
-    sort_order: integer("sort_order").notNull().default(0),
-    created_at: timestamp({ withTimezone: true }).notNull().defaultNow()
-  },
-  (table) => ({
-    cartIdx: index("cart_folders_cart_idx").on(table.cart_id)
-  })
-);
-
-// --- CART TAGS TABLE (Tag Definitions) ---
-export const cartTagsTable = pgTable(
-  "cart_tags",
-  {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    cart_id: integer("cart_id")
-      .notNull()
-      .references(() => cartsTable.id, { onDelete: "cascade" }),
-    name: varchar({ length: 100 }).notNull(), // The tag text
-    color: varchar({ length: 7 }), // Optional: hex color e.g., "#FF0000"
-    created_at: timestamp({ withTimezone: true }).notNull().defaultNow()
-  },
-  (table) => ({
-    cartIdx: index("cart_tags_cart_idx").on(table.cart_id),
-    // Ensures tag names are unique *within* a single cart
-    cartTagNameUnique: uniqueIndex("cart_tag_name_unique_idx").on(
-      table.cart_id,
-      table.name
-    )
-  })
-);
-
-// --- CART ITEM TAGS TABLE (Join Table) ---
-export const cartItemTagsTable = pgTable(
-  "cart_item_tags",
-  {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    cart_item_id: integer("cart_item_id")
-      .notNull()
-      .references(() => cartItemsTable.id, { onDelete: "cascade" }),
-    cart_tag_id: integer("cart_tag_id")
-      .notNull()
-      .references(() => cartTagsTable.id, { onDelete: "cascade" }),
-    created_at: timestamp({ withTimezone: true }).notNull().defaultNow()
-  },
-  (table) => ({
-    itemIdx: index("cart_item_tags_item_idx").on(table.cart_item_id),
-    tagIdx: index("cart_item_tags_tag_idx").on(table.cart_tag_id),
-    // Ensures a tag is only applied once to a specific item
-    itemTagUnique: uniqueIndex("cart_item_tag_unique_idx").on(
-      table.cart_item_id,
-      table.cart_tag_id
-    )
-  })
-);
-
-// --- CART ITEMS TABLE ---
-export const cartItemsTable = pgTable(
-  "cart_items",
-  {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    cart_id: integer("cart_id")
-      .notNull()
-      .references(() => cartsTable.id, { onDelete: "cascade" }),
-    product_id: integer("product_id")
-      .notNull()
-      .references(() => productsTable.id, { onDelete: "restrict" }),
-    quantity: integer("quantity").notNull().default(1),
-    price_snapshot: decimal("price_snapshot", {
-      precision: 10,
-      scale: 2
-    }).notNull(),
-    currency: varchar("currency", { length: 3 }).notNull().default("EUR"),
-    notes: text("notes"),
-
-    // Link to a folder (nullable)
-    folder_id: integer("folder_id").references(
-      () => cartFoldersTable.id,
-      { onDelete: "set null" } // If folder is deleted, item moves to root
-    ),
-    // For DND sorting
-    // If folder_id is NULL, sort_order is relative to root items/folders
-    // If folder_id is NOT NULL, sort_order is relative to items in that folder
-    sort_order: integer("sort_order").notNull().default(0),
-
-    created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-    updated_at: timestamp({ withTimezone: true }).notNull().defaultNow()
-  },
-  (table) => ({
-    cartIdx: index("cart_items_cart_idx").on(table.cart_id),
-    productIdx: index("cart_items_product_idx").on(table.product_id),
-    folderIdx: index("cart_items_folder_idx").on(table.folder_id)
-  })
-);
-
-// --- Zod Schemas ---
 
 export const selectCartSchema = createSelectSchema(cartsTable);
 export const createCartSchema = createInsertSchema(cartsTable).omit({
@@ -448,44 +349,30 @@ export const updateCartCollaboratorSchema = createUpdateSchema(
   cartCollaboratorsTable
 );
 
-// NEW Schemas
-export const selectCartFolderSchema = createSelectSchema(cartFoldersTable);
-export const createCartFolderSchema = createInsertSchema(cartFoldersTable).omit(
-  {
-    created_at: true
-  }
-);
-export const updateCartFolderSchema = createUpdateSchema(cartFoldersTable).omit(
-  {
-    created_at: true
-  }
-);
+// --- YJS TYPES (The Document State) ---
 
-export const selectCartTagSchema = createSelectSchema(cartTagsTable);
-export const createCartTagSchema = createInsertSchema(cartTagsTable).omit({
-  created_at: true
-});
-export const updateCartTagSchema = createUpdateSchema(cartTagsTable).omit({
-  created_at: true
-});
+export interface YCartItem {
+  type: "item";
+  id: string;
+  product_id: number;
+  quantity: number;
+  notes: string | null;
+  price_snapshot: string;
+  tag_ids: string[];
+  created_at: number;
+}
 
-export const selectCartItemTagSchema = createSelectSchema(cartItemTagsTable);
-export const createCartItemTagSchema = createInsertSchema(
-  cartItemTagsTable
-).omit({
-  created_at: true
-});
-// No update schema, as links are not updated
+export interface YCartFolder {
+  type: "folder";
+  id: string;
+  name: string;
+  // Folders contain a Y.Array of YCartItem (nested structure)
+  // In Yjs, this will be represented as a nested array within the map/object
+  children: YCartItem[];
+}
 
-// MODIFIED Schemas
-export const selectCartItemSchema = createSelectSchema(cartItemsTable);
-export const createCartItemSchema = createInsertSchema(cartItemsTable).omit({
-  created_at: true,
-  updated_at: true
-});
-export const updateCartItemSchema = createUpdateSchema(cartItemsTable).omit({
-  created_at: true
-});
+// The root is an array of either Items or Folders
+export type YCartNode = YCartItem | YCartFolder;
 
 // --- Export Types ---
 export type YdocUpdate = z.infer<typeof updateYdocSchema>;
@@ -507,10 +394,6 @@ export type CustomFieldValue = z.infer<typeof selectCustomFieldValueSchema>;
 
 // Cart Types
 export type Cart = z.infer<typeof selectCartSchema>;
-export type CartItem = z.infer<typeof selectCartItemSchema>;
 export type CartCollaborator = z.infer<typeof selectCartCollaboratorSchema>;
 export const cartRoleSchema = z.enum(cartRoleEnum.enumValues);
 export type CartRole = z.infer<typeof cartRoleSchema>;
-export type CartFolder = z.infer<typeof selectCartFolderSchema>;
-export type CartTag = z.infer<typeof selectCartTagSchema>;
-export type CartItemTag = z.infer<typeof selectCartItemTagSchema>;

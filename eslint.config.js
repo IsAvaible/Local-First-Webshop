@@ -49,6 +49,7 @@ export default defineConfig([
           caughtErrorsIgnorePattern: "^_"
         }
       ],
+      "@typescript-eslint/consistent-type-definitions": "off",
       "prefer-template": "error",
       "no-template-curly-in-string": "error",
       "@typescript-eslint/only-throw-error": [

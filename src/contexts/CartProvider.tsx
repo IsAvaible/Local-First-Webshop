@@ -1,36 +1,93 @@
-import { type ReactNode, useCallback, useEffect, useMemo } from "react";
-import { CartContext } from "./useCartContext";
-import { authClient } from "@/lib/auth-client.ts";
 import {
-  and,
-  eq,
-  useLiveQuery,
-  Query,
-  min,
-  lte,
-  max
-} from "@tanstack/react-db";
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
+import { CartContext, type EnrichedCartNode, type Tag } from "./useCartContext";
+import { authClient } from "@/lib/auth-client";
+import { and, eq, inArray, useLiveQuery } from "@tanstack/react-db";
 import {
-  cartCollaboratorsCollection,
-  cartItemsCollection,
   cartsCollection,
-  usersCollection,
-  cartFoldersCollection,
-  cartItemTagsCollection,
-  cartTagsCollection,
   productsCollection,
   assetsCollection,
-  pricingTiersCollection
-} from "@/lib/collections.ts";
-import type { CartRole } from "@/db/schema.ts";
+  pricingTiersCollection,
+  createApiUrl
+} from "@/lib/collections";
+import * as Y from "yjs";
+import type { TypedMap } from "yjs-types";
+import { IndexeddbPersistence } from "y-indexeddb";
+import { ElectricProvider, parseToDecoder } from "@electric-sql/y-electric";
+import { Awareness } from "y-protocols/awareness";
+import { v4 as uuidv4 } from "uuid";
+import { generateKeyBetween } from "fractional-indexing";
+import * as decoding from "lib0/decoding";
 
-// --- Provider ---
+// --- 1. Strict Type Definitions ---
+
+// Common fields for all nodes
+type BaseNodeShape = {
+  id: string;
+  parent_id: string | null; // null = root
+  order: string; // Fractional index key
+};
+
+// Item specific fields
+type YCartItemShape = BaseNodeShape & {
+  type: "item";
+  product_id: number;
+  quantity: number;
+  price_snapshot: string;
+  tag_ids: string[];
+  notes: string | null;
+  created_at: number;
+};
+
+// Folder specific fields
+type YCartFolderShape = BaseNodeShape & {
+  type: "folder";
+  name: string;
+};
+
+// The Union Type representing the raw JSON data
+type YCartNodeShape = YCartItemShape | YCartFolderShape;
+
+// --- Yjs Specific Types ---
+// These wrap the JSON shapes into Yjs TypedMaps
+type YCartNodeMap = TypedMap<YCartNodeShape>;
+type YTagMap = TypedMap<Tag>;
+
+// Type Guards for narrowing the union
+function isItem(node: YCartNodeShape): node is YCartItemShape {
+  return node.type === "item";
+}
+
+function isFolder(node: YCartNodeShape): node is YCartFolderShape {
+  return node.type === "folder";
+}
+
+// Helper to safely check type on a Y.Map without full JSON conversion
+function isYItemMap(map: YCartNodeMap): map is TypedMap<YCartItemShape> {
+  return map.get("type") === "item";
+}
+
+function isYFolderMap(map: YCartNodeMap): map is TypedMap<YCartFolderShape> {
+  return map.get("type") === "folder";
+}
+
+interface UpdateTableSchema {
+  update: decoding.Decoder;
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const { data: session } = authClient.useSession();
   const userId = session?.user.id;
 
-  // 1. Get the user's default cart
-  const { data: cart, isLoading: isCartPending } = useLiveQuery(
+  // --- 2. SQL Discovery & Initialization ---
+
+  const { data: sqlCart, isLoading: isSqlCartLoading } = useLiveQuery(
     (q) => {
       if (!userId) return undefined;
       return q
@@ -43,365 +100,487 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [userId]
   );
 
+  const initAttempted = useRef(false);
+
   useEffect(() => {
-    // We only create a cart if:
-    // - We have a logged-in user (userId)
-    // - The query for the cart is finished (!isCartPending)
-    // - No default cart was found (!cart)
-    if (userId && !isCartPending && !cart) {
-      cartsCollection.insert({
-        id: Math.floor(Math.random() * 1000000),
+    // This might not seem 100% safe, as unique creation of resources shouldn't
+    // be up to the client. However, if a duplication happens, the database constraint
+    // should reject the duplicate cart and the client can recover by re-querying.
+    if (userId && !isSqlCartLoading && !sqlCart && !initAttempted.current) {
+      initAttempted.current = true;
+      const tx = cartsCollection.insert({
+        id: uuidv4(),
         name: "Cart",
         owner_user_id: userId,
-        is_default: true,
         guest_session_id: null,
+        is_default: true,
         created_at: new Date(),
         updated_at: new Date()
       });
+      tx.isPersisted.promise.catch((e) => {
+        console.error("Failed to init cart", e);
+        initAttempted.current = false;
+      });
     }
-  }, [userId, isCartPending, cart]);
+  }, [userId, isSqlCartLoading, sqlCart]);
 
-  const cartId = cart?.id;
+  const roomName = sqlCart?.id;
 
-  // 2. Get items for that cart (enriched with product, asset, and pricing)
-  const { data: items, isLoading: isItemsPending } = useLiveQuery(
+  // --- 3. Yjs Setup (Strictly Typed) ---
+
+  const [ydoc] = useState(() => new Y.Doc());
+  const [awareness] = useState(() => new Awareness(ydoc));
+  const [isSynced, setIsSynced] = useState(false);
+
+  const [flatNodes, setFlatNodes] = useState<YCartNodeShape[]>([]);
+  const [flatTags, setFlatTags] = useState<Tag[]>([]);
+
+  // The Top-Level maps hold nested Y.Maps (TypedMap<T>)
+  const nodesMap = ydoc.getMap<YCartNodeMap>("nodes");
+  const tagsMap = ydoc.getMap<YTagMap>("tags");
+
+  useEffect(() => {
+    const updateState = () => {
+      // Convert Y.Maps to JS Objects
+      const nodes: YCartNodeShape[] = [];
+      nodesMap.forEach((nodeMap) => {
+        nodes.push(nodeMap.toJSON() as YCartNodeShape);
+      });
+      setFlatNodes(nodes);
+
+      const tags: Tag[] = [];
+      tagsMap.forEach((tagMap) => {
+        tags.push(tagMap.toJSON() as Tag);
+      });
+      setFlatTags(tags);
+    };
+
+    // It might be smarter to use a hook like use-yjs in the component instead
+    // of serializing the whole tree here. Each yjs change causes a re-serialization.
+    // Right now we are trading performance with separation of concerns (The component
+    // receives a React representation of the state and does not need to know of the data layer).
+    // As we have at most 100 items in a cart this performance hit should be fine.
+    nodesMap.observeDeep(updateState);
+    tagsMap.observeDeep(updateState);
+    updateState();
+
+    return () => {
+      nodesMap.unobserveDeep(updateState);
+      tagsMap.unobserveDeep(updateState);
+    };
+  }, [nodesMap, tagsMap]);
+
+  useEffect(() => {
+    if (!roomName) return;
+    const persistence = new IndexeddbPersistence(roomName, ydoc);
+    persistence.on("synced", () => setIsSynced(true));
+
+    const electricProvider = new ElectricProvider<
+      // @ts-expect-error This doesn't matter as it's only used for inferring the row.update type
+      UpdateTableSchema,
+      UpdateTableSchema
+    >({
+      doc: ydoc,
+      documentUpdates: {
+        shape: {
+          url: createApiUrl(`/api/ydoc-updates`),
+          params: { table: `ydoc_updates`, where: `room = '${roomName}'` },
+
+          parser: parseToDecoder
+        },
+        sendUrl: createApiUrl(`/api/ydoc-updates?room=${roomName}`),
+        getUpdateFromRow: (row) => row.update
+      },
+      awarenessUpdates: {
+        protocol: awareness,
+        shape: {
+          url: createApiUrl(`/api/ydoc-awareness`),
+          params: { table: `ydoc_awareness`, where: `room = '${roomName}'` },
+          parser: parseToDecoder
+        },
+        sendUrl: createApiUrl(
+          `/api/ydoc-awareness?room=${roomName}&clientId=${ydoc.clientID}`
+        ),
+        getUpdateFromRow: (row) => row.update
+      }
+    });
+
+    return () => {
+      void persistence.destroy();
+      electricProvider.destroy();
+      setIsSynced(false);
+    };
+  }, [roomName, ydoc, awareness]);
+
+  // --- 4. Enrichment (Strictly Typed) ---
+
+  const uniqueProductIds = useMemo(() => {
+    const ids = new Set<number>();
+    flatNodes.forEach((n) => {
+      if (isItem(n)) ids.add(n.product_id);
+    });
+    return Array.from(ids).sort();
+  }, [
+    // Stable stringify of strictly relevant fields
+    // This might cause issues if flatNodes is out of sync (as it is built from the source of truth from by React)
+    JSON.stringify(flatNodes.map((n) => (isItem(n) ? n.product_id : "F")))
+  ]);
+
+  const { data: productsData, isLoading: isProductsLoading } = useLiveQuery(
     (q) => {
-      if (!cartId) return undefined;
+      if (uniqueProductIds.length === 0) return undefined;
+      return q
+        .from({ p: productsCollection })
+        .where(({ p }) => inArray(p.id, uniqueProductIds));
+    },
+    [uniqueProductIds]
+  );
 
-      // Subquery: first asset id per product
-      const firstAssetIdSubquery = new Query()
+  const { data: assetsData, isLoading: isAssetsLoading } = useLiveQuery(
+    (q) => {
+      if (uniqueProductIds.length === 0) return undefined;
+      return q
         .from({ a: assetsCollection })
-        .groupBy(({ a }) => a.product_id)
-        .select(({ a }) => ({
-          product_id: a.product_id,
-          first_asset_id: min(a.id)
-        }));
-
-      // 1. Find the value of the best min_quantity for each cart item
-      const bestMinQuantitySubquery = new Query()
-        .from({ i: cartItemsCollection })
-        .where(({ i }) => eq(i.cart_id, cartId))
-        .join({ pt: pricingTiersCollection }, ({ i, pt }) =>
-          eq(pt.product_id, i.product_id)
-        )
-        .where(({ i, pt }) => lte(pt?.min_quantity, i.quantity))
-        .groupBy(({ i }) => i.id)
-        .select(({ i, pt }) => ({
-          cart_item_id: i.id,
-          best_min_quantity: max(pt?.min_quantity)
-        }));
-
-      // 2. Use the "best_min_quantity" value to find the price of that tier
-      const bestPriceIdSubquery = new Query()
-        .from({ i: cartItemsCollection })
-        .where(({ i }) => eq(i.cart_id, cartId))
-        .join({ bmq: bestMinQuantitySubquery }, ({ i, bmq }) =>
-          eq(i.id, bmq.cart_item_id)
-        )
-        .join({ pt: pricingTiersCollection }, ({ i, pt }) =>
-          eq(pt.product_id, i.product_id)
-        )
-        // Filter the pricing table to find the row that matches the best value
-        .where(({ pt, bmq }) => eq(pt?.min_quantity, bmq?.best_min_quantity))
-        .select(({ i, pt }) => ({
-          cart_item_id: i.id,
-          best_pricing_tier_id: pt?.id
-        }));
-
-      // Main query: cart items joined to product, asset, and best price
-      return q
-        .from({ i: cartItemsCollection })
-        .where(({ i }) => eq(i.cart_id, cartId))
-        .leftJoin({ p: productsCollection }, ({ i, p }) =>
-          eq(p.id, i.product_id)
-        )
-        .leftJoin({ fa_id: firstAssetIdSubquery }, ({ p, fa_id }) =>
-          eq(p?.id, fa_id.product_id)
-        )
-        .leftJoin({ asset: assetsCollection }, ({ asset, fa_id }) =>
-          eq(asset.id, fa_id?.first_asset_id)
-        )
-        .leftJoin({ bpi: bestPriceIdSubquery }, ({ i, bpi }) =>
-          eq(i.id, bpi.cart_item_id)
-        )
-        .leftJoin({ price: pricingTiersCollection }, ({ price, bpi }) =>
-          eq(price.id, bpi?.best_pricing_tier_id)
-        )
-        .orderBy(({ i }) => i.created_at)
-        .select(({ i, p, asset, price }) => ({
-          ...i,
-          product: p,
-          asset: asset,
-          price: price?.price_per_unit
-        }));
+        .where(({ a }) => inArray(a.product_id, uniqueProductIds));
     },
-    [cartId]
+    [uniqueProductIds]
   );
 
-  const itemIds = useMemo(() => items?.map((i) => i.id) ?? [], [items]);
-
-  // 3. Get collaborators for that cart
-  const { data: collaborators, isLoading: isCollabsPending } = useLiveQuery(
+  const { data: tiersData, isLoading: isTiersLoading } = useLiveQuery(
     (q) => {
-      if (!cartId) return undefined;
+      if (uniqueProductIds.length === 0) return undefined;
       return q
-        .from({ collabs: cartCollaboratorsCollection })
-        .where(({ collabs }) => eq(collabs.cart_id, cartId));
+        .from({ pt: pricingTiersCollection })
+        .where(({ pt }) => inArray(pt.product_id, uniqueProductIds));
     },
-    [cartId]
+    [uniqueProductIds]
   );
 
-  // 4. Get all users
-  const { data: allUsers, isLoading: isUsersPending } = useLiveQuery((q) =>
-    q.from({ users: usersCollection })
-  );
+  // --- 5. Tree Construction (Read Logic) ---
 
-  // 5. Get folders for that cart
-  const { data: folders, isLoading: isFoldersPending } = useLiveQuery(
-    (q) => {
-      if (!cartId) return undefined;
-      return q
-        .from({ folders: cartFoldersCollection })
-        .where(({ folders }) => eq(folders.cart_id, cartId))
-        .orderBy(({ folders }) => folders.sort_order);
-    },
-    [cartId]
-  );
+  const isLoadingData =
+    isSqlCartLoading || isTiersLoading || isProductsLoading || isAssetsLoading;
 
-  // 6. Get all available tags for that cart
-  const { data: tags, isLoading: isTagsPending } = useLiveQuery(
-    (q) => {
-      if (!cartId) return undefined;
-      return q
-        .from({ tags: cartTagsCollection })
-        .where(({ tags }) => eq(tags.cart_id, cartId));
-    },
-    [cartId]
-  );
+  const enrichedTree: EnrichedCartNode[] = useMemo(() => {
+    if (isLoadingData) return []; // Basic loading check
 
-  // 7. Get all item-tag associations
-  const { data: itemTags, isLoading: isItemTagsPending } = useLiveQuery(
-    (q) => {
-      if (itemIds.length === 0) return undefined;
-      return q
-        .from({ itemTags: cartItemTagsCollection })
-        .where(({ itemTags }) => eq(itemTags.cart_item_id, cartId));
-    },
-    [itemIds]
-  );
+    const nodesByParent: Record<string, YCartNodeShape[]> = {};
+    const rootNodes: YCartNodeShape[] = [];
 
-  const isLoading =
-    isCartPending ||
-    isItemsPending ||
-    isCollabsPending ||
-    isUsersPending ||
-    isFoldersPending ||
-    isTagsPending ||
-    isItemTagsPending;
+    flatNodes.forEach((node) => {
+      if (!node.parent_id) {
+        rootNodes.push(node);
+      } else {
+        if (!nodesByParent[node.parent_id]) {
+          nodesByParent[node.parent_id] = [];
+        }
+        nodesByParent[node.parent_id].push(node);
+      }
+    });
 
-  // --- Operations ---
+    const sortNodes = (a: YCartNodeShape, b: YCartNodeShape) => {
+      if (a.order === b.order) return a.id.localeCompare(b.id);
+      return a.order < b.order ? -1 : 1;
+    };
+
+    const buildTree = (node: YCartNodeShape): EnrichedCartNode => {
+      if (isItem(node)) {
+        const product = productsData?.find((p) => p.id === node.product_id);
+        const asset = assetsData?.find((a) => a.product_id === node.product_id);
+
+        const validTiers = (tiersData ?? [])
+          .filter((t) => t.product_id === node.product_id)
+          .sort((a, b) => b.min_quantity - a.min_quantity);
+
+        const bestTier = validTiers.find(
+          (t) => t.min_quantity <= node.quantity
+        );
+
+        return {
+          ...node,
+          product,
+          asset,
+          price: bestTier?.price_per_unit ?? node.price_snapshot
+        };
+      } else {
+        const children = nodesByParent[node.id] || [];
+        children.sort(sortNodes);
+
+        return {
+          ...node,
+          type: "folder",
+          children: children.map(buildTree)
+        };
+      }
+    };
+
+    rootNodes.sort(sortNodes);
+    return rootNodes.map(buildTree);
+  }, [flatNodes, productsData, assetsData, tiersData, isTiersLoading]);
+
+  // --- 6. Operations (Write Logic) ---
 
   const addItem = useCallback(
-    (productId: number, price: string, currency = "EUR") => {
-      if (!cart) return;
-      const existingItem = items?.find(
-        (i) => i.product_id === productId && i.cart_id === cart.id
-      );
-      if (existingItem) {
-        cartItemsCollection.update(existingItem.id, (draft) => {
-          draft.quantity = (draft.quantity ?? 1) + 1;
-        });
-      } else {
-        cartItemsCollection.insert({
-          id: Math.floor(Math.random() * 1000000), // Client-gen ID
-          cart_id: cart.id,
-          product_id: productId,
-          quantity: 1,
-          price_snapshot: price,
-          currency: currency,
-          notes: null,
-          created_at: new Date(),
-          updated_at: new Date(),
-          folder_id: null,
-          sort_order: 0
-        });
-      }
+    (productId: number, price: string) => {
+      ydoc.transact(() => {
+        // Find the last node in the root to append after
+        const lastRootNode = flatNodes
+          .filter((n) => n.parent_id === null)
+          .sort((a, b) => (a.order < b.order ? -1 : 1))
+          .pop();
+
+        const newOrder = generateKeyBetween(lastRootNode?.order ?? null, null);
+
+        const id = uuidv4();
+        // Initialize as TypedMap
+        const itemMap = new Y.Map() as TypedMap<YCartItemShape>;
+
+        itemMap.set("id", id);
+        itemMap.set("type", "item");
+        itemMap.set("parent_id", null);
+        itemMap.set("order", newOrder);
+        itemMap.set("product_id", productId);
+        itemMap.set("quantity", 1);
+        itemMap.set("price_snapshot", price);
+        itemMap.set("tag_ids", []);
+        itemMap.set("notes", null);
+        itemMap.set("created_at", Date.now());
+
+        nodesMap.set(id, itemMap);
+      });
     },
-    [cart, items]
+    [ydoc, nodesMap, flatNodes]
   );
 
-  const removeItem = useCallback((itemId: number) => {
-    cartItemsCollection.delete(itemId);
-  }, []);
+  const createFolder = useCallback(
+    (name: string) => {
+      ydoc.transact(() => {
+        const id = uuidv4();
+        const folderMap = new Y.Map() as TypedMap<YCartFolderShape>;
+
+        folderMap.set("id", id);
+        folderMap.set("type", "folder");
+        folderMap.set("parent_id", null);
+        folderMap.set("order", generateKeyBetween(null, null));
+        folderMap.set("name", name);
+
+        nodesMap.set(id, folderMap);
+      });
+    },
+    [ydoc, nodesMap]
+  );
+
+  const moveNode = useCallback(
+    (
+      activeId: string,
+      targetFolderId: string | null,
+      newIndexInFolder: number
+    ) => {
+      ydoc.transact(() => {
+        const nodeToMove = nodesMap.get(activeId);
+        if (!nodeToMove) return;
+
+        // 1. Cycle Detection
+        if (isYFolderMap(nodeToMove) && targetFolderId) {
+          let currentParentId: string | null = targetFolderId;
+
+          // Limit nesting depth to prevent infinite loops (due to erroneous state in yjs)
+          const MAX_NESTING = 100;
+          let depth = 0;
+
+          while (currentParentId) {
+            if (depth++ > MAX_NESTING) {
+              console.error(
+                "Exceeded MAX_NESTING. Aborting move to prevent infinite loop."
+              );
+              return;
+            }
+            if (currentParentId === activeId) {
+              console.warn("Cannot move a folder into its own child.");
+              return;
+            }
+            const parentMap = nodesMap.get(currentParentId);
+            currentParentId = parentMap?.get("parent_id") ?? null;
+          }
+        }
+
+        // 2. Find Siblings (using JS array for speed)
+        const siblings = flatNodes
+          .filter((n) => n.parent_id === targetFolderId && n.id !== activeId)
+          .sort((a, b) => (a.order < b.order ? -1 : 1));
+
+        const prevNode = siblings[newIndexInFolder - 1];
+        const nextNode = siblings[newIndexInFolder];
+
+        const newOrder = generateKeyBetween(
+          prevNode?.order || null,
+          nextNode?.order || null
+        );
+
+        nodeToMove.set("parent_id", targetFolderId);
+        nodeToMove.set("order", newOrder);
+      });
+    },
+    [ydoc, nodesMap, flatNodes]
+  );
+
+  const removeItem = useCallback(
+    (itemId: string) => {
+      ydoc.transact(() => {
+        const idsToDelete = [itemId];
+
+        // Cascading delete helper
+        const scanChildren = (parentId: string) => {
+          flatNodes.forEach((n) => {
+            if (n.parent_id === parentId) {
+              idsToDelete.push(n.id);
+              if (isFolder(n)) scanChildren(n.id);
+            }
+          });
+        };
+
+        const node = nodesMap.get(itemId);
+        if (node && isYFolderMap(node)) {
+          scanChildren(itemId);
+        }
+
+        idsToDelete.forEach((id) => nodesMap.delete(id));
+      });
+    },
+    [ydoc, nodesMap, flatNodes]
+  );
 
   const updateItemQuantity = useCallback(
-    (itemId: number, newQuantity: number) => {
-      if (newQuantity <= 0) {
-        cartItemsCollection.delete(itemId);
-      } else {
-        cartItemsCollection.update(itemId, (draft) => {
-          draft.quantity = newQuantity;
-        });
-      }
-    },
-    []
-  );
-
-  const updateItemNotes = useCallback((itemId: number, notes: string) => {
-    cartItemsCollection.update(itemId, (draft) => {
-      draft.notes = notes;
-    });
-  }, []);
-
-  const updateItemFolderAndSort = useCallback(
-    (
-      itemId: number,
-      data: { folder_id?: number | null; sort_order?: number }
-    ) => {
-      cartItemsCollection.update(itemId, (draft) => {
-        if (data.folder_id !== undefined) {
-          draft.folder_id = data.folder_id;
-        }
-        if (data.sort_order !== undefined) {
-          draft.sort_order = data.sort_order;
+    (itemId: string, qty: number) => {
+      ydoc.transact(() => {
+        const item = nodesMap.get(itemId);
+        if (item && isYItemMap(item)) {
+          item.set("quantity", qty);
         }
       });
     },
-    []
+    [ydoc, nodesMap]
   );
 
-  const updateCartName = useCallback(
-    (newName: string) => {
-      if (cart) {
-        cartsCollection.update(cart.id, (draft) => {
-          draft.name = newName;
-        });
-      }
-    },
-    [cart]
-  );
-
-  const addCollaborator = useCallback(
-    (userId: string, role: CartRole) => {
-      if (cart) {
-        cartCollaboratorsCollection.insert({
-          id: Math.floor(Math.random() * 1000000), // Client-gen ID
-          cart_id: cart.id,
-          user_id: userId,
-          role: role,
-          created_at: new Date()
-        });
-      }
-    },
-    [cart]
-  );
-
-  const removeCollaborator = useCallback((collaboratorId: number) => {
-    cartCollaboratorsCollection.delete(collaboratorId);
-  }, []);
-
-  const updateCollaboratorRole = useCallback(
-    (collaboratorId: number, newRole: CartRole) => {
-      cartCollaboratorsCollection.update(collaboratorId, (draft) => {
-        draft.role = newRole;
+  const updateItemNotes = useCallback(
+    (itemId: string, notes: string) => {
+      ydoc.transact(() => {
+        const item = nodesMap.get(itemId);
+        if (item && isYItemMap(item)) {
+          item.set("notes", notes);
+        }
       });
     },
-    []
-  );
-
-  // --- Folder Operations ---
-  const createFolder = useCallback(
-    (name: string, sort_order: number) => {
-      if (cart) {
-        cartFoldersCollection.insert({
-          id: Math.floor(Math.random() * 1000000), // Client-gen ID
-          cart_id: cart.id,
-          name: name,
-          sort_order: sort_order,
-          created_at: new Date()
-        });
-      }
-    },
-    [cart]
+    [ydoc, nodesMap]
   );
 
   const updateFolder = useCallback(
-    (folderId: number, data: { name?: string; sort_order?: number }) => {
-      cartFoldersCollection.update(folderId, (draft) => {
-        if (data.name !== undefined) draft.name = data.name;
-        if (data.sort_order !== undefined) draft.sort_order = data.sort_order;
+    (folderId: string, name: string) => {
+      ydoc.transact(() => {
+        const folder = nodesMap.get(folderId);
+        if (folder && isYFolderMap(folder)) {
+          folder.set("name", name);
+        }
       });
     },
-    []
+    [ydoc, nodesMap]
   );
 
-  const deleteFolder = useCallback((folderId: number) => {
-    cartFoldersCollection.delete(folderId);
-  }, []);
-
-  // --- Tag Operations ---
   const createTag = useCallback(
     (name: string) => {
-      if (cart) {
-        cartTagsCollection.insert({
-          id: Math.floor(Math.random() * 1000000),
-          cart_id: cart.id,
-          name: name,
-          color: "",
-          created_at: new Date()
-        });
-      }
+      ydoc.transact(() => {
+        const id = uuidv4();
+        const tagMap = new Y.Map() as YTagMap;
+        tagMap.set("id", id);
+        tagMap.set("name", name);
+        tagMap.set("color", null);
+        tagsMap.set(id, tagMap);
+      });
     },
-    [cart]
+    [ydoc, tagsMap]
   );
 
-  const updateTag = useCallback((tagId: number, name: string) => {
-    cartTagsCollection.update(tagId, (draft) => {
-      draft.name = name;
-    });
-  }, []);
+  const addTagToItem = useCallback(
+    (itemId: string, tagId: string) => {
+      ydoc.transact(() => {
+        const item = nodesMap.get(itemId);
+        if (item && isYItemMap(item)) {
+          const tags = item.get("tag_ids") ?? [];
+          if (!tags.includes(tagId)) {
+            item.set("tag_ids", [...tags, tagId]);
+          }
+        }
+      });
+    },
+    [ydoc, nodesMap]
+  );
 
-  const deleteTag = useCallback((tagId: number) => {
-    cartTagsCollection.delete(tagId);
-  }, []);
+  const removeTagFromItem = useCallback(
+    (itemId: string, tagId: string) => {
+      ydoc.transact(() => {
+        const item = nodesMap.get(itemId);
+        if (item && isYItemMap(item)) {
+          const tags = item.get("tag_ids") ?? [];
+          item.set(
+            "tag_ids",
+            tags.filter((t) => t !== tagId)
+          );
+        }
+      });
+    },
+    [ydoc, nodesMap]
+  );
 
-  // --- Item-Tag Association Operations ---
-  const addTagToItem = useCallback((itemId: number, tagId: number) => {
-    cartItemTagsCollection.insert({
-      id: Math.floor(Math.random() * 1000000), // Client-gen ID
-      cart_item_id: itemId,
-      cart_tag_id: tagId,
-      created_at: new Date()
-    });
-  }, []);
+  const updateTag = useCallback(
+    (tagId: string, name: string) => {
+      ydoc.transact(() => {
+        const tagMap = tagsMap.get(tagId);
+        if (tagMap) {
+          tagMap.set("name", name);
+        }
+      });
+    },
+    [ydoc, tagsMap]
+  );
 
-  const removeTagFromItem = useCallback((itemTagId: number) => {
-    cartItemTagsCollection.delete(itemTagId);
-  }, []);
+  const deleteTag = useCallback(
+    (tagId: string) => {
+      ydoc.transact(() => {
+        // 1. Delete tag definition
+        tagsMap.delete(tagId);
 
-  // --- Context Value ---
+        // 2. Remove tag reference from all items
+        // We iterate the Y.Map directly for writes to ensure atomicity
+        // (Using flatNodes for reads is okay, but for writes we want direct map access)
+        for (const nodeMap of nodesMap.values()) {
+          if (isYItemMap(nodeMap)) {
+            const currentTags = nodeMap.get("tag_ids") ?? [];
+            if (currentTags.includes(tagId)) {
+              nodeMap.set(
+                "tag_ids",
+                currentTags.filter((t) => t !== tagId)
+              );
+            }
+          }
+        }
+      });
+    },
+    [ydoc, tagsMap, nodesMap]
+  );
+
   const value = {
-    cart,
-    items,
-    folders,
-    tags,
-    itemTags,
-    collaborators,
-    allUsers,
-    session,
-    isLoading,
+    cartId: roomName,
+    rootNodes: enrichedTree,
+    tags: flatTags,
+    isLoading: isLoadingData,
+    isSynced,
     addItem,
     removeItem,
     updateItemQuantity,
     updateItemNotes,
-    updateItemFolderAndSort,
-    updateCartName,
-    addCollaborator,
-    removeCollaborator,
-    updateCollaboratorRole,
+    moveNode,
     createFolder,
     updateFolder,
-    deleteFolder,
     createTag,
     updateTag,
     deleteTag,

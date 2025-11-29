@@ -613,16 +613,16 @@ The collection hooks use tRPC for all mutations, providing full end-to-end type 
 ```tsx
 // In your collection configuration
 onUpdate: async ({ transaction }) => {
-  const { modified: updatedTodo } = transaction.mutations[0]
+  const { modified: updatedTodo } = transaction.mutations[0];
   const result = await trpc.todos.update.mutate({
     id: updatedTodo.id,
     data: {
       text: updatedTodo.text,
-      completed: updatedTodo.completed,
-    },
-  })
-  return { txid: result.txid }
-},
+      completed: updatedTodo.completed
+    }
+  });
+  return { txid: result.txid };
+};
 ```
 
 **API Routes:**

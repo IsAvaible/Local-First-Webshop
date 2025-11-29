@@ -1,4 +1,4 @@
-import { useCart } from "@/contexts/useCartContext.ts";
+import { type Tag, useCart } from "@/contexts/useCartContext"; // Removed .ts extension for standard import
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,14 +10,13 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { CheckIcon, PencilIcon, Trash2Icon, XIcon } from "lucide-react";
-import type { CartTag } from "@/db/schema";
 
 export function TagManager() {
   const { tags, createTag, deleteTag, updateTag } = useCart();
   const [newTag, setNewTag] = useState("");
 
   // --- State for inline editing ---
-  const [editingTagId, setEditingTagId] = useState<number | null>(null);
+  const [editingTagId, setEditingTagId] = useState<string | null>(null);
   const [editingTagName, setEditingTagName] = useState("");
 
   const handleAddTag = () => {
@@ -28,7 +27,7 @@ export function TagManager() {
   };
 
   // --- Handlers for editing ---
-  const startEditing = (tag: CartTag) => {
+  const startEditing = (tag: Tag) => {
     setEditingTagId(tag.id);
     setEditingTagName(tag.name);
   };
@@ -46,7 +45,7 @@ export function TagManager() {
   };
 
   return (
-    <Dialog onOpenChange={() => cancelEditing()}>
+    <Dialog onOpenChange={(open) => !open && cancelEditing()}>
       <DialogTrigger asChild>
         <Button variant="outline">Manage Tags</Button>
       </DialogTrigger>
@@ -68,7 +67,7 @@ export function TagManager() {
 
           {/* --- List of Existing Tags --- */}
           <div className="flex max-h-60 flex-col gap-2 overflow-y-auto pr-2">
-            {tags?.length === 0 && (
+            {(!tags || tags.length === 0) && (
               <p className="text-muted-foreground text-sm">
                 No tags created yet.
               </p>

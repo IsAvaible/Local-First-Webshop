@@ -1,12 +1,7 @@
 import { type EnrichedCartItem, useCart } from "@/contexts/useCartContext.ts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  GripVerticalIcon,
-  Trash2Icon,
-  CornerLeftUpIcon,
-  XIcon
-} from "lucide-react";
+import { GripVerticalIcon, Trash2Icon, XIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -30,36 +25,23 @@ export function CartItemComponent({
 } & React.ComponentProps<"div">) {
   const {
     tags,
-    itemTags,
     updateItemNotes,
     removeItem,
     updateItemQuantity,
-    updateItemFolderAndSort,
     addTagToItem,
     removeTagFromItem
   } = useCart();
 
-  // --- Derive this item's tags from global lists ---
-  const thisItemsTagLinks =
-    itemTags?.filter((it) => it.cart_item_id === item.id) ?? [];
-  const thisItemsTagIds = new Set(
-    thisItemsTagLinks.map((link) => link.cart_tag_id)
-  );
-  const thisItemsTags = tags?.filter((t) => thisItemsTagIds.has(t.id)) ?? [];
+  const thisItemsTags = tags?.filter((t) => item.tag_ids.includes(t.id)) ?? [];
 
-  // --- Updated Tag Handlers ---
-  const handleAddTag = (tagIdStr: string) => {
-    addTagToItem(item.id, Number(tagIdStr));
+  const handleAddTag = (tagId: string) => {
+    addTagToItem(item.id, tagId);
   };
 
-  const handleRemoveTag = (tagId: number) => {
-    const linkToRemove = thisItemsTagLinks.find((l) => l.cart_tag_id === tagId);
-    if (linkToRemove) {
-      removeTagFromItem(linkToRemove.id);
-    }
+  const handleRemoveTag = (tagId: string) => {
+    removeTagFromItem(item.id, tagId);
   };
 
-  // --- Updated Quantity Handler ---
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQuantity = parseInt(e.target.value, 10);
     if (newQuantity > 0) {
@@ -140,8 +122,8 @@ export function CartItemComponent({
                 {tags?.map((tag) => (
                   <SelectItem
                     key={tag.id}
-                    value={String(tag.id)}
-                    disabled={thisItemsTagIds.has(tag.id)}
+                    value={tag.id}
+                    disabled={item.tag_ids.includes(tag.id)}
                   >
                     {tag.name}
                   </SelectItem>
@@ -173,18 +155,16 @@ export function CartItemComponent({
         </Button>
 
         {/* --- Move out of Folder Button (conditional) --- */}
-        {item.folder_id && (
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() =>
-              updateItemFolderAndSort(item.id, { folder_id: null })
-            }
-          >
-            <CornerLeftUpIcon className="h-4 w-4" />
-          </Button>
-        )}
+        {/*{item.folder_id && (*/}
+        {/*  <Button*/}
+        {/*    variant="outline"*/}
+        {/*    size="icon"*/}
+        {/*    className="h-8 w-8"*/}
+        {/*    onClick={() => updateItemFolder(item.id, { folder_id: null })}*/}
+        {/*  >*/}
+        {/*    <CornerLeftUpIcon className="h-4 w-4" />*/}
+        {/*  </Button>*/}
+        {/*)}*/}
       </div>
     </div>
   );

@@ -23,7 +23,7 @@ export const cartsRouter = router({
   update: authedProcedure
     .input(
       z.object({
-        id: z.number(),
+        id: z.uuid(),
         data: updateCartSchema
       })
     )
@@ -50,7 +50,7 @@ export const cartsRouter = router({
     }),
 
   delete: authedProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const { cart, role } = await getCartWithRole(input.id, ctx.session);
       if (!cart || !canManage(role)) throw new TRPCError({ code: "FORBIDDEN" });

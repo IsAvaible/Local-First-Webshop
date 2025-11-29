@@ -12,7 +12,7 @@ export type UserSession = { user: { id: string } } | null;
 export type EffectiveRole = CartRole | "owner" | "guest" | "none";
 
 export async function getCartWithRole(
-  cartId: number,
+  cartId: string,
   session: UserSession,
   guestSessionId?: string
 ): Promise<{ cart: Cart | undefined; role: EffectiveRole }> {

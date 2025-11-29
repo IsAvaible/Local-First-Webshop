@@ -12,11 +12,7 @@ import {
   selectCustomFieldDefinitionSchema,
   selectCustomFieldValueSchema,
   selectCartSchema,
-  selectCartItemSchema,
-  selectCartCollaboratorSchema,
-  selectCartFolderSchema,
-  selectCartItemTagSchema,
-  selectCartTagSchema
+  selectCartCollaboratorSchema
 } from "@/db/schema";
 import { trpc } from "@/lib/trpc-client";
 
@@ -230,50 +226,6 @@ export const cartsCollection = createCollection(
   })
 );
 
-// --- Cart Items Collection ---
-export const cartItemsCollection = createCollection(
-  electricCollectionOptions({
-    id: "cart_items",
-    shapeOptions: {
-      url: createApiUrl("/api/cart-items"),
-      parser: { timestamptz: (date: string) => new Date(date) }
-    },
-    schema: selectCartItemSchema,
-    getKey: (item) => item.id,
-    onInsert: async ({ transaction }) => {
-      const { modified: newItem } = transaction.mutations[0];
-      const result = await trpc.cartItems.create.mutate({
-        cart_id: newItem.cart_id,
-        product_id: newItem.product_id,
-        quantity: newItem.quantity,
-        price_snapshot: newItem.price_snapshot,
-        currency: newItem.currency,
-        notes: newItem.notes
-      });
-
-      return { txid: result.txid };
-    },
-    onUpdate: async ({ transaction }) => {
-      const { modified: updatedItem } = transaction.mutations[0];
-      const result = await trpc.cartItems.update.mutate({
-        id: updatedItem.id,
-        data: {
-          quantity: updatedItem.quantity,
-          notes: updatedItem.notes
-        }
-      });
-
-      return { txid: result.txid };
-    },
-    onDelete: async ({ transaction }) => {
-      const { original: deletedItem } = transaction.mutations[0];
-      const result = await trpc.cartItems.delete.mutate({ id: deletedItem.id });
-
-      return { txid: result.txid };
-    }
-  })
-);
-
 // --- Cart Collaborators Collection ---
 export const cartCollaboratorsCollection = createCollection(
   electricCollectionOptions({
@@ -309,127 +261,6 @@ export const cartCollaboratorsCollection = createCollection(
       const { original: deletedCollab } = transaction.mutations[0];
       const result = await trpc.cartCollaborators.delete.mutate({
         id: deletedCollab.id
-      });
-
-      return { txid: result.txid };
-    }
-  })
-);
-
-// --- Cart Folders Collection ---
-export const cartFoldersCollection = createCollection(
-  electricCollectionOptions({
-    id: "cart_folders",
-    shapeOptions: {
-      url: createApiUrl("/api/cart-folders"),
-      parser: { timestamptz: (date: string) => new Date(date) }
-    },
-    schema: selectCartFolderSchema,
-    getKey: (item) => item.id,
-    onInsert: async ({ transaction }) => {
-      const { modified: newFolder } = transaction.mutations[0];
-      const result = await trpc.cartFolders.create.mutate({
-        cart_id: newFolder.cart_id,
-        name: newFolder.name,
-        sort_order: newFolder.sort_order
-      });
-
-      return { txid: result.txid };
-    },
-    onUpdate: async ({ transaction }) => {
-      const { modified: updatedFolder } = transaction.mutations[0];
-      const result = await trpc.cartFolders.update.mutate({
-        id: updatedFolder.id,
-        data: {
-          // Only include mutable fields
-          name: updatedFolder.name,
-          sort_order: updatedFolder.sort_order
-        }
-      });
-
-      return { txid: result.txid };
-    },
-    onDelete: async ({ transaction }) => {
-      const { original: deletedFolder } = transaction.mutations[0];
-      const result = await trpc.cartFolders.delete.mutate({
-        id: deletedFolder.id
-      });
-
-      return { txid: result.txid };
-    }
-  })
-);
-
-// --- Cart Tags Collection (Tag Definitions) ---
-export const cartTagsCollection = createCollection(
-  electricCollectionOptions({
-    id: "cart_tags",
-    shapeOptions: {
-      url: createApiUrl("/api/cart-tags"),
-      parser: { timestamptz: (date: string) => new Date(date) }
-    },
-    schema: selectCartTagSchema,
-    getKey: (item) => item.id,
-
-    onInsert: async ({ transaction }) => {
-      const { modified: newTag } = transaction.mutations[0];
-
-      const result = await trpc.cartTags.create.mutate({
-        cart_id: newTag.cart_id,
-        name: newTag.name,
-        color: newTag.color
-      });
-
-      return { txid: result.txid };
-    },
-
-    onUpdate: async ({ transaction }) => {
-      const { original, modified } = transaction.mutations[0];
-
-      const result = await trpc.cartTags.update.mutate({
-        cart_id: original.cart_id, // TODO: wrong, should take id
-        name: modified.name,
-        color: modified.color
-      });
-
-      return { txid: result.txid };
-    },
-
-    onDelete: async ({ transaction }) => {
-      const { original: deletedTag } = transaction.mutations[0];
-
-      const result = await trpc.cartItemTags.delete.mutate({
-        id: deletedTag.id
-      });
-
-      return { txid: result.txid };
-    }
-  })
-);
-
-// --- Cart Item Tags Join Collection ---
-export const cartItemTagsCollection = createCollection(
-  electricCollectionOptions({
-    id: "cart_item_tags",
-    shapeOptions: {
-      url: createApiUrl("/api/cart-item-tags"),
-      parser: { timestamptz: (date: string) => new Date(date) }
-    },
-    schema: selectCartItemTagSchema,
-    getKey: (item) => item.id,
-    onInsert: async ({ transaction }) => {
-      const { modified: newItemTag } = transaction.mutations[0];
-      const result = await trpc.cartItemTags.create.mutate({
-        cart_item_id: newItemTag.cart_item_id,
-        cart_tag_id: newItemTag.cart_tag_id
-      });
-
-      return { txid: result.txid };
-    },
-    onDelete: async ({ transaction }) => {
-      const { original: deletedItemTag } = transaction.mutations[0];
-      const result = await trpc.cartItemTags.delete.mutate({
-        id: deletedItemTag.id
       });
 
       return { txid: result.txid };

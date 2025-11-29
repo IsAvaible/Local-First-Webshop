@@ -34,7 +34,7 @@ export const cartCollaboratorsRouter = router({
   update: authedProcedure
     .input(
       z.object({
-        id: z.number(),
+        id: z.uuid(),
         data: updateCartCollaboratorSchema
       })
     )
@@ -70,7 +70,7 @@ export const cartCollaboratorsRouter = router({
     }),
 
   delete: authedProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [existing] = await ctx.db
         .select()
