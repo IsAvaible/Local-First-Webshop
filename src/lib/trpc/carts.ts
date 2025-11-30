@@ -1,24 +1,52 @@
-import { router, authedProcedure, generateTxId } from "@/lib/trpc";
+import { router, authedProcedure, generateTxId, procedure } from "@/lib/trpc";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
-import { cartsTable, createCartSchema, updateCartSchema } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
+import {
+  cartCollaboratorsTable,
+  cartsTable,
+  createCartSchema,
+  updateCartSchema
+} from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 import { canManage, getCartWithRole } from "@/lib/carts-permissions";
 
 export const cartsRouter = router({
-  create: authedProcedure
-    .input(createCartSchema)
-    .mutation(async ({ ctx, input }) => {
-      const result = await ctx.db.transaction(async (tx) => {
-        const txid = await generateTxId(tx);
-        const [newItem] = await tx
-          .insert(cartsTable)
-          .values({ ...input, owner_user_id: ctx.session.user.id })
-          .returning();
-        return { item: newItem, txid };
+  create: procedure.input(createCartSchema).mutation(async ({ ctx, input }) => {
+    const userId = ctx.session?.user?.id;
+    const guestId = input.guest_session_id;
+
+    // Ensure we have at least one form of identity
+    if (!userId && !guestId) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Must be logged in or provide a guest ID"
       });
-      return result;
-    }),
+    }
+
+    const result = await ctx.db.transaction(async (tx) => {
+      const txid = await generateTxId(tx);
+      const [newItem] = await tx
+        .insert(cartsTable)
+        .values({
+          ...input,
+          owner_user_id: userId ?? null,
+          guest_session_id: userId ? null : guestId
+        })
+        .returning();
+
+      // If the user is authenticated, add them as an admin collaborator immediately
+      if (userId) {
+        await tx.insert(cartCollaboratorsTable).values({
+          cart_id: newItem.id,
+          user_id: userId,
+          role: "admin"
+        });
+      }
+
+      return { item: newItem, txid };
+    });
+    return result;
+  }),
 
   update: authedProcedure
     .input(
@@ -69,26 +97,73 @@ export const cartsRouter = router({
     }),
 
   // Helper mutation to ensure a default cart exists for the user and return it
-  ensureActive: authedProcedure.mutation(async ({ ctx }) => {
-    // Prefer existing default cart; else create one
-    const existing = await ctx.db
-      .select()
-      .from(cartsTable)
-      .where(eq(cartsTable.owner_user_id, ctx.session.user.id));
+  ensureDefault: procedure
+    .input(z.object({ guest_session_id: z.string().nullable() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session?.user?.id;
+      const guestId = input.guest_session_id;
 
-    let target = existing.find((c) => c.is_default) ?? existing[0];
-    if (!target) {
-      const [created] = await ctx.db
-        .insert(cartsTable)
-        .values({
-          name: "Default Cart",
-          owner_user_id: ctx.session.user.id,
-          is_default: true
-        })
-        .returning();
-      target = created;
-    }
+      if (!userId && !guestId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No identity provided"
+        });
+      }
 
-    return { cart: target };
-  })
+      // 1. Try to find existing default cart
+      const [existing] = await ctx.db
+        .select()
+        .from(cartsTable)
+        .where(
+          and(
+            eq(cartsTable.is_default, true),
+            userId
+              ? eq(cartsTable.owner_user_id, userId)
+              : eq(cartsTable.guest_session_id, guestId!)
+          )
+        );
+
+      if (existing) return existing;
+
+      // 2. If none, try to create one.
+      try {
+        const [created] = await ctx.db.transaction(async (tx) => {
+          const [cart] = await tx
+            .insert(cartsTable)
+            .values({
+              name: "My Cart",
+              owner_user_id: userId ?? null,
+              guest_session_id: userId ? null : guestId,
+              is_default: true
+            })
+            .returning();
+
+          // Add owner as admin collaborator if logged in
+          if (userId) {
+            await tx.insert(cartCollaboratorsTable).values({
+              cart_id: cart.id,
+              user_id: userId,
+              role: "admin"
+            });
+          }
+          return [cart];
+        });
+        return created;
+      } catch (e) {
+        // 3. Race condition handling:
+        // If insertion failed due to unique constraint, fetch the one that won the race.
+        const [winner] = await ctx.db
+          .select()
+          .from(cartsTable)
+          .where(
+            and(
+              eq(cartsTable.is_default, true),
+              userId
+                ? eq(cartsTable.owner_user_id, userId)
+                : eq(cartsTable.guest_session_id, guestId!)
+            )
+          );
+        return winner;
+      }
+    })
 });

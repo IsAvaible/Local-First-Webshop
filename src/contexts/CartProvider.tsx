@@ -6,15 +6,22 @@ import {
   useRef,
   useState
 } from "react";
-import { CartContext, type EnrichedCartNode, type Tag } from "./useCartContext";
+import {
+  type CartCollaboratorWithUser,
+  CartContext,
+  type EnrichedCartNode,
+  type Tag
+} from "./useCartContext";
 import { authClient } from "@/lib/auth-client";
-import { and, eq, inArray, useLiveQuery } from "@tanstack/react-db";
+import { eq, inArray, useLiveQuery } from "@tanstack/react-db";
 import {
   cartsCollection,
   productsCollection,
   assetsCollection,
   pricingTiersCollection,
-  createApiUrl
+  cartCollaboratorsCollection,
+  createApiUrl,
+  usersCollection
 } from "@/lib/collections";
 import * as Y from "yjs";
 import type { TypedMap } from "yjs-types";
@@ -24,6 +31,8 @@ import { Awareness } from "y-protocols/awareness";
 import { v4 as uuidv4 } from "uuid";
 import { generateKeyBetween } from "fractional-indexing";
 import * as decoding from "lib0/decoding";
+import { trpc } from "@/lib/trpc-client";
+import type { CartRole, Cart } from "@/db/schema";
 
 // --- 1. Strict Type Definitions ---
 
@@ -81,57 +90,45 @@ interface UpdateTableSchema {
   update: decoding.Decoder;
 }
 
-export function CartProvider({ children }: { children: ReactNode }) {
-  const { data: session } = authClient.useSession();
-  const userId = session?.user.id;
+// --- 2. Inner Component: The Cart Session ---
+// This component handles ONE specific cart.
+// When the parent changes the `key` prop, this component unmounts and remounts,
+// ensuring a clean YDoc and no state bleeding.
 
-  // --- 2. SQL Discovery & Initialization ---
+type CartSessionProps = {
+  cartId: string;
+  userId: string | undefined;
+  guestId: string | null;
+  // Global props passed down from Provider
+  carts: Cart[];
+  activeCartId: string;
+  setActiveCartId: (id: string) => void;
+  createCart: (name: string) => void;
+  addCollaborator: (email: string, role: CartRole) => Promise<void>;
+  isLoadingGlobal: boolean;
+  children: ReactNode;
+};
 
-  const { data: sqlCart, isLoading: isSqlCartLoading } = useLiveQuery(
-    (q) => {
-      if (!userId) return undefined;
-      return q
-        .from({ carts: cartsCollection })
-        .where(({ carts }) =>
-          and(eq(carts.owner_user_id, userId), eq(carts.is_default, true))
-        )
-        .findOne();
-    },
-    [userId]
-  );
+function CartSession({
+  cartId,
+  userId,
+  guestId,
+  carts,
+  activeCartId,
+  setActiveCartId,
+  createCart,
+  addCollaborator,
+  isLoadingGlobal,
+  children
+}: CartSessionProps) {
+  const roomName = cartId;
 
-  const initAttempted = useRef(false);
-
-  useEffect(() => {
-    // This might not seem 100% safe, as unique creation of resources shouldn't
-    // be up to the client. However, if a duplication happens, the database constraint
-    // should reject the duplicate cart and the client can recover by re-querying.
-    if (userId && !isSqlCartLoading && !sqlCart && !initAttempted.current) {
-      initAttempted.current = true;
-      const tx = cartsCollection.insert({
-        id: uuidv4(),
-        name: "Cart",
-        owner_user_id: userId,
-        guest_session_id: null,
-        is_default: true,
-        created_at: new Date(),
-        updated_at: new Date()
-      });
-      tx.isPersisted.promise.catch((e) => {
-        console.error("Failed to init cart", e);
-        initAttempted.current = false;
-      });
-    }
-  }, [userId, isSqlCartLoading, sqlCart]);
-
-  const roomName = sqlCart?.id;
-
-  // --- 3. Yjs Setup (Strictly Typed) ---
-
+  // Initialize YDoc ONCE per session.
   const [ydoc] = useState(() => new Y.Doc());
   const [awareness] = useState(() => new Awareness(ydoc));
   const [isSynced, setIsSynced] = useState(false);
 
+  // --- Yjs Data Binding ---
   const [flatNodes, setFlatNodes] = useState<YCartNodeShape[]>([]);
   const [flatTags, setFlatTags] = useState<Tag[]>([]);
 
@@ -170,8 +167,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
   }, [nodesMap, tagsMap]);
 
+  // --- Persistence & Sync ---
   useEffect(() => {
-    if (!roomName) return;
     const persistence = new IndexeddbPersistence(roomName, ydoc);
     persistence.on("synced", () => setIsSynced(true));
 
@@ -185,10 +182,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
         shape: {
           url: createApiUrl(`/api/ydoc-updates`),
           params: { table: `ydoc_updates`, where: `room = '${roomName}'` },
-
           parser: parseToDecoder
         },
-        sendUrl: createApiUrl(`/api/ydoc-updates?room=${roomName}`),
+        sendUrl: createApiUrl(
+          `/api/ydoc-updates?room=${roomName}${
+            !userId && guestId ? `&guestId=${guestId}` : ""
+          }`
+        ),
         getUpdateFromRow: (row) => row.update
       },
       awarenessUpdates: {
@@ -199,7 +199,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
           parser: parseToDecoder
         },
         sendUrl: createApiUrl(
-          `/api/ydoc-awareness?room=${roomName}&clientId=${ydoc.clientID}`
+          `/api/ydoc-awareness?room=${roomName}&clientId=${ydoc.clientID}${
+            !userId && guestId ? `&guestId=${guestId}` : ""
+          }`
         ),
         getUpdateFromRow: (row) => row.update
       }
@@ -210,9 +212,84 @@ export function CartProvider({ children }: { children: ReactNode }) {
       electricProvider.destroy();
       setIsSynced(false);
     };
-  }, [roomName, ydoc, awareness]);
+  }, [roomName, ydoc, awareness, userId, guestId]);
 
-  // --- 4. Enrichment (Strictly Typed) ---
+  // --- Data Fetching: Collaborators & Users ---
+
+  // 1. Get Collaborators for this cart
+  const { data: collaboratorLinks } = useLiveQuery((q) =>
+    q
+      .from({ collaborator: cartCollaboratorsCollection })
+      .where(({ collaborator }) => eq(collaborator.cart_id, cartId))
+  );
+
+  const currentCart = carts.find((c) => c.id === cartId);
+
+  // 2. Identify all User IDs involved (Owner + Collaborators)
+  const relevantUserIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (currentCart?.owner_user_id) ids.add(currentCart.owner_user_id);
+    collaboratorLinks?.forEach((l) => ids.add(l.user_id));
+    return Array.from(ids);
+  }, [currentCart, collaboratorLinks]);
+
+  // 3. Fetch User Profiles
+  const { data: usersData } = useLiveQuery(
+    (q) => {
+      if (relevantUserIds.length === 0) return undefined;
+      return q
+        .from({ user: usersCollection })
+        .where(({ user }) => inArray(user.id, relevantUserIds));
+    },
+    [relevantUserIds]
+  );
+
+  // 4. Construct Collaborator Objects
+  const collaborators: CartCollaboratorWithUser[] = useMemo(() => {
+    if (!usersData || !currentCart) return [];
+
+    return usersData.flatMap((user) => {
+      const isOwner = user.id === currentCart.owner_user_id;
+      const link = collaboratorLinks?.find((l) => l.user_id === user.id);
+
+      // Return empty array to "filter" this item out
+      if (!link) return [];
+
+      const role: CartRole = isOwner ? "admin" : (link?.role ?? "viewer");
+
+      return [
+        {
+          name: user.name ?? "Unknown User",
+          email: user.email ?? "",
+          avatarUrl: user.image ?? undefined,
+          ...link,
+          role
+        }
+      ];
+    });
+  }, [usersData, currentCart, collaboratorLinks]);
+
+  // 5. Determine Current User's Permissions
+  const cartRole: CartRole = useMemo(() => {
+    if (
+      !userId &&
+      !currentCart?.owner_user_id &&
+      currentCart?.guest_session_id === guestId
+    ) {
+      return "admin";
+    }
+
+    if (userId) {
+      const myCollab = collaborators.find((c) => c.user_id === userId);
+      if (myCollab) return myCollab.role;
+    }
+
+    return "viewer";
+  }, [userId, guestId, currentCart, collaborators]);
+  const canManageUsers = cartRole === "admin";
+  const canManageItems = cartRole !== "viewer";
+
+  // --- Data Fetching: Products & Assets ---
 
   const uniqueProductIds = useMemo(() => {
     const ids = new Set<number>();
@@ -256,13 +333,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [uniqueProductIds]
   );
 
-  // --- 5. Tree Construction (Read Logic) ---
+  // --- Tree Construction ---
 
   const isLoadingData =
-    isSqlCartLoading || isTiersLoading || isProductsLoading || isAssetsLoading;
+    isLoadingGlobal || isTiersLoading || isProductsLoading || isAssetsLoading;
 
   const enrichedTree: EnrichedCartNode[] = useMemo(() => {
-    if (isLoadingData) return []; // Basic loading check
+    if (isLoadingData) return [];
 
     const nodesByParent: Record<string, YCartNodeShape[]> = {};
     const rootNodes: YCartNodeShape[] = [];
@@ -316,14 +393,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     rootNodes.sort(sortNodes);
     return rootNodes.map(buildTree);
-  }, [flatNodes, productsData, assetsData, tiersData, isTiersLoading]);
+  }, [flatNodes, productsData, assetsData, tiersData, isLoadingData]);
 
-  // --- 6. Operations (Write Logic) ---
+  // --- Operations (Inner) ---
 
   const addItem = useCallback(
     (productId: number, price: string) => {
       ydoc.transact(() => {
-        // Find the last node in the root to append after
         const lastRootNode = flatNodes
           .filter((n) => n.parent_id === null)
           .sort((a, b) => (a.order < b.order ? -1 : 1))
@@ -332,7 +408,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const newOrder = generateKeyBetween(lastRootNode?.order ?? null, null);
 
         const id = uuidv4();
-        // Initialize as TypedMap
         const itemMap = new Y.Map() as TypedMap<YCartItemShape>;
 
         itemMap.set("id", id);
@@ -404,7 +479,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // 2. Find Siblings (using JS array for speed)
+        // 2. Find Siblings
         const siblings = flatNodes
           .filter((n) => n.parent_id === targetFolderId && n.id !== activeId)
           .sort((a, b) => (a.order < b.order ? -1 : 1));
@@ -568,12 +643,43 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [ydoc, tagsMap, nodesMap]
   );
 
+  // --- Collaborator Management Actions ---
+
+  const updateCollaboratorRole = async (
+    collaboratorRowId: string,
+    newRole: CartRole
+  ) => {
+    const tx = cartCollaboratorsCollection.update(
+      collaboratorRowId,
+      (draft) => {
+        draft.role = newRole;
+      }
+    );
+    await tx.isPersisted.promise;
+  };
+
+  const removeCollaborator = async (collaboratorRowId: string) => {
+    const tx = cartCollaboratorsCollection.delete(collaboratorRowId);
+    await tx.isPersisted.promise;
+  };
+
   const value = {
     cartId: roomName,
     rootNodes: enrichedTree,
     tags: flatTags,
+    collaborators,
+    cartRole,
+    canManageUsers,
+    canManageItems,
     isLoading: isLoadingData,
     isSynced,
+    carts,
+    activeCartId,
+    setActiveCartId,
+    createCart,
+    addCollaborator,
+    updateCollaboratorRole,
+    removeCollaborator,
     addItem,
     removeItem,
     updateItemQuantity,
@@ -589,4 +695,137 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   return <CartContext value={value}>{children}</CartContext>;
+}
+
+// --- 3. Outer Component: The Provider ---
+// This handles Global state (Auth, Carts List) and deciding WHICH session to render.
+
+export function CartProvider({ children }: { children: ReactNode }) {
+  const { data: session } = authClient.useSession();
+  const userId = session?.user.id;
+
+  // Guest ID Management
+  const [guestId, setGuestId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("guest_session_id");
+    if (stored) {
+      setGuestId(stored);
+    } else {
+      const newId = uuidv4();
+      localStorage.setItem("guest_session_id", newId);
+      setGuestId(newId);
+    }
+  }, []);
+
+  // Fetch all relevant carts
+  // The server handles the filtering for Owner, Collaborator, and Guest logic.
+  const { data: carts, isLoading: isCartsLoading } = useLiveQuery(
+    (q) => {
+      if (userId === undefined && guestId === null) return undefined;
+
+      return q.from({ carts: cartsCollection }).where(({ carts }) => {
+        if (userId === undefined) {
+          // TODO - guest-cart-filtering: Move this logic to server-side filtering in the collection definition
+          return eq(carts.guest_session_id, guestId);
+        }
+        return eq(1, 1);
+      });
+    },
+    [userId, guestId] // Trigger re-fetches on auth change
+  );
+
+  const [activeCartId, setActiveCartId] = useState<string | null>(null);
+
+  // Auto-select cart
+  useEffect(() => {
+    if (isCartsLoading || !carts || carts.length === 0) return;
+    if (activeCartId && carts.find((c) => c.id === activeCartId)) return;
+
+    const defaultCart = carts.find((c) => c.is_default);
+    if (defaultCart) {
+      setActiveCartId(defaultCart.id);
+    } else if (carts.length > 0) {
+      setActiveCartId(carts[0].id);
+    }
+  }, [carts, isCartsLoading, activeCartId]);
+
+  // Create initial cart if needed
+  const isInitializing = useRef(false);
+  useEffect(() => {
+    if (
+      !isCartsLoading &&
+      carts?.length === 0 &&
+      !isInitializing.current &&
+      (userId || guestId)
+    ) {
+      isInitializing.current = true;
+      trpc.carts.ensureDefault
+        .mutate({
+          guest_session_id: guestId
+        })
+        .catch((e) => {
+          console.error("Failed to init cart", e);
+          isInitializing.current = false;
+        });
+    }
+  }, [isCartsLoading, carts, userId, guestId]);
+
+  // Global Actions passed to session
+  const createCart = useCallback(
+    (name: string) => {
+      const id = uuidv4();
+      cartsCollection.insert({
+        id,
+        name,
+        owner_user_id: userId ?? null,
+        guest_session_id: userId ? null : guestId,
+        is_default: false,
+        created_at: new Date(),
+        updated_at: new Date()
+      });
+      setActiveCartId(id);
+    },
+    [userId, guestId]
+  );
+
+  const addCollaborator = useCallback(
+    async (email: string, role: CartRole) => {
+      if (!activeCartId) return;
+      await trpc.cartCollaborators.invite.mutate({
+        cart_id: activeCartId,
+        email,
+        role
+      });
+    },
+    [activeCartId]
+  );
+
+  // Loading state
+  // If we are loading carts, or if we have carts but no active one yet (logic pending), we show generic loading or nothing.
+  // But we must provide context even if loading to avoid errors in children?
+  // No, children use `useCart()`. If we don't render `CartSession` (which renders Provider), `useCart` throws.
+  // So we must render *something* or make sure children handle missing context (they don't).
+  // So we delay rendering children until we have a session.
+
+  if (!activeCartId) {
+    return null; // Or a spinner
+  }
+
+  return (
+    <CartSession
+      key={activeCartId}
+      cartId={activeCartId}
+      userId={userId}
+      guestId={guestId}
+      carts={carts ?? []}
+      activeCartId={activeCartId}
+      setActiveCartId={setActiveCartId}
+      createCart={createCart}
+      addCollaborator={addCollaborator}
+      isLoadingGlobal={isCartsLoading}
+    >
+      {children}
+    </CartSession>
+  );
 }

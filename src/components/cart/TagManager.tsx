@@ -1,4 +1,4 @@
-import { type Tag, useCart } from "@/contexts/useCartContext"; // Removed .ts extension for standard import
+import { type Tag, useCart } from "@/contexts/useCartContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,7 +11,11 @@ import {
 import { useState } from "react";
 import { CheckIcon, PencilIcon, Trash2Icon, XIcon } from "lucide-react";
 
-export function TagManager() {
+interface TagManagerProps {
+  disabled?: boolean;
+}
+
+export function TagManager({ disabled }: TagManagerProps) {
   const { tags, createTag, deleteTag, updateTag } = useCart();
   const [newTag, setNewTag] = useState("");
 
@@ -47,7 +51,9 @@ export function TagManager() {
   return (
     <Dialog onOpenChange={(open) => !open && cancelEditing()}>
       <DialogTrigger asChild>
-        <Button variant="outline">Manage Tags</Button>
+        <Button variant="outline" disabled={disabled}>
+          Manage Tags
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

@@ -1,6 +1,6 @@
 import { createContext, use } from "react";
-import type { Product, Asset } from "@/db/schema";
-import type { YCartItem, YCartFolder } from "@/db/schema";
+import type { Product, Asset, CartCollaborator } from "@/db/schema";
+import type { YCartItem, YCartFolder, Cart, CartRole } from "@/db/schema";
 
 // Enriched types for UI
 export interface EnrichedCartItem extends YCartItem {
@@ -24,6 +24,12 @@ export type Tag = {
   color: string | null;
 };
 
+export type CartCollaboratorWithUser = CartCollaborator & {
+  name: string;
+  email: string;
+  avatarUrl?: string | null;
+};
+
 export interface CartContextType {
   // --- Data ---
   cartId: string | undefined;
@@ -33,6 +39,24 @@ export interface CartContextType {
 
   isLoading: boolean;
   isSynced: boolean;
+
+  // --- Cart Management ---
+  carts: Cart[];
+  activeCartId: string | null;
+  setActiveCartId: (id: string) => void;
+  createCart: (name: string) => void;
+
+  cartRole: CartRole;
+  canManageUsers: boolean;
+  canManageItems: boolean;
+
+  collaborators: CartCollaboratorWithUser[];
+  addCollaborator: (email: string, role: CartRole) => Promise<void>;
+  updateCollaboratorRole: (
+    collaboratorRowId: string,
+    newRole: CartRole
+  ) => Promise<void>;
+  removeCollaborator: (collaboratorRowId: string) => Promise<void>;
 
   // --- Operations ---
   addItem: (productId: number, price: string) => void;

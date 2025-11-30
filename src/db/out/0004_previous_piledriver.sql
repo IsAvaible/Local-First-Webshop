@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "one_default_cart_per_guest_idx" ON "carts" USING btree ("guest_session_id") WHERE "carts"."is_default" = true;

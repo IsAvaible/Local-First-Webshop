@@ -304,6 +304,10 @@ export const cartsTable = pgTable(
 
     oneDefaultCartPerUser: uniqueIndex("one_default_cart_per_user_idx")
       .on(table.owner_user_id)
+      .where(sql`${table.is_default} = true`),
+
+    oneDefaultCartPerGuest: uniqueIndex("one_default_cart_per_guest_idx")
+      .on(table.guest_session_id)
       .where(sql`${table.is_default} = true`)
   })
 );

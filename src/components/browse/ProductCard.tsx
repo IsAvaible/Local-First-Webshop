@@ -27,7 +27,7 @@ export default function ProductCard({
   customFields,
   imageUrl
 }: ProductCardProps) {
-  const { addItem } = useCart();
+  const { addItem, canManageItems } = useCart();
 
   return (
     <Card className="flex h-full flex-col overflow-hidden pt-0">
@@ -75,6 +75,7 @@ export default function ProductCard({
           onClick={() => {
             addItem(product.id, (product.min_price ?? 0).toFixed(2));
           }}
+          disabled={!canManageItems}
         >
           <ShoppingCartIcon />
         </Button>

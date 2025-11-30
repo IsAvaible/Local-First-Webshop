@@ -4,7 +4,9 @@ import { eq } from "drizzle-orm";
 import {
   cartCollaboratorsTable,
   createCartCollaboratorSchema,
-  updateCartCollaboratorSchema
+  updateCartCollaboratorSchema,
+  users,
+  cartRoleSchema
 } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 import { canManage, getCartWithRole } from "@/lib/carts-permissions";
@@ -24,6 +26,49 @@ export const cartCollaboratorsRouter = router({
         const [newItem] = await tx
           .insert(cartCollaboratorsTable)
           .values(input)
+          .returning();
+        return { item: newItem, txid };
+      });
+
+      return result;
+    }),
+
+  invite: authedProcedure
+    .input(
+      z.object({
+        cart_id: z.uuid(),
+        email: z.email(),
+        role: cartRoleSchema
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { cart, role } = await getCartWithRole(input.cart_id, ctx.session);
+      if (!cart || !canManage(role)) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      const [userToInvite] = await ctx.db
+        .select()
+        .from(users)
+        .where(eq(users.email, input.email));
+
+      if (!userToInvite) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User with this email not found."
+        });
+      }
+
+      // 3. Insert collaborator
+      const result = await ctx.db.transaction(async (tx) => {
+        const txid = await generateTxId(tx);
+        const [newItem] = await tx
+          .insert(cartCollaboratorsTable)
+          .values({
+            cart_id: input.cart_id,
+            user_id: userToInvite.id,
+            role: input.role
+          })
           .returning();
         return { item: newItem, txid };
       });

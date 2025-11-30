@@ -18,10 +18,12 @@ import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 export function CartItemComponent({
   item,
   className,
-  dragHandleProps
+  dragHandleProps,
+  disabled
 }: {
   item: EnrichedCartItem;
   dragHandleProps?: SyntheticListenerMap;
+  disabled?: boolean;
 } & React.ComponentProps<"div">) {
   const {
     tags,
@@ -79,8 +81,13 @@ export function CartItemComponent({
           </h3>
 
           <Textarea
-            placeholder="Add a note..."
+            placeholder={disabled ? "No notes" : "Add a note..."}
             className="min-h-8 resize-y"
+            value={item.notes ?? ""}
+            disabled={disabled}
+            onKeyDownCapture={(e) => {
+              if (e.key === " " || e.key === "Enter") e.stopPropagation();
+            }}
             onChange={(e) => updateItemNotes(item.id, e.target.value)}
           />
 
@@ -93,13 +100,15 @@ export function CartItemComponent({
                 className="flex items-center"
               >
                 {tag.name}
-                <button
-                  onClick={() => handleRemoveTag(tag.id)}
-                  className="ml-1 rounded-full p-0.5 hover:bg-gray-300"
-                  aria-label={`Remove tag ${tag.name}`}
-                >
-                  <XIcon className="h-3 w-3" />
-                </button>
+                {!disabled && (
+                  <button
+                    onClick={() => handleRemoveTag(tag.id)}
+                    className="ml-1 rounded-full p-0.5 hover:bg-gray-300"
+                    aria-label={`Remove tag ${tag.name}`}
+                  >
+                    <XIcon className="h-3 w-3" />
+                  </button>
+                )}
               </Badge>
             ))}
           </div>
@@ -110,11 +119,12 @@ export function CartItemComponent({
               value={item.quantity}
               className="h-8 w-12 px-2"
               min={1}
+              disabled={disabled}
               onChange={handleQuantityChange}
               aria-label="Quantity"
             />
             {/* --- Updated Tag Select --- */}
-            <Select onValueChange={handleAddTag}>
+            <Select onValueChange={handleAddTag} disabled={disabled}>
               <SelectTrigger className="h-8!">
                 <SelectValue placeholder="+ Tag" />
               </SelectTrigger>
@@ -138,10 +148,11 @@ export function CartItemComponent({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 cursor-grab"
+          disabled={disabled}
+          className={cn("h-8 w-8", !disabled && "cursor-grab")}
           {...dragHandleProps}
         >
-          <GripVerticalIcon className="text-muted-foreground w-4 cursor-grab" />
+          <GripVerticalIcon className="text-muted-foreground w-4" />
         </Button>
 
         {/* --- Remove Item Button --- */}
@@ -149,22 +160,11 @@ export function CartItemComponent({
           variant="outline"
           size="icon"
           className="h-8 w-8"
+          disabled={disabled}
           onClick={() => removeItem(item.id)}
         >
           <Trash2Icon className="h-4 w-4" />
         </Button>
-
-        {/* --- Move out of Folder Button (conditional) --- */}
-        {/*{item.folder_id && (*/}
-        {/*  <Button*/}
-        {/*    variant="outline"*/}
-        {/*    size="icon"*/}
-        {/*    className="h-8 w-8"*/}
-        {/*    onClick={() => updateItemFolder(item.id, { folder_id: null })}*/}
-        {/*  >*/}
-        {/*    <CornerLeftUpIcon className="h-4 w-4" />*/}
-        {/*  </Button>*/}
-        {/*)}*/}
       </div>
     </div>
   );
