@@ -15,7 +15,7 @@ import type { JsonValue } from "@/lib/utils.ts";
 import { humanizeCustomFieldValue } from "@/lib/utils.ts";
 
 interface ProductCardProps {
-  product: Product & { min_price: number | null };
+  product: Product & { min_price?: number | null };
   customFields?:
     | Record<string, { value: JsonValue; type?: string }>
     | undefined;

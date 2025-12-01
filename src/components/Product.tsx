@@ -1,6 +1,8 @@
 import ProductImageCarousel from "@/components/product/ProductImageCarousel.tsx";
 import ProductDetails from "@/components/product/ProductDetails.tsx";
-import RelatedProducts from "@/components/product/RelatedProducts.tsx";
+import RelatedProducts, {
+  type RelatedProduct
+} from "@/components/product/RelatedProducts.tsx";
 import ShippingInfo from "@/components/product/ShippingInfo.tsx";
 import { Loader2Icon } from "lucide-react";
 import { useState } from "react";
@@ -15,15 +17,7 @@ import {
 } from "@/db/schema";
 
 // Mock product data generation
-const products: {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  imageUrl: string;
-  inCart: boolean;
-  images?: { src: string; alt: string }[];
-}[] = [];
+const products: RelatedProduct[] = [];
 const productMocks = [
   {
     name: "Gyro-Stabilizer Core (Model 7G)",
@@ -73,23 +67,22 @@ for (let i = 0; i < 6; i++) {
     id: i + 1,
     name: mock.name,
     description: mock.description,
-    price: mock.price,
-    imageUrl: `${mock.image}?text=Product+${i + 1}`,
-    inCart: i % 2 === 0,
-    images: [
-      {
-        src: `${mock.image}?text=${mock.name.replace(/ /g, "+")}`,
-        alt: mock.name
-      },
-      {
-        src: `https://placehold.co/600?text=Side+View`,
-        alt: `${mock.name} side view`
-      },
-      {
-        src: `https://placehold.co/600?text=Interior`,
-        alt: `${mock.name} interior view`
-      }
-    ]
+    company_id: 1,
+    category_id: 1,
+    base_product_id: null,
+    created_at: new Date(),
+    min_price: mock.price,
+    asset: {
+      id: i + 1,
+      product_id: i + 1,
+      url: `${mock.image}?text=Product+${i + 1}`,
+      alt: mock.name,
+      file_extension: "jpg",
+      file_size: 1024,
+      mime_type: "image/jpeg",
+      description: null,
+      created_at: new Date()
+    }
   });
 }
 
@@ -110,7 +103,7 @@ export default function Product({
   pricingTiers?: PricingTier[];
   customFields?: (CustomFieldValue & CustomFieldDefinition)[];
 }) {
-  const [relatedProducts] = useState<typeof products>([]);
+  const [relatedProducts] = useState<RelatedProduct[]>(products);
 
   if (loading) {
     return (
