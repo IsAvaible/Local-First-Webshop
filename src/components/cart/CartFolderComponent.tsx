@@ -1,6 +1,5 @@
 import { type EnrichedCartFolder, useCart } from "@/contexts/useCartContext.ts";
 import * as React from "react";
-import { useDroppable } from "@dnd-kit/core";
 import { cn } from "@/lib/utils.ts";
 import { FolderIcon, TrashIcon } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
@@ -26,13 +25,7 @@ export const CartFolderComponent = ({
   const [tempName, setTempName] = React.useState(folder.name);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
-  const droppableId = `folder-droppable-${folder.id}`;
-
-  const { setNodeRef, isOver } = useDroppable({
-    id: droppableId,
-    data: { type: "folder", acceptDrop: true, folderId: folder.id },
-    disabled: disabled
-  });
+  const isOver = false;
 
   // Focus input when entering edit mode
   React.useEffect(() => {
@@ -75,7 +68,6 @@ export const CartFolderComponent = ({
 
   return (
     <div
-      ref={setNodeRef}
       className={cn(
         "rounded-lg border bg-gray-50 p-4 shadow-sm transition-colors",
         isOver ? "border-blue-300 bg-blue-50 ring-2 ring-blue-200" : ""

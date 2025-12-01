@@ -4,12 +4,16 @@ import {
   type DragEndEvent,
   DragOverlay,
   type DragStartEvent,
+  type DragOverEvent,
   KeyboardSensor,
   PointerSensor,
-  pointerWithin,
   useDroppable,
   useSensor,
-  useSensors
+  useSensors,
+  closestCorners,
+  defaultDropAnimationSideEffects,
+  type DropAnimation,
+  MeasuringStrategy
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -75,6 +79,28 @@ const findActiveNode = (
   return null;
 };
 
+// Helper to check if a node contains another node (prevent circular folder drops)
+const doesNodeContain = (
+  nodes: EnrichedCartNode[],
+  parentId: string,
+  childId: string
+): boolean => {
+  const parent = findActiveNode(nodes, parentId);
+  if (parent?.type !== "folder" || !parent.children) return false;
+  if (parent?.type !== "folder" || !parent.children) return false;
+
+  const checkChildren = (children: EnrichedCartNode[]): boolean => {
+    for (const child of children) {
+      if (child.id === childId) return true;
+      if (child.type === "folder" && child.children) {
+        if (checkChildren(child.children)) return true;
+      }
+    }
+    return false;
+  };
+  return checkChildren(parent.children);
+};
+
 const findNodeContext = (
   nodes: EnrichedCartNode[],
   targetId: string,
@@ -133,53 +159,78 @@ const RootDroppable = ({
   );
 };
 
-export const SortableNode = ({
-  node,
-  className,
-  disabled
-}: {
-  node: EnrichedCartNode;
-  disabled?: boolean;
-} & React.ComponentProps<"div">) => {
-  // Disable dragging if disabled prop is true
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging
-  } = useSortable({
-    id: node.id,
-    data: { type: node.type, node },
-    disabled: disabled
-  });
+export const SortableNode = React.memo(
+  ({
+    node,
+    className,
+    disabled
+  }: {
+    node: EnrichedCartNode;
+    disabled?: boolean;
+  } & React.ComponentProps<"div">) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging
+    } = useSortable({
+      id: node.id,
+      data: { type: node.type, node },
+      disabled: disabled
+    });
 
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1
-  };
+    const style = {
+      transform: CSS.Translate.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1
+    };
 
-  const commonProps = {
-    ref: setNodeRef,
-    style,
-    ...attributes,
-    ...listeners,
-    className: cn("touch-none", className)
-  };
+    const commonProps = {
+      ref: setNodeRef,
+      style,
+      ...attributes,
+      ...listeners,
+      className: cn("touch-none", className)
+    };
 
-  if (node.type === "folder")
+    if (node.type === "folder")
+      return (
+        <div {...commonProps}>
+          <CartFolderComponent folder={node} disabled={disabled} />
+        </div>
+      );
     return (
       <div {...commonProps}>
-        <CartFolderComponent folder={node} disabled={disabled} />
+        <CartItemComponent item={node} disabled={disabled} />
       </div>
     );
-  return (
-    <div {...commonProps}>
-      <CartItemComponent item={node} disabled={disabled} />
-    </div>
-  );
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison function (optional but recommended for objects)
+    // Only re-render if the node ID, type, or children count changes
+    // or if the "disabled" state changes.
+    return (
+      prevProps.node.id === nextProps.node.id &&
+      prevProps.node === nextProps.node && // Reference check usually sufficient if data is immutable
+      prevProps.disabled === nextProps.disabled
+    );
+  }
+);
+
+// ------------------------------------------------------------------
+// CONFIG
+// ------------------------------------------------------------------
+
+const dropAnimationConfig: DropAnimation = {
+  sideEffects: defaultDropAnimationSideEffects({
+    styles: {
+      active: {
+        opacity: "0.5"
+      }
+    }
+  })
 };
 
 // ------------------------------------------------------------------
@@ -203,64 +254,121 @@ export function Cart({ className }: React.ComponentProps<"div">) {
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const [newCartName, setNewCartName] = React.useState("");
   const [isCreateCartOpen, setIsCreateCartOpen] = React.useState(false);
-
   const [isShareOpen, setIsShareOpen] = React.useState(false);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const handleDragStart = (event: DragStartEvent) => {
-    // Extra safety check
     if (!canManageItems) return;
     setActiveId(String(event.active.id));
   };
 
+  /**
+   * Handles moving items BETWEEN containers (e.g. Root -> Folder)
+   * This updates the state *during* the drag to allow visual nesting.
+   */
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    const overId = over?.id;
+    const activeId = active.id;
+
+    if (!overId || activeId === overId || !rootNodes) return;
+
+    const activeContext = findNodeContext(rootNodes, String(activeId));
+    const overContext = findNodeContext(rootNodes, String(overId));
+
+    if (!activeContext || !overContext) return;
+
+    const activeParentId = activeContext.parentId;
+    const overParentId = overContext.parentId;
+
+    const overNode = findActiveNode(rootNodes, String(overId));
+
+    // SCENARIO 1: Dropping OVER a Folder (Drilling down)
+    // We are hovering over a Folder Node, not an item inside it yet.
+    if (overNode?.type === "folder" && activeParentId !== overNode.id) {
+      // Prevent circular dependency
+      if (doesNodeContain(rootNodes, String(activeId), String(overId))) return;
+
+      // Move item into the folder (at the end)
+      // This allows the user to hover a folder to "open" it and drop inside
+      moveNode(
+        String(activeId),
+        String(overId),
+        overNode.children?.length || 0
+      );
+      return;
+    }
+
+    // SCENARIO 2: Moving between lists or reordering in same list
+    if (activeParentId !== overParentId) {
+      moveNode(String(activeId), overParentId, overContext.index);
+      // SCENARIO 3: Reordering within the same list
+    } else if (activeContext.index !== overContext.index) {
+      moveNode(String(activeId), activeParentId, overContext.index);
+    }
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
-    // Extra safety check
     if (!canManageItems) return;
 
     const { active, over } = event;
     setActiveId(null);
+
     if (!over || !rootNodes) return;
-    const activeNodeId = active.id as string;
-    const overId = over.id as string;
 
+    const activeNodeId = String(active.id);
+    const overId = String(over.id);
+
+    // 1. Explicit drop on Root (White space)
     if (overId === "root-droppable") {
-      moveNode(activeNodeId, null, rootNodes.length);
-      return;
-    }
-
-    if (overId.startsWith("folder-droppable-")) {
-      const targetFolderId = overId.replace("folder-droppable-", "");
-      const folderContext = findNodeContext(rootNodes, targetFolderId);
-      if (folderContext) {
-        const targetFolder = folderContext.siblings[folderContext.index];
-        if (targetFolder.type === "folder") {
-          moveNode(
-            activeNodeId,
-            targetFolderId,
-            targetFolder.children?.length || 0
-          );
-        }
+      const activeContext = findNodeContext(rootNodes, activeNodeId);
+      // Only move if it wasn't already in the root
+      if (activeContext?.parentId !== null) {
+        moveNode(activeNodeId, null, rootNodes.length);
       }
       return;
     }
 
+    // 2. Handle dropping explicitly onto a Folder Droppable Zone
+    if (overId.startsWith("folder-droppable-")) {
+      const targetFolderId = overId.replace("folder-droppable-", "");
+      // Safety: Don't drag folder into itself
+      if (targetFolderId === activeNodeId) return;
+
+      const folderContext = findNodeContext(rootNodes, targetFolderId);
+      if (folderContext) {
+        const targetFolder = folderContext.siblings[folderContext.index];
+        if (targetFolder.type !== "folder") return;
+        // Don't drag folder into its own child
+        if (doesNodeContain(rootNodes, activeNodeId, targetFolderId)) return;
+
+        moveNode(
+          activeNodeId,
+          targetFolderId,
+          targetFolder.children?.length || 0
+        );
+      }
+      return;
+    }
+
+    // 3. Handle Sorting (Reordering within the same container)
     if (activeNodeId !== overId) {
+      const activeContext = findNodeContext(rootNodes, activeNodeId);
       const overContext = findNodeContext(rootNodes, overId);
-      if (overContext) {
-        const { parentId, index: overIndex } = overContext;
-        const activeContext = findNodeContext(rootNodes, activeNodeId);
-        let newIndex = overIndex;
-        if (
-          activeContext?.parentId === parentId &&
-          activeContext.index < overIndex
-        ) {
-          newIndex = overIndex;
+
+      if (
+        activeContext &&
+        overContext &&
+        activeContext.parentId === overContext.parentId
+      ) {
+        // Only trigger move if indices are different
+        if (activeContext.index !== overContext.index) {
+          moveNode(activeNodeId, activeContext.parentId, overContext.index);
         }
-        moveNode(activeNodeId, parentId, newIndex);
       }
     }
   };
@@ -279,20 +387,24 @@ export function Cart({ className }: React.ComponentProps<"div">) {
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={pointerWithin}
+      collisionDetection={closestCorners}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
       modifiers={[restrictToWindowEdges]}
+      measuring={{
+        droppable: {
+          strategy: MeasuringStrategy.WhileDragging
+        }
+      }}
     >
       <div className={cn("flex h-full w-80 flex-col", className)}>
         {/* HEADER SECTION */}
         <div className="flex flex-col gap-3 border-b p-4">
-          {/* Top Row: Title, Avatars, Share */}
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold tracking-tight">Cart</h2>
 
             <div className="flex items-center gap-3">
-              {/* Face Pile */}
               <div className="flex -space-x-2 overflow-hidden">
                 {collaborators.slice(0, 3).map((user) => (
                   <UserAvatar
@@ -307,8 +419,6 @@ export function Cart({ className }: React.ComponentProps<"div">) {
                   </div>
                 )}
               </div>
-
-              {/* Share Dialog */}
               <CartShareDialog
                 open={isShareOpen}
                 onOpenChange={setIsShareOpen}
@@ -316,7 +426,6 @@ export function Cart({ className }: React.ComponentProps<"div">) {
             </div>
           </div>
 
-          {/* Cart Selection Row */}
           <div className="flex gap-2">
             <Select
               value={activeCartId ?? undefined}
@@ -411,7 +520,7 @@ export function Cart({ className }: React.ComponentProps<"div">) {
         </div>
       </div>
 
-      <DragOverlay>
+      <DragOverlay dropAnimation={dropAnimationConfig}>
         {activeNode ? (
           <div className="cursor-grabbing opacity-90">
             {activeNode.type === "folder" ? (
