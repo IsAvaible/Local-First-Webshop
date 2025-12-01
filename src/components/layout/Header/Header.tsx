@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react"; // 1. Import hooks
 import {
   HomeIcon,
   HeartIcon,
@@ -12,8 +13,31 @@ import { ClientOnly } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 
 export default function Header() {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 0) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   return (
-    <header className="w-full p-6">
+    // 4. Conditionally add shadow and transition classes
+    <header
+      className={`sticky top-0 z-10 w-full bg-gray-50 p-6 transition-shadow duration-300 dark:bg-gray-900 ${
+        isScrolled ? "shadow-md" : ""
+      }`}
+    >
       <nav className="mx-auto grid max-w-5xl grid-cols-3 items-center">
         <div>
           <Link
