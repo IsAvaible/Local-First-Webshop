@@ -21,7 +21,6 @@ import {
   useSortable,
   verticalListSortingStrategy
 } from "@dnd-kit/sortable";
-import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 import { PlusIcon } from "lucide-react";
 
@@ -50,6 +49,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CartShareDialog } from "@/components/cart/CartShareDialog.tsx";
 import { CartFolderComponent } from "@/components/cart/CartFolderComponent.tsx";
+import { Link } from "@tanstack/react-router";
 
 // ------------------------------------------------------------------
 // UTILITIES
@@ -391,7 +391,6 @@ export function Cart({ className }: React.ComponentProps<"div">) {
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
-      modifiers={[restrictToWindowEdges]}
       measuring={{
         droppable: {
           strategy: MeasuringStrategy.WhileDragging
@@ -514,9 +513,11 @@ export function Cart({ className }: React.ComponentProps<"div">) {
             </Button>
             <TagManager disabled={!canManageItems} />
           </div>
-          <Button className="mt-4 w-full" disabled={!canManageItems}>
-            Checkout
-          </Button>
+          <Link to={"/checkout"}>
+            <Button className="mt-4 w-full" disabled={!canManageItems}>
+              Checkout
+            </Button>
+          </Link>
         </div>
       </div>
 

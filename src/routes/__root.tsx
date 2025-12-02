@@ -52,9 +52,7 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
-      <CartProvider>
-        <Outlet />
-      </CartProvider>
+      <Outlet />
     </RootDocument>
   );
 }
@@ -68,9 +66,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <ClientOnly>
           <div className="flex min-h-screen flex-col bg-gray-50 text-slate-800 dark:bg-gray-900 dark:text-slate-200">
-            <Header />
-            <main className="flex-grow">{children}</main>
-            <Footer />
+            <CartProvider>
+              <Header />
+              <main className="flex-grow">{children}</main>
+              <Footer />
+            </CartProvider>
           </div>
           <TanStackRouterDevtools />
         </ClientOnly>
