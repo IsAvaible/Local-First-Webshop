@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, stripSearchParams } from "@tanstack/react-router";
 import { useLiveQuery, eq, min, Query } from "@tanstack/react-db";
 import { useState, useMemo, useCallback } from "react";
 import {
@@ -49,6 +49,8 @@ import {
 } from "lucide-react";
 import ProductCard from "@/components/browse/ProductCard";
 import type { Product, Asset } from "@/db/schema";
+import { z } from "zod";
+import { zodValidator } from "@tanstack/zod-adapter";
 
 // --- Configuration & Constants ---
 const CONFIG = {
@@ -64,21 +66,30 @@ const CONFIG = {
   } as const
 };
 
-type ShippingMethod = keyof typeof CONFIG.SHIPPING_RATES;
-type ViewState = "overview" | "checkout" | "success";
-type Step = "address" | "shipping" | "payment" | "review";
+// 1. Define the exact linear flow of the application
+const WIZARD_STEPS = ["address", "shipping", "payment", "review"] as const;
+const FLOW_ORDER = ["overview", ...WIZARD_STEPS, "success"] as const;
 
+type FlowStepId = (typeof FLOW_ORDER)[number];
+type WizardStepId = (typeof WIZARD_STEPS)[number];
+type ShippingMethod = keyof typeof CONFIG.SHIPPING_RATES;
 type ProductSuggestion = Product & { asset?: Asset; min_price?: number };
 
-const WIZARD_STEPS: { id: Step; label: string }[] = [
-  { id: "address", label: "Address" },
-  { id: "shipping", label: "Shipping" },
-  { id: "payment", label: "Payment" },
-  { id: "review", label: "Summary" }
-];
+// --- Search Param Validation ---
+const urlDefaultValues = {
+  step: "overview" as FlowStepId
+};
 
-// --- Loader ---
+const cartUrlSchema = z.object({
+  step: z.enum(FLOW_ORDER).catch("overview")
+});
+
+// --- Loader & Route Definition ---
 export const Route = createFileRoute("/checkout")({
+  validateSearch: zodValidator(cartUrlSchema),
+  search: {
+    middlewares: [stripSearchParams(urlDefaultValues)]
+  },
   loader: async () => {
     await Promise.all([
       productsCollection.preload(),
@@ -92,12 +103,15 @@ export const Route = createFileRoute("/checkout")({
 // --- Custom Hook: Business Logic Separation ---
 function useCheckoutLogic() {
   const { rootNodes } = useCart();
+  const navigate = Route.useNavigate();
+  const { step } = Route.useSearch();
 
-  // UI State
-  const [view, setView] = useState<ViewState>("overview");
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  // Determine current position in the linear flow
+  const currentFlowIndex = FLOW_ORDER.indexOf(step);
+  const validatedStep = currentFlowIndex === -1 ? "overview" : step;
+  const validatedIndex = currentFlowIndex === -1 ? 0 : currentFlowIndex;
 
-  // Form Data State
+  // Form State
   const [shippingMethod, setShippingMethod] =
     useState<ShippingMethod>("standard");
   const [paymentMethod, setPaymentMethod] = useState("card");
@@ -105,7 +119,7 @@ function useCheckoutLogic() {
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
 
-  // 1. Flatten Cart Items (Memoized)
+  // Flatten Cart Items
   const cartItems = useMemo(() => {
     if (!rootNodes) return [];
     const flatten = (nodes: EnrichedCartNode[]): EnrichedCartItem[] => {
@@ -120,7 +134,7 @@ function useCheckoutLogic() {
     return flatten(rootNodes);
   }, [rootNodes]);
 
-  // 2. Calculate Totals (Memoized to prevent re-calc on input typing)
+  // Calculate Totals
   const totals = useMemo(() => {
     const subtotal = cartItems.reduce(
       (sum, item) => sum + parseFloat(item.price ?? "0") * item.quantity,
@@ -145,46 +159,67 @@ function useCheckoutLogic() {
     return { subtotal, warrantyCost, shippingCost, tax, discount, total };
   }, [cartItems, warranties, shippingMethod, appliedCoupon]);
 
-  // 3. Actions
-  const toggleWarranty = useCallback((itemId: string) => {
-    setWarranties((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
-  }, []);
-
-  const applyCoupon = useCallback(() => {
-    if (CONFIG.COUPONS[couponInput]) {
-      setAppliedCoupon(couponInput);
-    }
-  }, [couponInput]);
-
-  const goToNextStep = useCallback(() => {
-    if (currentStepIndex < WIZARD_STEPS.length - 1) {
-      setCurrentStepIndex((prev) => prev + 1);
+  // Actions & Navigation
+  const navigateToStep = useCallback(
+    async (targetStep: FlowStepId) => {
+      await navigate({ search: (prev) => ({ ...prev, step: targetStep }) });
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      setView("success");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }, [currentStepIndex]);
+    },
+    [navigate]
+  );
 
-  const goToPrevStep = useCallback(() => {
-    if (currentStepIndex > 0) {
-      setCurrentStepIndex((prev) => prev - 1);
-    } else {
-      setView("overview");
-    }
-  }, [currentStepIndex]);
+  const actions = {
+    goToNext: useCallback(() => {
+      const nextIndex = validatedIndex + 1;
+      if (nextIndex < FLOW_ORDER.length) {
+        void navigateToStep(FLOW_ORDER[nextIndex]);
+      }
+    }, [validatedIndex, navigateToStep]),
 
-  const resetFlow = useCallback(() => {
-    setView("overview");
-    setCurrentStepIndex(0);
-    setAppliedCoupon(null);
-    setWarranties({});
-  }, []);
+    goToBack: useCallback(() => {
+      const prevIndex = validatedIndex - 1;
+      if (prevIndex >= 0) {
+        void navigateToStep(FLOW_ORDER[prevIndex]);
+      }
+    }, [validatedIndex, navigateToStep]),
+
+    resetFlow: useCallback(() => {
+      setAppliedCoupon(null);
+      setWarranties({});
+      void navigateToStep("overview");
+    }, [navigateToStep]),
+
+    setStep: navigateToStep,
+    setShippingMethod,
+    setPaymentMethod,
+    setCouponInput,
+    toggleWarranty: useCallback((itemId: string) => {
+      setWarranties((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
+    }, []),
+    applyCoupon: useCallback(() => {
+      if (CONFIG.COUPONS[couponInput]) {
+        setAppliedCoupon(couponInput);
+      }
+    }, [couponInput])
+  };
+
+  // Return consolidated state
+  const isWizardStep = (WIZARD_STEPS as readonly string[]).includes(
+    validatedStep
+  );
+  const wizardProgress = isWizardStep
+    ? (((WIZARD_STEPS as readonly string[]).indexOf(validatedStep) + 1) /
+        WIZARD_STEPS.length) *
+      100
+    : 0;
 
   return {
     state: {
-      view,
-      currentStepIndex,
+      step: validatedStep,
+      isOverview: validatedStep === "overview",
+      isSuccess: validatedStep === "success",
+      isWizard: isWizardStep,
+      wizardProgress,
       cartItems,
       totals,
       formData: {
@@ -195,17 +230,7 @@ function useCheckoutLogic() {
         appliedCoupon
       }
     },
-    actions: {
-      setView,
-      setShippingMethod,
-      setPaymentMethod,
-      setCouponInput,
-      toggleWarranty,
-      applyCoupon,
-      goToNextStep,
-      goToPrevStep,
-      resetFlow
-    }
+    actions
   };
 }
 
@@ -213,8 +238,7 @@ function useCheckoutLogic() {
 function CheckoutPage() {
   const { state, actions } = useCheckoutLogic();
 
-  // Suggestions Data (Only fetch if relevant, though useLiveQuery manages subscriptions well)
-  // Logic kept from original, wrapped for cleaner access
+  // Data Loading for Recommendations
   const { data: suggestions, isLoading: isSuggestionsLoading } = useLiveQuery(
     () => {
       const minPriceSubquery = new Query()
@@ -254,11 +278,12 @@ function CheckoutPage() {
     }
   );
 
-  if (state.view === "success") {
+  // View Routing - Clean and Flat
+  if (state.isSuccess) {
     return <SuccessView onReset={actions.resetFlow} />;
   }
 
-  if (state.view === "checkout") {
+  if (state.isWizard) {
     return <CheckoutWizardView state={state} actions={actions} />;
   }
 
@@ -319,7 +344,7 @@ function CartOverviewView({
             <Button
               className="h-12 w-full text-lg"
               size="lg"
-              onClick={() => actions.setView("checkout")}
+              onClick={actions.goToNext}
             >
               Proceed to Payment <ArrowRightIcon className="ml-2 h-5 w-5" />
             </Button>
@@ -357,88 +382,93 @@ function CheckoutWizardView({
   state: ReturnType<typeof useCheckoutLogic>["state"];
   actions: ReturnType<typeof useCheckoutLogic>["actions"];
 }) {
-  const progressValue =
-    ((state.currentStepIndex + 1) / WIZARD_STEPS.length) * 100;
+  // Use a map to render steps instead of if/else chains
+  // We strictly cast state.step to WizardStepId because we know isWizard is true here
+  const currentStepId = state.step as WizardStepId;
+
+  const STEP_CONTENT: Record<WizardStepId, React.ReactNode> = {
+    address: <AddressStep />,
+    shipping: (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TruckIcon className="h-5 w-5" /> Shipping Method
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ShippingSelector
+            value={state.formData.shippingMethod}
+            onChange={actions.setShippingMethod}
+            variant="detailed"
+          />
+        </CardContent>
+      </Card>
+    ),
+    payment: (
+      <PaymentStep
+        method={state.formData.paymentMethod}
+        setMethod={actions.setPaymentMethod}
+        coupon={state.formData.couponInput}
+        setCoupon={actions.setCouponInput}
+        onApplyCoupon={actions.applyCoupon}
+        isCouponApplied={!!state.formData.appliedCoupon}
+      />
+    ),
+    review: (
+      <ReviewStep
+        cartItems={state.cartItems}
+        shippingMethod={state.formData.shippingMethod}
+        paymentMethod={state.formData.paymentMethod}
+        warranties={state.formData.warranties}
+      />
+    )
+  };
 
   return (
     <div className="min-h-screen bg-gray-50/50 py-8 dark:bg-slate-950">
       <div className="container mx-auto max-w-7xl px-4">
+        {/* Wizard Header */}
         <div className="mb-8 space-y-4">
           <Button
             variant="ghost"
-            onClick={() => actions.setView("overview")}
+            onClick={actions.goToBack}
             className="pl-0 hover:bg-transparent"
           >
-            <ChevronLeftIcon className="mr-2 h-4 w-4" /> Back to Cart
+            <ChevronLeftIcon className="mr-2 h-4 w-4" /> Back
           </Button>
+
           <h1 className="text-3xl font-bold">Checkout</h1>
+
           <div className="space-y-2">
             <div className="text-muted-foreground flex justify-between text-sm font-medium">
-              {WIZARD_STEPS.map((step, idx) => (
+              {WIZARD_STEPS.map((stepId, idx) => (
                 <span
-                  key={step.id}
+                  key={stepId}
                   className={
-                    idx <= state.currentStepIndex ? "text-primary" : ""
+                    currentStepId === stepId ? "text-primary font-bold" : ""
                   }
                 >
-                  {idx + 1}. {step.label}
+                  {idx + 1}. {stepId.charAt(0).toUpperCase() + stepId.slice(1)}
                 </span>
               ))}
             </div>
-            <Progress value={progressValue} className="h-2" />
+            <Progress value={state.wizardProgress} className="h-2" />
           </div>
         </div>
 
+        {/* Wizard Body */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
-            {state.currentStepIndex === 0 && <AddressStep />}
-
-            {state.currentStepIndex === 1 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TruckIcon className="h-5 w-5" /> Shipping Method
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ShippingSelector
-                    value={state.formData.shippingMethod}
-                    onChange={actions.setShippingMethod}
-                    variant="detailed"
-                  />
-                </CardContent>
-              </Card>
-            )}
-
-            {state.currentStepIndex === 2 && (
-              <PaymentStep
-                method={state.formData.paymentMethod}
-                setMethod={actions.setPaymentMethod}
-                coupon={state.formData.couponInput}
-                setCoupon={actions.setCouponInput}
-                onApplyCoupon={actions.applyCoupon}
-                isCouponApplied={!!state.formData.appliedCoupon}
-              />
-            )}
-
-            {state.currentStepIndex === 3 && (
-              <ReviewStep
-                cartItems={state.cartItems}
-                shippingMethod={state.formData.shippingMethod}
-                paymentMethod={state.formData.paymentMethod}
-                warranties={state.formData.warranties}
-              />
-            )}
+            {/* Dynamic Step Content */}
+            {STEP_CONTENT[currentStepId]}
 
             <div className="flex justify-between pt-4">
-              <Button variant="ghost" onClick={actions.goToPrevStep}>
+              <Button variant="ghost" onClick={actions.goToBack}>
                 Back
               </Button>
-              <Button onClick={actions.goToNextStep} size="lg">
-                {state.currentStepIndex === WIZARD_STEPS.length - 1
-                  ? "Pay & Confirm"
-                  : "Next Step"}
-                {state.currentStepIndex !== WIZARD_STEPS.length - 1 && (
+              <Button onClick={actions.goToNext} size="lg">
+                {currentStepId === "review" ? "Pay & Confirm" : "Next Step"}
+                {currentStepId !== "review" && (
                   <ChevronRightIcon className="ml-2 h-4 w-4" />
                 )}
               </Button>
@@ -459,7 +489,7 @@ function CheckoutWizardView({
   );
 }
 
-// --- Sub-Components (Cleaned up) ---
+// --- Sub-Components (Unchanged Visuals) ---
 
 function CartItemsList({
   items,
@@ -553,7 +583,6 @@ function ShippingSelector({
   onChange: (v: ShippingMethod) => void;
   variant: "simple" | "detailed";
 }) {
-  // Reusable Shipping selection logic
   return (
     <RadioGroup
       value={value}
@@ -617,7 +646,6 @@ function ShippingSelector({
   );
 }
 
-// Helpers for Shipping Selector to reduce TSX noise
 const SimpleShippingOption = ({
   id,
   icon: Icon,
@@ -689,7 +717,6 @@ function AddressStep() {
             </div>
           </TabsContent>
           <TabsContent value="new-address" className="mt-4 space-y-4">
-            {/* Simplified inputs for brevity - in production use React Hook Form */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>First name</Label>
