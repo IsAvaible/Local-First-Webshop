@@ -8,13 +8,15 @@ import { db } from "@/db/connection";
 import { auth } from "@/lib/auth";
 import { cartsRouter } from "@/lib/trpc/carts.ts";
 import { cartCollaboratorsRouter } from "@/lib/trpc/cartCollaborators";
+import { addressesRouter } from "@/lib/trpc/addresses";
 
 export const appRouter = router({
   projects: projectsRouter,
   todos: todosRouter,
   users: usersRouter,
   carts: cartsRouter,
-  cartCollaborators: cartCollaboratorsRouter
+  cartCollaborators: cartCollaboratorsRouter,
+  addresses: addressesRouter
 });
 
 export type AppRouter = typeof appRouter;

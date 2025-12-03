@@ -32,6 +32,7 @@ import { Route as ApiCartsRouteImport } from './routes/api/carts'
 import { Route as ApiCartCollaboratorsRouteImport } from './routes/api/cart-collaborators'
 import { Route as ApiAuthRouteImport } from './routes/api/auth'
 import { Route as ApiAssetsRouteImport } from './routes/api/assets'
+import { Route as ApiAddressesRouteImport } from './routes/api/addresses'
 import { Route as AuthenticatedIndexxRouteImport } from './routes/_authenticated/indexx'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
 import { Route as AuthenticatedProjectProjectIdRouteImport } from './routes/_authenticated/project/$projectId'
@@ -151,6 +152,11 @@ const ApiAssetsRoute = ApiAssetsRouteImport.update({
   path: '/api/assets',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAddressesRoute = ApiAddressesRouteImport.update({
+  id: '/api/addresses',
+  path: '/api/addresses',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedIndexxRoute = AuthenticatedIndexxRouteImport.update({
   id: '/indexx',
   path: '/indexx',
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/yjs': typeof YjsRoute
   '/indexx': typeof AuthenticatedIndexxRoute
+  '/api/addresses': typeof ApiAddressesRoute
   '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
   '/api/cart-collaborators': typeof ApiCartCollaboratorsRoute
@@ -203,6 +210,7 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/yjs': typeof YjsRoute
   '/indexx': typeof AuthenticatedIndexxRoute
+  '/api/addresses': typeof ApiAddressesRoute
   '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
   '/api/cart-collaborators': typeof ApiCartCollaboratorsRoute
@@ -232,6 +240,7 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/yjs': typeof YjsRoute
   '/_authenticated/indexx': typeof AuthenticatedIndexxRoute
+  '/api/addresses': typeof ApiAddressesRoute
   '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
   '/api/cart-collaborators': typeof ApiCartCollaboratorsRoute
@@ -261,6 +270,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/yjs'
     | '/indexx'
+    | '/api/addresses'
     | '/api/assets'
     | '/api/auth'
     | '/api/cart-collaborators'
@@ -288,6 +298,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/yjs'
     | '/indexx'
+    | '/api/addresses'
     | '/api/assets'
     | '/api/auth'
     | '/api/cart-collaborators'
@@ -316,6 +327,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/yjs'
     | '/_authenticated/indexx'
+    | '/api/addresses'
     | '/api/assets'
     | '/api/auth'
     | '/api/cart-collaborators'
@@ -344,6 +356,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SearchRoute: typeof SearchRoute
   YjsRoute: typeof YjsRoute
+  ApiAddressesRoute: typeof ApiAddressesRoute
   ApiAssetsRoute: typeof ApiAssetsRoute
   ApiAuthRoute: typeof ApiAuthRoute
   ApiCartCollaboratorsRoute: typeof ApiCartCollaboratorsRoute
@@ -526,6 +539,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAssetsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/addresses': {
+      id: '/api/addresses'
+      path: '/api/addresses'
+      fullPath: '/api/addresses'
+      preLoaderRoute: typeof ApiAddressesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/indexx': {
       id: '/_authenticated/indexx'
       path: '/indexx'
@@ -572,6 +592,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SearchRoute: SearchRoute,
   YjsRoute: YjsRoute,
+  ApiAddressesRoute: ApiAddressesRoute,
   ApiAssetsRoute: ApiAssetsRoute,
   ApiAuthRoute: ApiAuthRoute,
   ApiCartCollaboratorsRoute: ApiCartCollaboratorsRoute,

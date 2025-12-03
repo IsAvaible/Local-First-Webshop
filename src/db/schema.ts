@@ -401,3 +401,62 @@ export type Cart = z.infer<typeof selectCartSchema>;
 export type CartCollaborator = z.infer<typeof selectCartCollaboratorSchema>;
 export const cartRoleSchema = z.enum(cartRoleEnum.enumValues);
 export type CartRole = z.infer<typeof cartRoleSchema>;
+
+// --- USER ADDRESS SCHEMA ---
+
+export const userAddressesTable = pgTable(
+  "user_addresses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    recipient_name: text("recipient_name").notNull(),
+    company_name: text("company_name"),
+    country_code: text("country_code").notNull(),
+    state: text("state"),
+    city: text("city").notNull(),
+    zip_code: text("zip_code").notNull(),
+    line1: text("line1").notNull(),
+    line2: text("line2"),
+    phone_number: text("phone_number"),
+    email_address: text("email"),
+    is_default_delivery: boolean("is_default_delivery")
+      .notNull()
+      .default(false),
+    is_default_billing: boolean("is_default_billing").notNull().default(false),
+    created_at: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updated_at: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+  },
+  (table) => ({
+    userIdIdx: index("user_addresses_user_id_idx").on(table.user_id),
+    oneDefaultDeliveryPerUser: uniqueIndex("one_default_delivery_per_user_idx")
+      .on(table.user_id)
+      .where(sql`${table.is_default_delivery} = true`),
+    oneDefaultBillingPerUser: uniqueIndex("one_default_billing_per_user_idx")
+      .on(table.user_id)
+      .where(sql`${table.is_default_billing} = true`)
+  })
+);
+
+export const selectUserAddressSchema = createSelectSchema(userAddressesTable);
+export const createUserAddressSchema = createInsertSchema(
+  userAddressesTable
+).omit({
+  created_at: true,
+  updated_at: true
+});
+export const updateUserAddressSchema = createUpdateSchema(
+  userAddressesTable
+).omit({
+  created_at: true,
+  updated_at: true
+});
+
+export type UserAddress = z.infer<typeof selectUserAddressSchema>;
+export type CreateUserAddress = z.infer<typeof createUserAddressSchema>;
+export type UpdateUserAddress = z.infer<typeof updateUserAddressSchema>;

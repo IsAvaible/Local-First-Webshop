@@ -12,7 +12,8 @@ import {
   selectCustomFieldDefinitionSchema,
   selectCustomFieldValueSchema,
   selectCartSchema,
-  selectCartCollaboratorSchema
+  selectCartCollaboratorSchema,
+  selectUserAddressSchema
 } from "@/db/schema";
 import { trpc } from "@/lib/trpc-client";
 
@@ -310,6 +311,46 @@ export const todoCollection = createCollection(
       const { original: deletedTodo } = transaction.mutations[0];
       const result = await trpc.todos.delete.mutate({
         id: deletedTodo.id
+      });
+
+      return { txid: result.txid };
+    }
+  })
+);
+
+// --- User Addresses Collection ---
+export const userAddressesCollection = createCollection(
+  electricCollectionOptions({
+    id: "user_addresses",
+    shapeOptions: {
+      url: createApiUrl("/api/addresses"),
+      parser: { timestamptz: (date: string) => new Date(date) }
+    },
+    schema: selectUserAddressSchema,
+    getKey: (item) => item.id,
+    onInsert: async ({ transaction }) => {
+      const { modified: newAddress } = transaction.mutations[0];
+      const result = await trpc.addresses.create.mutate({
+        ...newAddress
+      });
+
+      return { txid: result.txid };
+    },
+    onUpdate: async ({ transaction }) => {
+      const { modified: updatedAddress } = transaction.mutations[0];
+      const result = await trpc.addresses.update.mutate({
+        id: updatedAddress.id,
+        data: {
+          ...updatedAddress
+        }
+      });
+
+      return { txid: result.txid };
+    },
+    onDelete: async ({ transaction }) => {
+      const { original: deletedAddress } = transaction.mutations[0];
+      const result = await trpc.addresses.delete.mutate({
+        id: deletedAddress.id
       });
 
       return { txid: result.txid };
