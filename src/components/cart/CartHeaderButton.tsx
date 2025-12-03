@@ -16,7 +16,7 @@ export function CartHeaderButton() {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[unset]!">
-        <Cart />
+        <Cart className={"w-80"} />
       </PopoverContent>
     </Popover>
   );

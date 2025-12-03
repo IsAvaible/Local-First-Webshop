@@ -20,7 +20,7 @@ const urlDefaultValues = {
 };
 
 const cartUrlSchema = z.object({
-  step: z.enum(FLOW_ORDER).catch("overview")
+  step: z.enum(FLOW_ORDER).optional().default("overview").catch("overview")
 });
 
 // --- Loader & Route Definition ---

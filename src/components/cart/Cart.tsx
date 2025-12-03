@@ -378,7 +378,7 @@ export function Cart({ className }: React.ComponentProps<"div">) {
 
   if (isLoading) {
     return (
-      <div className={cn("flex h-full w-80 flex-col p-4", className)}>
+      <div className={cn("flex h-full flex-col p-4", className)}>
         Loading...
       </div>
     );
@@ -397,7 +397,7 @@ export function Cart({ className }: React.ComponentProps<"div">) {
         }
       }}
     >
-      <div className={cn("flex h-full w-80 flex-col", className)}>
+      <div className={cn("flex h-full flex-col", className)}>
         {/* HEADER SECTION */}
         <div className="flex flex-col gap-3 border-b p-4">
           <div className="flex items-center justify-between">

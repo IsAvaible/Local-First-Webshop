@@ -163,7 +163,7 @@ export default function Browse({
             </div>
           </div>
           <div id="shopping-cart" className="3xl:block hidden">
-            <Cart />
+            <Cart className={"w-80"} />
           </div>
         </div>
       </div>

@@ -129,14 +129,7 @@ export const CartFolderComponent = ({
             </p>
           )}
           {folder.children.map((child) => (
-            <SortableNode
-              key={child.id}
-              node={child}
-              disabled={disabled}
-              className={
-                child.type === "item" ? "origin-top-left scale-90" : ""
-              }
-            />
+            <SortableNode key={child.id} node={child} disabled={disabled} />
           ))}
         </SortableContext>
       </div>

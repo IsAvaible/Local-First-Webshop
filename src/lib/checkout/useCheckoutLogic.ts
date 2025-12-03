@@ -13,7 +13,6 @@ interface UseCheckoutLogicProps {
   navigate: UseNavigateResult<"/checkout">;
 }
 
-// --- Custom Hook: Business Logic Separation ---
 export function useCheckoutLogic({ step, navigate }: UseCheckoutLogicProps) {
   const { rootNodes } = useCart();
 

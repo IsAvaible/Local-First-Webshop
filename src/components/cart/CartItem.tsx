@@ -60,111 +60,115 @@ export function CartItemComponent({
   const productName = product?.name ?? `Product ${item.product_id}`;
 
   return (
-    <div
-      className={cn(
-        "flex min-w-[19.5rem] items-stretch gap-4 rounded-lg border-b bg-white p-4 shadow-sm",
-        className
-      )}
-    >
-      <img
-        src={imageSrc}
-        alt={productName}
-        className="my-auto aspect-3/4 w-20 rounded-md object-cover"
-      />
-      <div className="flex flex-1 justify-between">
-        <div className="flex flex-1 flex-col justify-between gap-y-2">
-          <h3 className="flex items-center justify-between text-sm font-semibold">
-            <span className="inline-block max-w-20 truncate">
-              {productName}
-            </span>
-            <span>{`${item.price ?? item.price_snapshot ?? "N/A"}€`}</span>
-          </h3>
+    <div className={"@container"}>
+      <div
+        className={cn(
+          "flex min-w-max items-stretch gap-4 rounded-lg border-b bg-white p-4 shadow-sm",
+          "origin-top-left @[16rem]:@max-[18rem]:scale-88",
+          className
+        )}
+      >
+        <img
+          src={imageSrc}
+          alt={productName}
+          className="my-auto aspect-3/4 w-20 rounded-md object-cover @max-[16rem]:hidden @sm:w-28"
+        />
 
-          <Textarea
-            placeholder={disabled ? "No notes" : "Add a note..."}
-            className="min-h-8 resize-y"
-            value={item.notes ?? ""}
-            disabled={disabled}
-            onKeyDownCapture={(e) => {
-              if (e.key === " " || e.key === "Enter") e.stopPropagation();
-            }}
-            onChange={(e) => updateItemNotes(item.id, e.target.value)}
-          />
+        <div className="flex flex-1 justify-between">
+          <div className="flex flex-1 flex-col justify-between gap-y-2">
+            <h3 className="flex items-center justify-between text-sm font-semibold">
+              <span className="inline-block max-w-28 truncate @[16rem]:max-w-20">
+                {productName}
+              </span>
+              <span>{`${item.price ?? item.price_snapshot ?? "N/A"}€`}</span>
+            </h3>
 
-          {/* --- Display current tags with remove button --- */}
-          <div className="flex flex-wrap gap-1">
-            {thisItemsTags.map((tag) => (
-              <Badge
-                key={tag.id}
-                variant="secondary"
-                className="flex items-center"
-              >
-                {tag.name}
-                {!disabled && (
-                  <button
-                    onClick={() => handleRemoveTag(tag.id)}
-                    className="ml-1 rounded-full p-0.5 hover:bg-gray-300"
-                    aria-label={`Remove tag ${tag.name}`}
-                  >
-                    <XIcon className="h-3 w-3" />
-                  </button>
-                )}
-              </Badge>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2 text-xs">
-            <Input
-              type="number"
-              value={item.quantity}
-              className="h-8 w-12 px-2"
-              min={1}
+            <Textarea
+              placeholder={disabled ? "No notes" : "Add a note..."}
+              className="min-h-8 resize-y"
+              value={item.notes ?? ""}
               disabled={disabled}
-              onChange={handleQuantityChange}
-              aria-label="Quantity"
+              onKeyDownCapture={(e) => {
+                if (e.key === " " || e.key === "Enter") e.stopPropagation();
+              }}
+              onChange={(e) => updateItemNotes(item.id, e.target.value)}
             />
-            {/* --- Updated Tag Select --- */}
-            <Select onValueChange={handleAddTag} disabled={disabled}>
-              <SelectTrigger className="h-8!">
-                <SelectValue placeholder="+ Tag" />
-              </SelectTrigger>
-              <SelectContent>
-                {tags?.map((tag) => (
-                  <SelectItem
-                    key={tag.id}
-                    value={tag.id}
-                    disabled={item.tag_ids.includes(tag.id)}
-                  >
-                    {tag.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+            {/* --- Display current tags with remove button --- */}
+            <div className="flex flex-wrap gap-1">
+              {thisItemsTags.map((tag) => (
+                <Badge
+                  key={tag.id}
+                  variant="secondary"
+                  className="flex items-center"
+                >
+                  {tag.name}
+                  {!disabled && (
+                    <button
+                      onClick={() => handleRemoveTag(tag.id)}
+                      className="ml-1 rounded-full p-0.5 hover:bg-gray-300"
+                      aria-label={`Remove tag ${tag.name}`}
+                    >
+                      <XIcon className="h-3 w-3" />
+                    </button>
+                  )}
+                </Badge>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 text-xs">
+              <Input
+                type="number"
+                value={item.quantity}
+                className="h-8 w-20 px-2 @[16rem]:w-12"
+                min={1}
+                disabled={disabled}
+                onChange={handleQuantityChange}
+                aria-label="Quantity"
+              />
+              {/* --- Updated Tag Select --- */}
+              <Select onValueChange={handleAddTag} disabled={disabled}>
+                <SelectTrigger className="h-8!">
+                  <SelectValue placeholder="+ Tag" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tags?.map((tag) => (
+                    <SelectItem
+                      key={tag.id}
+                      value={tag.id}
+                      disabled={item.tag_ids.includes(tag.id)}
+                    >
+                      {tag.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="flex flex-col justify-between self-stretch">
-        {/* --- Drag Handle --- */}
-        <Button
-          variant="ghost"
-          size="icon"
-          disabled={disabled}
-          className={cn("h-8 w-8", !disabled && "cursor-grab")}
-          {...dragHandleProps}
-        >
-          <GripVerticalIcon className="text-muted-foreground w-4" />
-        </Button>
+        <div className="flex flex-col justify-between self-stretch">
+          {/* --- Drag Handle --- */}
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={disabled}
+            className={cn("h-8 w-8", !disabled && "cursor-grab")}
+            {...dragHandleProps}
+          >
+            <GripVerticalIcon className="text-muted-foreground w-4" />
+          </Button>
 
-        {/* --- Remove Item Button --- */}
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          disabled={disabled}
-          onClick={() => removeItem(item.id)}
-        >
-          <Trash2Icon className="h-4 w-4" />
-        </Button>
+          {/* --- Remove Item Button --- */}
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            disabled={disabled}
+            onClick={() => removeItem(item.id)}
+          >
+            <Trash2Icon className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );
