@@ -10,18 +10,31 @@ import { Separator } from "@/components/ui/separator";
 import type { ShippingMethod } from "@/lib/checkout/types";
 import { formatCurrency } from "@/lib/checkout/utils";
 import { PackageIcon, ShieldCheckIcon } from "lucide-react";
+import { useLiveQuery, eq } from "@tanstack/react-db";
+import { userAddressesCollection } from "@/lib/collections";
 
 function ReviewStep({
   cartItems,
   shippingMethod,
   paymentMethod,
-  warranties
+  warranties,
+  selectedAddressId
 }: {
   cartItems: EnrichedCartItem[];
   shippingMethod: ShippingMethod;
   paymentMethod: string;
   warranties: Record<string, boolean>;
+  selectedAddressId: string | null;
 }) {
+  const { data: addresses } = useLiveQuery((q) =>
+    q
+      .from({ a: userAddressesCollection })
+      .where(({ a }) => eq(a.id, selectedAddressId ?? ""))
+      .select(({ a }) => a)
+  );
+
+  const address = addresses?.[0];
+
   return (
     <Card>
       <CardHeader>
@@ -36,13 +49,23 @@ function ReviewStep({
             <span className="text-muted-foreground font-medium">
               Shipping To:
             </span>
-            <p>
-              John Doe
-              <br />
-              123 Main St
-              <br />
-              New York, NY 10001
-            </p>
+            {address ? (
+              <p>
+                {address.recipient_name}
+                <br />
+                {address.line1}
+                {address.line2 && (
+                  <>
+                    <br />
+                    {address.line2}
+                  </>
+                )}
+                <br />
+                {address.zip_code} {address.city}, {address.country_code}
+              </p>
+            ) : (
+              <p className="text-red-500">No address selected</p>
+            )}
           </div>
           <div className="space-y-1">
             <span className="text-muted-foreground font-medium">Details:</span>

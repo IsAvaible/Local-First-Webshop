@@ -24,7 +24,12 @@ function CheckoutWizardView({
   const currentStepId = state.step as WizardStepId;
 
   const STEP_CONTENT: Record<WizardStepId, React.ReactNode> = {
-    address: <AddressStep />,
+    address: (
+      <AddressStep
+        selectedAddressId={state.formData.selectedAddressId}
+        onSelectAddress={actions.setSelectedAddressId}
+      />
+    ),
     shipping: (
       <Card>
         <CardHeader>
@@ -57,6 +62,7 @@ function CheckoutWizardView({
         shippingMethod={state.formData.shippingMethod}
         paymentMethod={state.formData.paymentMethod}
         warranties={state.formData.warranties}
+        selectedAddressId={state.formData.selectedAddressId}
       />
     )
   };

@@ -28,6 +28,9 @@ export function useCheckoutLogic({ step, navigate }: UseCheckoutLogicProps) {
   const [warranties, setWarranties] = useState<Record<string, boolean>>({});
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+    null
+  );
 
   // Flatten Cart Items
   const cartItems = useMemo(() => {
@@ -114,6 +117,7 @@ export function useCheckoutLogic({ step, navigate }: UseCheckoutLogicProps) {
     setShippingMethod,
     setPaymentMethod,
     setCouponInput,
+    setSelectedAddressId,
     toggleWarranty: useCallback((itemId: string) => {
       setWarranties((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
     }, []),
@@ -148,7 +152,8 @@ export function useCheckoutLogic({ step, navigate }: UseCheckoutLogicProps) {
         paymentMethod,
         warranties,
         couponInput,
-        appliedCoupon
+        appliedCoupon,
+        selectedAddressId
       }
     },
     actions
