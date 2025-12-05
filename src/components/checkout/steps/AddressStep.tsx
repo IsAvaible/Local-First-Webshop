@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import { userAddressesCollection } from "@/lib/collections";
-import { type SubmitHandler, useForm } from "react-hook-form";
+import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
@@ -27,6 +27,7 @@ import { MapPinIcon, CheckIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client.ts";
 import { v4 as uuidv4 } from "uuid";
+import { CountryDropdown } from "@/components/ui/country-dropdown.tsx";
 
 const createUserAddressSchema = z.object({
   recipient_name: z
@@ -366,13 +367,25 @@ function AddressStep({ selectedAddressId, onSelectAddress }: AddressStepProps) {
 
                   {/* Row 5: Country */}
                   <Field data-invalid={!!errors.country_code}>
-                    <FieldLabel htmlFor="country_code">Country Code</FieldLabel>
-                    <Input
-                      id="country_code"
-                      placeholder="DE"
-                      maxLength={2}
-                      aria-invalid={!!errors.country_code}
-                      {...register("country_code")}
+                    <FieldLabel htmlFor="country_code">Country</FieldLabel>
+                    <Controller
+                      name="country_code"
+                      control={form.control}
+                      rules={{ required: "Please select a country" }}
+                      render={({
+                        field: { onChange, value, ref, ...props }
+                      }) => (
+                        <CountryDropdown
+                          ref={ref}
+                          defaultValue={value}
+                          placeholder="Select country"
+                          aria-invalid={!!errors.country_code}
+                          onChange={(country) => {
+                            onChange(country.alpha2);
+                          }}
+                          {...props}
+                        />
+                      )}
                     />
                     <FieldError>{errors.country_code?.message}</FieldError>
                   </Field>

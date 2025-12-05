@@ -129,6 +129,9 @@ importers:
       codemirror:
         specifier: ^6.0.2
         version: 6.0.2
+      country-data-list:
+        specifier: ^1.5.5
+        version: 1.5.5
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -162,6 +165,9 @@ importers:
       react:
         specifier: ^19.2.0
         version: 19.2.0
+      react-circle-flags:
+        specifier: ^0.0.25
+        version: 0.0.25(react@19.2.0)
       react-day-picker:
         specifier: ^9.11.1
         version: 9.11.1(react@19.2.0)
@@ -3219,6 +3225,12 @@ packages:
       typescript:
         optional: true
 
+  country-data-list@1.5.5:
+    resolution:
+      {
+        integrity: sha512-igoAbJvlD/foOq4+aB3t24Hndvb5y/DasXcrVOtJMZ0UFLgfYq/mPMcCcSjJAIykLcTWOHZehZgNUJyaKMz1iA==
+      }
+
   crelt@1.0.6:
     resolution:
       {
@@ -5000,6 +5012,15 @@ packages:
         integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==
       }
     hasBin: true
+
+  react-circle-flags@0.0.25:
+    resolution:
+      {
+        integrity: sha512-qdfCo3okpvK5/s/2ptmFfU3vfPgwBHvAkSJ+CB4DG6FS1iFzgdmT06MMQi/2ZxkGM6YK1KfmyilPO3QOhEs3DA==
+      }
+    engines: { node: ">=10" }
+    peerDependencies:
+      react: ^16.0.0 || 17.x || 18.x || 19.x
 
   react-day-picker@9.11.1:
     resolution:
@@ -8091,6 +8112,8 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
+  country-data-list@1.5.5: {}
+
   crelt@1.0.6: {}
 
   cross-spawn@7.0.6:
@@ -8991,6 +9014,10 @@ snapshots:
       minimist: 1.2.8
       strip-json-comments: 2.0.1
     optional: true
+
+  react-circle-flags@0.0.25(react@19.2.0):
+    dependencies:
+      react: 19.2.0
 
   react-day-picker@9.11.1(react@19.2.0):
     dependencies:
