@@ -5,8 +5,6 @@ import { type SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
-import { createUserAddressSchema as rawCreateUserAddressSchema } from "@/db/schema";
-
 import {
   Card,
   CardContent,
@@ -30,8 +28,46 @@ import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client.ts";
 import { v4 as uuidv4 } from "uuid";
 
-const createUserAddressSchema = rawCreateUserAddressSchema.omit({
-  user_id: true
+const createUserAddressSchema = z.object({
+  recipient_name: z
+    .string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name is too long"),
+
+  company_name: z.string().trim().optional(),
+
+  line1: z.string().trim().min(5, "Address must be at least 5 characters"),
+
+  line2: z.string().trim().optional(),
+
+  city: z.string().trim().min(2, "City name is too short"),
+
+  state: z.string().trim().optional(),
+
+  zip_code: z
+    .string()
+    .trim()
+    .min(3, "Zip code must be at least 3 characters")
+    .max(20, "Zip code is too long"),
+
+  country_code: z
+    .string()
+    .trim()
+    .length(2, "Please use a 2-letter Country Code (e.g., DE, US)")
+    .transform((val) => val.toUpperCase()),
+
+  phone_number: z
+    .string()
+    .trim()
+    // Allow empty string OR valid phone regex (digits, +, -, space, parens)
+    .refine(
+      (val) => val === "" || /^[\d+\-\s()]+$/.test(val),
+      "Invalid phone number format"
+    )
+    .optional(),
+
+  email_address: z.email().optional()
 });
 
 // Helper type for the form values
@@ -81,23 +117,30 @@ function AddressStep({ selectedAddressId, onSelectAddress }: AddressStepProps) {
     try {
       if (userId === undefined) {
         console.error("User not found / not logged in");
+        return;
       }
 
       const newId = uuidv4();
       const isFirstAddress = !addresses || addresses.length === 0;
 
+      // Helper to convert empty strings to null for DB consistency
+      const toNull = (val?: string | null) =>
+        val && val.trim() !== "" ? val : null;
+
       const tx = userAddressesCollection.insert({
         ...data,
-        company_name: data.company_name ?? null,
-        line2: data.line2 ?? null,
-        state: data.state ?? null,
-        phone_number: data.phone_number ?? null,
-        email_address: data.email_address ?? null,
+        // Apply helper to optional fields
+        company_name: toNull(data.company_name),
+        line2: toNull(data.line2),
+        state: toNull(data.state),
+        phone_number: toNull(data.phone_number),
+        email_address: toNull(data.email_address),
+
         is_default_delivery: isFirstAddress,
         is_default_billing: isFirstAddress,
 
         id: newId,
-        user_id: userId!,
+        user_id: userId,
         created_at: new Date(),
         updated_at: new Date()
       });
