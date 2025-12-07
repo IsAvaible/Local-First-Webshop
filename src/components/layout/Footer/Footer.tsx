@@ -27,7 +27,7 @@ export default function Footer() {
         <button
           type="button"
           onClick={scrollToTop}
-          className="cursor-pointer text-center text-sm text-gray-500 hover:underline dark:text-slate-400"
+          className="text-center text-sm text-gray-500 hover:underline dark:text-slate-400"
         >
           Scroll to Top
         </button>

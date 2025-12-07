@@ -520,7 +520,8 @@ export function Cart({ className }: React.ComponentProps<"div">) {
             </Button>
             <TagManager disabled={!canManageItems} />
           </div>
-          <Link to={"/checkout"}>
+
+          <Link disabled={!canManageItems} to={"/checkout"}>
             <Button className="mt-4 w-full" disabled={!canManageItems}>
               Checkout
             </Button>
