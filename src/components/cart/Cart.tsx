@@ -508,7 +508,7 @@ export function Cart({ className }: React.ComponentProps<"div">) {
         </RootDroppable>
 
         {/* FOOTER */}
-        <div className="border-t bg-gray-50/50 p-4">
+        <div className="border-t bg-transparent p-4">
           <div className="flex gap-2">
             <Button
               onClick={() => createFolder("New Folder")}
