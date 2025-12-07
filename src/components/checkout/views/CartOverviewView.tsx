@@ -28,7 +28,7 @@ function CartOverviewView({
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="space-y-8 lg:col-span-2">
-            <CartItemsList items={cartItems} />
+            <CartItemsList />
 
             <Card>
               <CardHeader>

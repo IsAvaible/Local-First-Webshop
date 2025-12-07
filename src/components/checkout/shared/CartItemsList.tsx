@@ -1,4 +1,3 @@
-import type { EnrichedCartItem } from "@/contexts/useCartContext";
 import {
   Card,
   CardContent,
@@ -7,23 +6,22 @@ import {
   CardTitle
 } from "@/components/ui/card";
 import { Cart } from "@/components/cart/Cart.tsx";
+import { useCart } from "@/contexts/useCartContext.ts";
 
-function CartItemsList({ items }: { items: EnrichedCartItem[] }) {
-  if (items.length === 0)
-    return (
-      <div className="text-muted-foreground py-8 text-center">
-        Your cart is empty.
-      </div>
-    );
+function CartItemsList() {
+  const { activeCart, enrichedFlatItems } = useCart();
+  const activeCartName = activeCart?.name ?? "Your Cart";
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Your Cart</CardTitle>
-        <CardDescription>{items.length} items</CardDescription>
+        <CardTitle>{activeCartName}</CardTitle>
+        <CardDescription>
+          {enrichedFlatItems?.length ?? 0} items
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <Cart />
+        <Cart displayHeader={false} />
       </CardContent>
     </Card>
   );

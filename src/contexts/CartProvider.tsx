@@ -11,6 +11,7 @@ import {
   type CartCollaboratorWithUser,
   CartContext,
   type EnrichedCartNode,
+  type EnrichedFlatCartNode,
   type Tag
 } from "./useCartContext";
 import { authClient } from "@/lib/auth-client";
@@ -33,59 +34,22 @@ import { v4 as uuidv4 } from "uuid";
 import { generateKeyBetween } from "fractional-indexing";
 import * as decoding from "lib0/decoding";
 import { trpc } from "@/lib/trpc-client";
-import type { CartRole, Cart } from "@/db/schema";
+import {
+  type CartRole,
+  type Cart,
+  type YCartNodeShape,
+  type YCartNodeMap,
+  type YTagMap,
+  isYItem,
+  type YCartFolderShape,
+  isYFolderMap,
+  isYFolder,
+  isYItemMap,
+  type YCartItemShape,
+  type PricingTier
+} from "@/db/schema";
 
-// --- 1. Strict Type Definitions ---
-
-// Common fields for all nodes
-type BaseNodeShape = {
-  id: string;
-  parent_id: string | null; // null = root
-  order: string; // Fractional index key
-};
-
-// Item specific fields
-type YCartItemShape = BaseNodeShape & {
-  type: "item";
-  product_id: number;
-  quantity: number;
-  price_snapshot: string;
-  tag_ids: string[];
-  notes: string | null;
-  created_at: number;
-};
-
-// Folder specific fields
-type YCartFolderShape = BaseNodeShape & {
-  type: "folder";
-  name: string;
-};
-
-// The Union Type representing the raw JSON data
-type YCartNodeShape = YCartItemShape | YCartFolderShape;
-
-// --- Yjs Specific Types ---
-// These wrap the JSON shapes into Yjs TypedMaps
-type YCartNodeMap = TypedMap<YCartNodeShape>;
-type YTagMap = TypedMap<Tag>;
-
-// Type Guards for narrowing the union
-function isItem(node: YCartNodeShape): node is YCartItemShape {
-  return node.type === "item";
-}
-
-function isFolder(node: YCartNodeShape): node is YCartFolderShape {
-  return node.type === "folder";
-}
-
-// Helper to safely check type on a Y.Map without full JSON conversion
-function isYItemMap(map: YCartNodeMap): map is TypedMap<YCartItemShape> {
-  return map.get("type") === "item";
-}
-
-function isYFolderMap(map: YCartNodeMap): map is TypedMap<YCartFolderShape> {
-  return map.get("type") === "folder";
-}
+// --- 1. Type Definitions ---
 
 interface UpdateTableSchema {
   update: decoding.Decoder;
@@ -120,6 +84,7 @@ type CartSessionProps = {
   guestId: string | null;
   // Global props passed down from Provider
   carts: Cart[];
+  activeCart?: Cart;
   activeCartId: string;
   setActiveCartId: (id: string) => void;
   createCart: (name: string) => void;
@@ -133,6 +98,7 @@ function CartSession({
   userId,
   guestId,
   carts,
+  activeCart,
   activeCartId,
   setActiveCartId,
   createCart,
@@ -293,7 +259,7 @@ function CartSession({
         }
       ];
     });
-  }, [usersData, currentCart, onlineUsers, collaboratorLinks]);
+  }, [userId, usersData, currentCart, onlineUsers, collaboratorLinks]);
 
   // 5. Determine Current User's Permissions
   const cartRole: CartRole = useMemo(() => {
@@ -320,13 +286,13 @@ function CartSession({
   const uniqueProductIds = useMemo(() => {
     const ids = new Set<number>();
     flatNodes.forEach((n) => {
-      if (isItem(n)) ids.add(n.product_id);
+      if (isYItem(n)) ids.add(n.product_id);
     });
     return Array.from(ids).sort();
   }, [
     // Stable stringify of strictly relevant fields
     // This might cause issues if flatNodes is out of sync (as it is built from the source of truth from by React)
-    JSON.stringify(flatNodes.map((n) => (isItem(n) ? n.product_id : "F")))
+    JSON.stringify(flatNodes.map((n) => (isYItem(n) ? n.product_id : "F")))
   ]);
 
   const { data: productsData, isLoading: isProductsLoading } = useLiveQuery(
@@ -430,36 +396,39 @@ function CartSession({
   const isLoadingData =
     isLoadingGlobal || isTiersLoading || isProductsLoading || isAssetsLoading;
 
-  const enrichedTree: EnrichedCartNode[] = useMemo(() => {
+  // --- 0. Create Lookup Maps (O(M)) ---
+  const { productMap, assetMap, tiersMap } = useMemo(() => {
+    // Map: Product ID -> Product
+    const pMap = new Map(productsData?.map((p) => [p.id, p]));
+
+    // Map: Product ID -> Asset
+    const aMap = new Map(assetsData?.map((a) => [a.product_id, a]));
+
+    // Map: Product ID -> Sorted Tiers Array
+    // Group tiers by product_id once, upfront
+    const tMap = new Map<number, PricingTier[]>();
+    (tiersData ?? []).forEach((tier) => {
+      if (!tMap.has(tier.product_id)) tMap.set(tier.product_id, []);
+      tMap.get(tier.product_id)!.push(tier);
+    });
+    // Sort tiers once
+    tMap.forEach((tiers) =>
+      tiers.sort((a, b) => b.min_quantity - a.min_quantity)
+    );
+
+    return { productMap: pMap, assetMap: aMap, tiersMap: tMap };
+  }, [productsData, assetsData, tiersData]);
+
+  // --- 1. Create Intermediate Enriched Flat Array (O(N)) ---
+  const enrichedFlatNodes: EnrichedFlatCartNode[] = useMemo(() => {
     if (isLoadingData) return [];
 
-    const nodesByParent: Record<string, YCartNodeShape[]> = {};
-    const rootNodes: YCartNodeShape[] = [];
-
-    flatNodes.forEach((node) => {
-      if (!node.parent_id) {
-        rootNodes.push(node);
-      } else {
-        if (!nodesByParent[node.parent_id]) {
-          nodesByParent[node.parent_id] = [];
-        }
-        nodesByParent[node.parent_id].push(node);
-      }
-    });
-
-    const sortNodes = (a: YCartNodeShape, b: YCartNodeShape) => {
-      if (a.order === b.order) return a.id.localeCompare(b.id);
-      return a.order < b.order ? -1 : 1;
-    };
-
-    const buildTree = (node: YCartNodeShape): EnrichedCartNode => {
-      if (isItem(node)) {
-        const product = productsData?.find((p) => p.id === node.product_id);
-        const asset = assetsData?.find((a) => a.product_id === node.product_id);
-
-        const validTiers = (tiersData ?? [])
-          .filter((t) => t.product_id === node.product_id)
-          .sort((a, b) => b.min_quantity - a.min_quantity);
+    return flatNodes.map((node) => {
+      if (isYItem(node)) {
+        // O(1) Lookups!
+        const product = productMap.get(node.product_id);
+        const asset = assetMap.get(node.product_id);
+        const validTiers = tiersMap.get(node.product_id) ?? [];
 
         const bestTier = validTiers.find(
           (t) => t.min_quantity <= node.quantity
@@ -471,21 +440,62 @@ function CartSession({
           asset,
           price: bestTier?.price_per_unit ?? node.price_snapshot
         };
-      } else {
-        const children = nodesByParent[node.id] || [];
-        children.sort(sortNodes);
-
-        return {
-          ...node,
-          type: "folder",
-          children: children.map(buildTree)
-        };
       }
+      return { ...node };
+    });
+  }, [flatNodes, productMap, assetMap, tiersMap, isLoadingData]);
+
+  const enrichedFlatItems = useMemo(
+    () => enrichedFlatNodes.filter(isYItem),
+    [enrichedFlatNodes]
+  );
+
+  // Build Tree from Enriched Flat Nodes
+  const enrichedTree: EnrichedCartNode[] = useMemo(() => {
+    if (enrichedFlatNodes.length === 0) return [];
+
+    const nodesByParent: Record<string, EnrichedCartNode[]> = {};
+    const rootNodes: EnrichedCartNode[] = [];
+
+    enrichedFlatNodes.forEach((node) => {
+      let newNode: EnrichedCartNode;
+      if (isYFolder(node)) {
+        newNode = { ...node, children: [] };
+      } else {
+        newNode = node;
+      }
+      if (!node.parent_id) {
+        rootNodes.push(newNode);
+      } else {
+        if (!nodesByParent[node.parent_id]) {
+          nodesByParent[node.parent_id] = [];
+        }
+        nodesByParent[node.parent_id].push(newNode);
+      }
+    });
+
+    const sortNodes = (a: EnrichedCartNode, b: EnrichedCartNode) => {
+      if (a.order === b.order) return a.id.localeCompare(b.id);
+      return a.order < b.order ? -1 : 1;
+    };
+
+    // Recursive builder that grabs children from the lookup table
+    const buildHierarchy = (node: EnrichedCartNode): EnrichedCartNode => {
+      if (node.type === "item") {
+        return { ...node };
+      }
+      const children = nodesByParent[node.id] || [];
+      children.sort(sortNodes);
+
+      return {
+        ...node,
+        children: children.map(buildHierarchy)
+      };
     };
 
     rootNodes.sort(sortNodes);
-    return rootNodes.map(buildTree);
-  }, [flatNodes, productsData, assetsData, tiersData, isLoadingData]);
+    return rootNodes.map(buildHierarchy);
+  }, [enrichedFlatNodes]);
 
   // --- Operations (Inner) ---
 
@@ -601,7 +611,7 @@ function CartSession({
           flatNodes.forEach((n) => {
             if (n.parent_id === parentId) {
               idsToDelete.push(n.id);
-              if (isFolder(n)) scanChildren(n.id);
+              if (isYFolder(n)) scanChildren(n.id);
             }
           });
         };
@@ -758,6 +768,7 @@ function CartSession({
   const value = {
     cartId: roomName,
     rootNodes: enrichedTree,
+    enrichedFlatItems,
     tags: flatTags,
     collaborators,
     cartRole,
@@ -766,6 +777,7 @@ function CartSession({
     isLoading: isLoadingData,
     isSynced,
     carts,
+    activeCart,
     activeCartId,
     setActiveCartId,
     createCart,
@@ -843,6 +855,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [carts, isCartsLoading, activeCartId]);
 
+  const activeCart = useMemo(
+    () => carts?.find((c) => c.id === activeCartId),
+    [carts, activeCartId]
+  );
+
   // Create initial cart if needed
   const isInitializing = useRef(false);
   useEffect(() => {
@@ -912,6 +929,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       userId={userId}
       guestId={guestId}
       carts={carts ?? []}
+      activeCart={activeCart}
       activeCartId={activeCartId}
       setActiveCartId={setActiveCartId}
       createCart={createCart}

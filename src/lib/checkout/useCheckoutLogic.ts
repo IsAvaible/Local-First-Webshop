@@ -1,10 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import type { UseNavigateResult } from "@tanstack/react-router";
-import {
-  useCart,
-  type EnrichedCartNode,
-  type EnrichedCartItem
-} from "@/contexts/useCartContext";
+import { useCart } from "@/contexts/useCartContext";
 import { CONFIG, FLOW_ORDER, WIZARD_STEPS } from "@/lib/checkout/config";
 import type { FlowStepId, ShippingMethod } from "@/lib/checkout/types";
 
@@ -14,7 +10,8 @@ interface UseCheckoutLogicProps {
 }
 
 export function useCheckoutLogic({ step, navigate }: UseCheckoutLogicProps) {
-  const { rootNodes } = useCart();
+  const { enrichedFlatItems: rawCartItems } = useCart();
+  const cartItems = useMemo(() => rawCartItems ?? [], [rawCartItems]);
 
   // Determine current position in the linear flow
   const currentFlowIndex = FLOW_ORDER.indexOf(step);
@@ -32,21 +29,6 @@ export function useCheckoutLogic({ step, navigate }: UseCheckoutLogicProps) {
     null
   );
 
-  // Flatten Cart Items
-  const cartItems = useMemo(() => {
-    if (!rootNodes) return [];
-    const flatten = (nodes: EnrichedCartNode[]): EnrichedCartItem[] => {
-      let items: EnrichedCartItem[] = [];
-      for (const node of nodes) {
-        if (node.type === "item") items.push(node);
-        else if (node.type === "folder")
-          items = items.concat(flatten(node.children));
-      }
-      return items;
-    };
-    return flatten(rootNodes);
-  }, [rootNodes]);
-
   interface Totals {
     subtotal: number;
     warrantyCost: number;
@@ -55,8 +37,6 @@ export function useCheckoutLogic({ step, navigate }: UseCheckoutLogicProps) {
     discount: number;
     total: number;
   }
-
-  // ... inside useCheckoutLogic function
 
   // Calculate Totals
   const totals = useMemo((): Totals => {

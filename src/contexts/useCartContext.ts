@@ -1,20 +1,27 @@
 import { createContext, use } from "react";
 import type { Product, Asset, CartCollaborator } from "@/db/schema";
-import type { YCartItem, YCartFolder, Cart, CartRole } from "@/db/schema";
+import type {
+  YCartItemShape,
+  YCartFolderShape,
+  Cart,
+  CartRole
+} from "@/db/schema";
 
 // Enriched types for UI
-export interface EnrichedCartItem extends YCartItem {
+export interface EnrichedFlatCartItem extends YCartItemShape {
   product?: Product | null;
   asset?: Asset | null;
   price?: string | null;
 }
 
+export type EnrichedCartItem = Omit<EnrichedFlatCartItem, "parent_id">;
+
 export interface EnrichedCartFolder
-  extends Omit<YCartFolder, "children" | "type"> {
-  type: "folder";
+  extends Omit<YCartFolderShape, "children" | "parent_id"> {
   children: EnrichedCartNode[];
 }
 
+export type EnrichedFlatCartNode = EnrichedFlatCartItem | YCartFolderShape;
 export type EnrichedCartNode = EnrichedCartItem | EnrichedCartFolder;
 
 // The Tag Shape
@@ -45,6 +52,7 @@ export interface CartContextType {
   // --- Data ---
   cartId: string | undefined;
   rootNodes: EnrichedCartNode[] | undefined; // The main tree
+  enrichedFlatItems: EnrichedFlatCartItem[] | undefined;
 
   tags: { id: string; name: string; color: string | null }[] | undefined;
 
@@ -53,6 +61,7 @@ export interface CartContextType {
 
   // --- Cart Management ---
   carts: Cart[];
+  activeCart?: Cart;
   activeCartId: string | null;
   setActiveCartId: (id: string) => void;
   createCart: (name: string) => void;

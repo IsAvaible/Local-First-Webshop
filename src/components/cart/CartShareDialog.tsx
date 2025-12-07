@@ -69,8 +69,7 @@ const RoleSelect = ({
 
 export function CartShareDialog({ open, onOpenChange }: CartShareDialogProps) {
   const {
-    carts,
-    activeCartId,
+    activeCart,
     addCollaborator,
     canManageUsers,
     collaborators,
@@ -87,8 +86,7 @@ export function CartShareDialog({ open, onOpenChange }: CartShareDialogProps) {
   const [inviteRole, setInviteRole] = React.useState<CartRole>("viewer");
   const [copyLinkText, setCopyLinkText] = React.useState("Copy link");
 
-  const activeCartName =
-    carts.find((c) => c.id === activeCartId)?.name ?? "Shopping Cart";
+  const activeCartName = activeCart?.name ?? "Current Cart";
 
   const handleInvite = async () => {
     if (inviteEmail.trim()) {
