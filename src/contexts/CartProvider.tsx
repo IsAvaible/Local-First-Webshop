@@ -847,13 +847,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (isCartsLoading || !carts || carts.length === 0) return;
     if (activeCartId && carts.find((c) => c.id === activeCartId)) return;
 
-    const defaultCart = carts.find((c) => c.is_default);
+    const defaultCart = carts.find(
+      (c) => c.owner_user_id === userId && c.is_default
+    );
     if (defaultCart) {
       setActiveCartId(defaultCart.id);
     } else if (carts.length > 0) {
       setActiveCartId(carts[0].id);
     }
-  }, [carts, isCartsLoading, activeCartId]);
+  }, [userId, carts, isCartsLoading, activeCartId]);
 
   const activeCart = useMemo(
     () => carts?.find((c) => c.id === activeCartId),
