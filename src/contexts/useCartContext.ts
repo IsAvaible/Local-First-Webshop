@@ -24,10 +24,21 @@ export type Tag = {
   color: string | null;
 };
 
+export type AwarenessUser = {
+  clientId: number;
+  user: {
+    id: string;
+    name: string;
+    color: string;
+    avatarUrl?: string;
+  };
+};
+
 export type CartCollaboratorWithUser = CartCollaborator & {
   name: string;
   email: string;
   avatarUrl?: string | null;
+  isOnline: boolean;
 };
 
 export interface CartContextType {
@@ -50,6 +61,7 @@ export interface CartContextType {
   canManageUsers: boolean;
   canManageItems: boolean;
 
+  onlineUsers: AwarenessUser[];
   collaborators: CartCollaboratorWithUser[];
   addCollaborator: (email: string, role: CartRole) => Promise<void>;
   updateCollaboratorRole: (

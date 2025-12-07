@@ -7,6 +7,7 @@ import {
   useState
 } from "react";
 import {
+  type AwarenessUser,
   type CartCollaboratorWithUser,
   CartContext,
   type EnrichedCartNode,
@@ -90,6 +91,24 @@ interface UpdateTableSchema {
   update: decoding.Decoder;
 }
 
+const COLORS = [
+  "#f87171",
+  "#fb923c",
+  "#facc15",
+  "#4ade80",
+  "#60a5fa",
+  "#a78bfa",
+  "#f472b6"
+];
+const stringToColor = (str: string) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash % COLORS.length);
+  return COLORS[index];
+};
+
 // --- 2. Inner Component: The Cart Session ---
 // This component handles ONE specific cart.
 // When the parent changes the `key` prop, this component unmounts and remounts,
@@ -127,6 +146,8 @@ function CartSession({
   const [ydoc] = useState(() => new Y.Doc());
   const [awareness] = useState(() => new Awareness(ydoc));
   const [isSynced, setIsSynced] = useState(false);
+
+  const [onlineUsers, setOnlineUsers] = useState<AwarenessUser[]>([]);
 
   // --- Yjs Data Binding ---
   const [flatNodes, setFlatNodes] = useState<YCartNodeShape[]>([]);
@@ -257,17 +278,22 @@ function CartSession({
 
       const role: CartRole = isOwner ? "admin" : (link?.role ?? "viewer");
 
+      const isOnline =
+        user.id === userId ||
+        !!onlineUsers.find((aw) => aw.user.id === user.id);
+
       return [
         {
           name: user.name ?? "Unknown User",
           email: user.email ?? "",
           avatarUrl: user.image ?? undefined,
+          isOnline,
           ...link,
           role
         }
       ];
     });
-  }, [usersData, currentCart, collaboratorLinks]);
+  }, [usersData, currentCart, onlineUsers, collaboratorLinks]);
 
   // 5. Determine Current User's Permissions
   const cartRole: CartRole = useMemo(() => {
@@ -332,6 +358,72 @@ function CartSession({
     },
     [uniqueProductIds]
   );
+
+  // --- Awareness Logic ---
+
+  // 1. Identify Current User Details for Awareness
+  const currentUserProfile = useMemo(() => {
+    // If logged in
+    if (userId) {
+      const myCollab = collaborators.find((c) => c.user_id === userId);
+      return {
+        id: userId,
+        name: myCollab?.name ?? "Unknown User",
+        avatarUrl: myCollab?.avatarUrl,
+        color: stringToColor(userId)
+      };
+    }
+    // If Guest
+    return {
+      id: guestId ?? "unknown-guest",
+      name: "Guest",
+      color: stringToColor(""),
+      avatarUrl: undefined
+    };
+  }, [userId, guestId, usersData]);
+
+  // 2. Broadcast Local Presence
+  useEffect(() => {
+    if (!isSynced) return;
+
+    awareness.setLocalStateField("user", currentUserProfile);
+
+    return () => {
+      awareness.setLocalState(null);
+    };
+  }, [awareness, currentUserProfile, isSynced]);
+
+  // 3. Listen for Remote Presence
+  useEffect(() => {
+    const onAwarenessChange = () => {
+      const states = awareness.getStates();
+      const users: AwarenessUser[] = [];
+
+      states.forEach((state, clientId) => {
+        if (state.user) {
+          users.push({
+            clientId,
+            user: state.user as AwarenessUser["user"]
+          });
+        }
+      });
+
+      // Deduplicate by User ID (in case user has multiple tabs open)
+      const uniqueUsers = Array.from(
+        new Map(users.map((u) => [u.user.id, u])).values()
+      );
+
+      setOnlineUsers(uniqueUsers);
+    };
+
+    awareness.on("change", onAwarenessChange);
+    // Trigger initial load
+    onAwarenessChange();
+
+    return () => {
+      awareness.off("change", onAwarenessChange);
+    };
+  }, [awareness]);
 
   // --- Tree Construction ---
 
@@ -677,6 +769,7 @@ function CartSession({
     activeCartId,
     setActiveCartId,
     createCart,
+    onlineUsers,
     addCollaborator,
     updateCollaboratorRole,
     removeCollaborator,

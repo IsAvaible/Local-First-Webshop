@@ -404,20 +404,27 @@ export function Cart({ className }: React.ComponentProps<"div">) {
             <h2 className="text-lg font-semibold tracking-tight">Cart</h2>
 
             <div className="flex items-center gap-3">
-              <div className="flex -space-x-2 overflow-hidden">
-                {collaborators.slice(0, 3).map((user) => (
-                  <UserAvatar
-                    key={user.id}
-                    name={user.name}
-                    src={user.avatarUrl}
-                  />
-                ))}
-                {collaborators.length > 3 && (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gray-100 text-[10px] font-medium text-gray-600">
-                    +{collaborators.length - 3}
-                  </div>
-                )}
-              </div>
+              {collaborators.length > 1 && (
+                <div className="flex -space-x-2 overflow-hidden">
+                  {collaborators.slice(0, 3).map((user) => (
+                    <div
+                      key={user.id}
+                      className="relative inline-block rounded-full border-2 border-white"
+                    >
+                      <UserAvatar name={user.name} src={user.avatarUrl} />
+                      {user.isOnline && (
+                        <span className="absolute right-0 bottom-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white" />
+                      )}
+                    </div>
+                  ))}
+                  {collaborators.length > 3 && (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gray-100 text-[10px] font-medium text-gray-600">
+                      +{collaborators.length - 3}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <CartShareDialog
                 open={isShareOpen}
                 onOpenChange={setIsShareOpen}
