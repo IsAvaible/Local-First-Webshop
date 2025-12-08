@@ -45,7 +45,7 @@ function PaymentStep({
               <Label
                 key={p.id}
                 htmlFor={p.id}
-                className="border-muted bg-popover hover:bg-accent hover:text-accent-foreground [&:has(:checked)]:border-primary flex cursor-pointer flex-col items-center justify-between rounded-md border-2 p-4"
+                className="border-muted bg-popover hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary flex cursor-pointer flex-col items-center justify-between rounded-md border-2 p-4"
               >
                 <RadioGroupItem value={p.id} id={p.id} className="sr-only" />
                 <p.icon className="mb-3 h-6 w-6" /> {p.label}

@@ -30,7 +30,6 @@ function ReviewStep({
     q
       .from({ a: userAddressesCollection })
       .where(({ a }) => eq(a.id, selectedAddressId ?? ""))
-      .select(({ a }) => a)
   );
 
   const address = addresses?.[0];

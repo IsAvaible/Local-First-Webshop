@@ -239,9 +239,11 @@ const dropAnimationConfig: DropAnimation = {
 
 interface CartProps {
   displayHeader?: boolean;
+  displayCheckoutButton?: boolean;
 }
 export function Cart({
   displayHeader,
+  displayCheckoutButton,
   className
 }: CartProps & React.ComponentProps<"div">) {
   const {
@@ -497,7 +499,7 @@ export function Cart({
         )}
 
         {/* CART BODY */}
-        <RootDroppable className="flex max-h-[65dvh] flex-1 flex-col gap-y-4 overflow-x-clip overflow-y-auto py-4">
+        <RootDroppable className="flex max-h-[65dvh] flex-1 flex-col gap-y-4 overflow-x-clip overflow-y-auto px-0.5 py-4">
           {!rootNodes || rootNodes.length === 0 ? (
             <p className="text-muted-foreground p-4 text-center">
               Your cart is empty.
@@ -532,11 +534,13 @@ export function Cart({
             <TagManager disabled={!canManageItems} />
           </div>
 
-          <Link disabled={!canManageItems} to={"/checkout"}>
-            <Button className="mt-4 w-full" disabled={!canManageItems}>
-              Checkout
-            </Button>
-          </Link>
+          {displayCheckoutButton !== false && (
+            <Link disabled={!canManageItems} to={"/checkout"}>
+              <Button className="mt-4 w-full" disabled={!canManageItems}>
+                Checkout
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 

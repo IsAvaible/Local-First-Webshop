@@ -11,6 +11,7 @@ import ReviewStep from "../steps/ReviewStep";
 import ShippingSelector from "../shared/ShippingSelector";
 import OrderSummary from "../shared/OrderSummary";
 import * as React from "react";
+import { Link } from "@tanstack/react-router";
 
 function CheckoutWizardView({
   state,
@@ -85,14 +86,16 @@ function CheckoutWizardView({
           <div className="space-y-2">
             <div className="text-muted-foreground flex justify-between text-sm font-medium">
               {WIZARD_STEPS.map((stepId, idx) => (
-                <span
+                <Link
                   key={stepId}
+                  to={"/checkout"}
+                  search={{ step: stepId }}
                   className={
                     currentStepId === stepId ? "text-primary font-bold" : ""
                   }
                 >
                   {idx + 1}. {stepId.charAt(0).toUpperCase() + stepId.slice(1)}
-                </span>
+                </Link>
               ))}
             </div>
             <Progress value={state.wizardProgress} className="h-2" />

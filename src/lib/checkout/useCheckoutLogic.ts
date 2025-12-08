@@ -113,8 +113,8 @@ export function useCheckoutLogic({ step, navigate }: UseCheckoutLogicProps) {
     validatedStep
   );
   const wizardProgress = isWizardStep
-    ? (((WIZARD_STEPS as readonly string[]).indexOf(validatedStep) + 1) /
-        WIZARD_STEPS.length) *
+    ? ((WIZARD_STEPS as readonly string[]).indexOf(validatedStep) /
+        (WIZARD_STEPS.length - 1)) *
       100
     : 0;
 
