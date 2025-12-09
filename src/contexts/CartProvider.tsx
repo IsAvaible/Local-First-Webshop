@@ -310,7 +310,8 @@ function CartSession({
       if (uniqueProductIds.length === 0) return undefined;
       return q
         .from({ a: assetsCollection })
-        .where(({ a }) => inArray(a.product_id, uniqueProductIds));
+        .where(({ a }) => inArray(a.product_id, uniqueProductIds))
+        .orderBy(({ a }) => a.id, "desc");
     },
     [uniqueProductIds]
   );

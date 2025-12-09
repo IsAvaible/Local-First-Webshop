@@ -6,7 +6,7 @@ local-first-webshop.localhost {
     }
     
     # Network access
-    10.14.14.103 {
+    172.24.160.1 {
       reverse_proxy localhost:5173
       encode {
         gzip

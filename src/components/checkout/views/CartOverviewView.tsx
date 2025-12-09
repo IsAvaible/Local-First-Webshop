@@ -19,7 +19,7 @@ function CartOverviewView({
   suggestions?: ProductSuggestion[];
   isSuggestionsLoading: boolean;
 }) {
-  const { cartItems, totals, formData } = state;
+  const { cartItems, totals, paymentError, formData } = state;
 
   return (
     <div className="min-h-screen bg-gray-50/50 py-8 dark:bg-slate-950">
@@ -45,7 +45,11 @@ function CartOverviewView({
           </div>
 
           <div className="space-y-8 lg:col-span-1">
-            <OrderSummary totals={totals} itemCount={cartItems.length} />
+            <OrderSummary
+              totals={totals}
+              itemCount={cartItems.length}
+              paymentError={paymentError}
+            />
             <Button
               className="h-12 w-full text-lg"
               size="lg"

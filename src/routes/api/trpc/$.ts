@@ -9,6 +9,7 @@ import { auth } from "@/lib/auth";
 import { cartsRouter } from "@/lib/trpc/carts.ts";
 import { cartCollaboratorsRouter } from "@/lib/trpc/cartCollaborators";
 import { addressesRouter } from "@/lib/trpc/addresses";
+import { paymentRouter } from "@/lib/trpc/payment";
 
 export const appRouter = router({
   projects: projectsRouter,
@@ -16,7 +17,8 @@ export const appRouter = router({
   users: usersRouter,
   carts: cartsRouter,
   cartCollaborators: cartCollaboratorsRouter,
-  addresses: addressesRouter
+  addresses: addressesRouter,
+  payment: paymentRouter
 });
 
 export type AppRouter = typeof appRouter;

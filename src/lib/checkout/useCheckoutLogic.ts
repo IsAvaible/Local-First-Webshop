@@ -1,15 +1,35 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import type { UseNavigateResult } from "@tanstack/react-router";
 import { useCart } from "@/contexts/useCartContext";
 import { CONFIG, FLOW_ORDER, WIZARD_STEPS } from "@/lib/checkout/config";
 import type { FlowStepId, ShippingMethod } from "@/lib/checkout/types";
+import type { Stripe, StripeElements } from "@stripe/stripe-js";
+
+// Define the shape of Stripe params based on your Zod schema
+interface StripeReturnParams {
+  payment_intent?: string;
+  payment_intent_client_secret?: string;
+  redirect_status?: string;
+  error?: string; // Standard Stripe error param
+}
 
 interface UseCheckoutLogicProps {
   step: FlowStepId;
   navigate: UseNavigateResult<"/checkout">;
+  // Add search params to the hook props
+  stripeParams?: StripeReturnParams;
 }
 
-export function useCheckoutLogic({ step, navigate }: UseCheckoutLogicProps) {
+interface SubmitPaymentArgs {
+  stripe: Stripe | null;
+  elements: StripeElements | null;
+}
+
+export function useCheckoutLogic({
+  step,
+  navigate,
+  stripeParams
+}: UseCheckoutLogicProps) {
   const { enrichedFlatItems: rawCartItems } = useCart();
   const cartItems = useMemo(() => rawCartItems ?? [], [rawCartItems]);
 
@@ -21,13 +41,50 @@ export function useCheckoutLogic({ step, navigate }: UseCheckoutLogicProps) {
   // Form State
   const [shippingMethod, setShippingMethod] =
     useState<ShippingMethod>("standard");
-  const [paymentMethod, setPaymentMethod] = useState("card");
   const [warranties, setWarranties] = useState<Record<string, boolean>>({});
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null
   );
+  const [paymentMethodType, setPaymentMethodType] = useState<string | null>(
+    null
+  );
+
+  // Payment State
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  // --- Handle Stripe Return Logic ---
+  useEffect(() => {
+    // If there are no stripe params, do nothing
+    if (!stripeParams?.redirect_status && !stripeParams?.error) return;
+
+    const { redirect_status, error } = stripeParams;
+
+    if (redirect_status === "succeeded") {
+      // If success, we ensure we are on the success step
+      // We strip the stripe params from the URL to prevent dirty history
+      void navigate({
+        search: { step: "success" },
+        replace: true
+      });
+    } else if (redirect_status === "failed" || error) {
+      // Extract error message
+      const errorMessage =
+        error ?? "Payment failed or was cancelled. Please try again.";
+
+      setPaymentError(errorMessage);
+
+      void navigate({
+        search: () => ({
+          // Redirect to the payment step to retry
+          step: "payment"
+        }),
+        replace: true
+      });
+    }
+  }, [stripeParams, navigate, step]);
 
   interface Totals {
     subtotal: number;
@@ -93,11 +150,40 @@ export function useCheckoutLogic({ step, navigate }: UseCheckoutLogicProps) {
       void navigateToStep("overview");
     }, [navigateToStep]),
 
+    submitPayment: useCallback(
+      async ({ stripe, elements }: SubmitPaymentArgs) => {
+        if (!stripe || !elements) {
+          return;
+        }
+
+        setIsProcessing(true);
+        setPaymentError(null);
+
+        const { error } = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            // Note: We direct to success, but our useEffect above
+            // will catch failures and redirect back if status != succeeded
+            return_url: `${window.location.origin}/checkout?step=success`
+          }
+        });
+
+        if (error.type === "card_error" || error.type === "validation_error") {
+          setPaymentError(error.message ?? "An unexpected error occurred.");
+        } else {
+          setPaymentError("An unexpected error occurred.");
+        }
+
+        setIsProcessing(false);
+      },
+      []
+    ),
+
     setStep: navigateToStep,
     setShippingMethod,
-    setPaymentMethod,
     setCouponInput,
     setSelectedAddressId,
+    setPaymentMethodType,
     toggleWarranty: useCallback((itemId: string) => {
       setWarranties((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
     }, []),
@@ -127,13 +213,15 @@ export function useCheckoutLogic({ step, navigate }: UseCheckoutLogicProps) {
       wizardProgress,
       cartItems,
       totals,
+      isProcessing,
+      paymentError,
       formData: {
         shippingMethod,
-        paymentMethod,
         warranties,
         couponInput,
         appliedCoupon,
-        selectedAddressId
+        selectedAddressId,
+        paymentMethodType
       }
     },
     actions

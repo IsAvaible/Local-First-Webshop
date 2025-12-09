@@ -9,22 +9,22 @@ import {
 import { Separator } from "@/components/ui/separator";
 import type { ShippingMethod } from "@/lib/checkout/types";
 import { formatCurrency } from "@/lib/checkout/utils";
-import { PackageIcon, ShieldCheckIcon } from "lucide-react";
+import { PackageIcon, ShieldCheckIcon, CreditCardIcon } from "lucide-react";
 import { useLiveQuery, eq } from "@tanstack/react-db";
 import { userAddressesCollection } from "@/lib/collections";
 
 function ReviewStep({
   cartItems,
   shippingMethod,
-  paymentMethod,
   warranties,
-  selectedAddressId
+  selectedAddressId,
+  paymentMethodType
 }: {
   cartItems: EnrichedCartItem[];
   shippingMethod: ShippingMethod;
-  paymentMethod: string;
   warranties: Record<string, boolean>;
   selectedAddressId: string | null;
+  paymentMethodType: string | null;
 }) {
   const { data: addresses } = useLiveQuery((q) =>
     q
@@ -33,6 +33,14 @@ function ReviewStep({
   );
 
   const address = addresses?.[0];
+
+  // Helper to make the stripe type readable
+  const formatPaymentType = (type: string | null) => {
+    if (!type) return "Not selected";
+    if (type === "card") return "Credit/Debit Card";
+    // Capitalize other types (e.g. 'klarna' -> 'Klarna')
+    return type.charAt(0).toUpperCase() + type.slice(1);
+  };
 
   return (
     <Card>
@@ -44,6 +52,7 @@ function ReviewStep({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-2 gap-4 text-sm">
+          {/* Shipping Address */}
           <div className="space-y-1">
             <span className="text-muted-foreground font-medium">
               Shipping To:
@@ -66,15 +75,32 @@ function ReviewStep({
               <p className="text-red-500">No address selected</p>
             )}
           </div>
-          <div className="space-y-1">
-            <span className="text-muted-foreground font-medium">Details:</span>
-            <p className="capitalize">Method: {shippingMethod}</p>
-            <p className="capitalize">
-              Payment: {paymentMethod.replace("_", " ")}
-            </p>
+
+          {/* Details Column containing Shipping Method & Payment */}
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <span className="text-muted-foreground font-medium">
+                Shipping Method:
+              </span>
+              <p className="capitalize">{shippingMethod}</p>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-muted-foreground font-medium">
+                Payment Method:
+              </span>
+              <div className="flex items-center gap-2">
+                <CreditCardIcon className="h-4 w-4 text-slate-500" />
+                <p className="font-medium">
+                  {formatPaymentType(paymentMethodType)}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
+
         <Separator />
+
         <div className="space-y-4">
           <h4 className="font-semibold">Items</h4>
           {cartItems.map((item: EnrichedCartItem) => (

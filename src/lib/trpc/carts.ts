@@ -149,7 +149,7 @@ export const cartsRouter = router({
           return [cart];
         });
         return created;
-      } catch (e) {
+      } catch (_e) {
         // 3. Race condition handling:
         // If insertion failed due to unique constraint, fetch the one that won the race.
         const [winner] = await ctx.db
