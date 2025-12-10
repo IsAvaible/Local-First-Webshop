@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { anonymous } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db/connection"; // your drizzle instance
 import * as schema from "@/db/auth-schema";
@@ -21,6 +22,14 @@ for (const name of Object.keys(nets)) {
 }
 
 export const auth = betterAuth({
+  plugins: [
+    anonymous({
+      // TODO Logic when they convert to a real account later
+      onLinkAccount: async () => {
+        // e.g., Migrate shopping cart or preferences here
+      }
+    })
+  ],
   database: drizzleAdapter(db, {
     provider: "pg",
     usePlural: true,

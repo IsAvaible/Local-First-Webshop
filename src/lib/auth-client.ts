@@ -1,4 +1,5 @@
 import { createAuthClient } from "better-auth/react";
+import { anonymousClient } from "better-auth/client/plugins";
 import {
   createCollection,
   localOnlyCollectionOptions
@@ -20,6 +21,7 @@ export const authStateCollection = createCollection(
 );
 
 export const authClient = createAuthClient({
+  plugins: [anonymousClient()],
   baseURL:
     typeof window !== "undefined"
       ? window.location.origin // Always use current domain in browser

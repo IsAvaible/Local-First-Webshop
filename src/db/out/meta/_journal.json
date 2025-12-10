@@ -50,6 +50,13 @@
       "when": 1765368946812,
       "tag": "0006_true_molly_hayes",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1765391254625,
+      "tag": "0007_loose_swordsman",
+      "breakpoints": true
     }
   ]
 }

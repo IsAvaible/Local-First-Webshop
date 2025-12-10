@@ -14,6 +14,8 @@ import { NotFound } from "@/components/routing/NotFound.tsx";
 import Header from "@/components/layout/Header/Header.tsx";
 import Footer from "@/components/layout/Footer/Footer.tsx";
 import { CartProvider } from "@/contexts/CartProvider.tsx";
+import { authClient } from "@/lib/auth-client.ts";
+import { useEffect } from "react";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -58,6 +60,15 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { data: session, isPending } = authClient.useSession();
+
+  useEffect(() => {
+    // Only run if not loading and no user exists
+    if (!isPending && !session) {
+      void authClient.signIn.anonymous();
+    }
+  }, [session, isPending]);
+
   return (
     <html lang="en">
       <head>
