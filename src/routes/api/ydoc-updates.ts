@@ -47,8 +47,9 @@ const putHandler = async ({ request }: { request: Request }) => {
 
     if (
       cart &&
-      (cart.owner_user_id === session.user.id ||
-        (cart.owner_user_id === undefined && cart.guest_session_id === guestId))
+      (cart.created_by_id === session.user.id ||
+        (cart.created_by_id === undefined &&
+          cart.created_by_guest_id === guestId))
     ) {
       hasAccess = true;
     } else {
@@ -72,7 +73,10 @@ const putHandler = async ({ request }: { request: Request }) => {
       .select()
       .from(cartsTable)
       .where(
-        and(eq(cartsTable.id, room), eq(cartsTable.guest_session_id, guestId))
+        and(
+          eq(cartsTable.id, room),
+          eq(cartsTable.created_by_guest_id, guestId)
+        )
       );
     if (cart) hasAccess = true;
   }

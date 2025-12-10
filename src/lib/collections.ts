@@ -13,7 +13,8 @@ import {
   selectCustomFieldValueSchema,
   selectCartSchema,
   selectCartCollaboratorSchema,
-  selectUserAddressSchema
+  selectUserAddressSchema,
+  selectUserSelectedCartSchema
 } from "@/db/schema";
 import { trpc } from "@/lib/trpc-client";
 
@@ -197,9 +198,8 @@ export const cartsCollection = createCollection(
       const { modified: newCart } = transaction.mutations[0];
       const result = await trpc.carts.create.mutate({
         name: newCart.name,
-        owner_user_id: newCart.owner_user_id,
-        guest_session_id: newCart.guest_session_id,
-        is_default: newCart.is_default
+        created_by_id: newCart.created_by_id,
+        created_by_guest_id: newCart.created_by_guest_id
       });
 
       return { txid: result.txid };
@@ -210,9 +210,8 @@ export const cartsCollection = createCollection(
         id: updatedCart.id,
         data: {
           name: updatedCart.name,
-          owner_user_id: updatedCart.owner_user_id,
-          guest_session_id: updatedCart.guest_session_id,
-          is_default: updatedCart.is_default
+          created_by_id: updatedCart.created_by_id,
+          created_by_guest_id: updatedCart.created_by_guest_id
         }
       });
 
@@ -264,6 +263,35 @@ export const cartCollaboratorsCollection = createCollection(
         id: deletedCollab.id
       });
 
+      return { txid: result.txid };
+    }
+  })
+);
+
+// --- User Selected Cart Collection ---
+export const userSelectedCartCollection = createCollection(
+  electricCollectionOptions({
+    id: "user_selected_cart",
+    shapeOptions: {
+      url: createApiUrl("/api/user-selected-cart"),
+      parser: { timestamptz: (date: string) => new Date(date) }
+    },
+    schema: selectUserSelectedCartSchema,
+    getKey: (item) => item.id,
+    onInsert: async ({ transaction }) => {
+      const { modified: newSelection } = transaction.mutations[0];
+      const result = await trpc.userSelectedCart.set.mutate({
+        cart_id: newSelection.cart_id,
+        guest_id: newSelection.guest_id ?? undefined
+      });
+      return { txid: result.txid };
+    },
+    onUpdate: async ({ transaction }) => {
+      const { modified: updatedSelection } = transaction.mutations[0];
+      const result = await trpc.userSelectedCart.set.mutate({
+        cart_id: updatedSelection.cart_id,
+        guest_id: updatedSelection.guest_id ?? undefined
+      });
       return { txid: result.txid };
     }
   })

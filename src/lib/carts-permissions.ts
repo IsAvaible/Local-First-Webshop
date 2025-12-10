@@ -23,7 +23,7 @@ export async function getCartWithRole(
 
   if (!cart) return { cart: undefined, role: "none" };
 
-  if (session?.user?.id && cart.owner_user_id === session.user.id) {
+  if (session?.user?.id && cart.created_by_id === session.user.id) {
     return { cart, role: "owner" };
   }
 
@@ -43,7 +43,7 @@ export async function getCartWithRole(
   if (
     !session?.user?.id &&
     guestSessionId &&
-    cart.guest_session_id === guestSessionId
+    cart.created_by_guest_id === guestSessionId
   ) {
     return { cart, role: "guest" };
   }

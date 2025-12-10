@@ -13,7 +13,8 @@ import {
   uniqueIndex,
   customType,
   primaryKey,
-  uuid
+  uuid,
+  check
 } from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
@@ -292,25 +293,16 @@ export const cartsTable = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     name: varchar({ length: 255 }).notNull(),
-    owner_user_id: text("owner_user_id").references(() => users.id, {
+    created_by_id: text("created_by_id").references(() => users.id, {
       onDelete: "cascade"
     }),
-    guest_session_id: text("guest_session_id"),
-    is_default: boolean("is_default").notNull().default(false),
+    created_by_guest_id: text("created_by_guest_id"),
     created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updated_at: timestamp({ withTimezone: true }).notNull().defaultNow()
   },
   (table) => ({
-    ownerIdx: index("carts_owner_idx").on(table.owner_user_id),
-    guestIdx: index("carts_guest_idx").on(table.guest_session_id),
-
-    oneDefaultCartPerUser: uniqueIndex("one_default_cart_per_user_idx")
-      .on(table.owner_user_id)
-      .where(sql`${table.is_default} = true`),
-
-    oneDefaultCartPerGuest: uniqueIndex("one_default_cart_per_guest_idx")
-      .on(table.guest_session_id)
-      .where(sql`${table.is_default} = true`)
+    ownerIdx: index("carts_created_by_id_idx").on(table.created_by_id),
+    guestIdx: index("carts_guest_idx").on(table.created_by_guest_id)
   })
 );
 
@@ -354,6 +346,47 @@ export const createCartCollaboratorSchema = createInsertSchema(
 export const updateCartCollaboratorSchema = createUpdateSchema(
   cartCollaboratorsTable
 );
+
+// --- USER SELECTED CART SCHEMA ---
+
+export const userSelectedCartTable = pgTable(
+  "user_selected_cart",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: text("user_id")
+      .unique()
+      .references(() => users.id, { onDelete: "cascade" }),
+    guest_id: text("guest_id").unique(),
+    cart_id: uuid("cart_id")
+      .notNull()
+      .references(() => cartsTable.id, { onDelete: "cascade" }),
+    created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updated_at: timestamp({ withTimezone: true }).notNull().defaultNow()
+  },
+  (table) => ({
+    cartIdIdx: index("user_selected_cart_cart_id_idx").on(table.cart_id),
+    userOrGuestCheck: check(
+      "user_or_guest_check",
+      sql`num_nonnulls(${table.user_id}, ${table.guest_id}) = 1`
+    )
+  })
+);
+
+export const selectUserSelectedCartSchema = createSelectSchema(
+  userSelectedCartTable
+);
+export const createUserSelectedCartSchema = createInsertSchema(
+  userSelectedCartTable
+).omit({
+  created_at: true,
+  updated_at: true
+});
+export const updateUserSelectedCartSchema = createUpdateSchema(
+  userSelectedCartTable
+).omit({
+  created_at: true,
+  updated_at: true
+});
 
 // --- YJS TYPES (The Document State) ---
 
@@ -432,6 +465,7 @@ export type Cart = z.infer<typeof selectCartSchema>;
 export type CartCollaborator = z.infer<typeof selectCartCollaboratorSchema>;
 export const cartRoleSchema = z.enum(cartRoleEnum.enumValues);
 export type CartRole = z.infer<typeof cartRoleSchema>;
+export type UserSelectedCart = z.infer<typeof selectUserSelectedCartSchema>;
 
 // --- USER ADDRESS SCHEMA ---
 

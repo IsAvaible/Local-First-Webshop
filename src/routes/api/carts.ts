@@ -29,7 +29,7 @@ const serveGet = async ({ request }: { request: Request }) => {
 
     // 2. Build Filter Clause
     // User is the owner OR User is a collaborator
-    const isOwner = `owner_user_id = '${userId}'`;
+    const isOwner = `created_by_id = '${userId}'`;
 
     const isCollaborator =
       collaboratorIds.length > 0
@@ -41,8 +41,8 @@ const serveGet = async ({ request }: { request: Request }) => {
     // Unauthenticated Guest
     // Must match guest session AND not have an owner (to prevent guests from seeing user carts)
     // TODO - guest-cart-filtering: Re-enable this clause when a way to pass the guestId is found
-    // filterClause = `guest_session_id = '${guestId}' AND owner_user_id IS NULL`;
-    filterClause = `owner_user_id IS NULL`; // Temporary: Allow access to all guest carts without filtering by guest ID
+    // filterClause = `created_by_guest_id = '${guestId}' AND created_by_id IS NULL`;
+    filterClause = `created_by_id IS NULL`; // Temporary: Allow access to all guest carts without filtering by guest ID
   }
 
   // Force the filter on the query

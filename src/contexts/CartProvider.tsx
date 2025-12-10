@@ -23,7 +23,8 @@ import {
   pricingTiersCollection,
   cartCollaboratorsCollection,
   createApiUrl,
-  usersCollection
+  usersCollection,
+  userSelectedCartCollection
 } from "@/lib/collections";
 import * as Y from "yjs";
 import type { TypedMap } from "yjs-types";
@@ -86,7 +87,7 @@ type CartSessionProps = {
   carts: Cart[];
   activeCart?: Cart;
   activeCartId: string;
-  setActiveCartId: (id: string) => void;
+  setActiveCartId: (id: string) => Promise<void>;
   createCart: (name: string) => void;
   addCollaborator: (email: string, role: CartRole) => Promise<void>;
   isLoadingGlobal: boolean;
@@ -215,7 +216,7 @@ function CartSession({
   // 2. Identify all User IDs involved (Owner + Collaborators)
   const relevantUserIds = useMemo(() => {
     const ids = new Set<string>();
-    if (currentCart?.owner_user_id) ids.add(currentCart.owner_user_id);
+    if (currentCart?.created_by_id) ids.add(currentCart.created_by_id);
     collaboratorLinks?.forEach((l) => ids.add(l.user_id));
     return Array.from(ids);
   }, [currentCart, collaboratorLinks]);
@@ -236,7 +237,7 @@ function CartSession({
     if (!usersData || !currentCart) return [];
 
     return usersData.flatMap((user) => {
-      const isOwner = user.id === currentCart.owner_user_id;
+      const isOwner = user.id === currentCart.created_by_id;
       const link = collaboratorLinks?.find((l) => l.user_id === user.id);
 
       // Return empty array to "filter" this item out
@@ -265,8 +266,8 @@ function CartSession({
   const cartRole: CartRole = useMemo(() => {
     if (
       !userId &&
-      !currentCart?.owner_user_id &&
-      currentCart?.guest_session_id === guestId
+      !currentCart?.created_by_id &&
+      currentCart?.created_by_guest_id === guestId
     ) {
       return "admin";
     }
@@ -814,12 +815,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [guestId, setGuestId] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("guest_session_id");
+    const stored = localStorage.getItem("created_by_guest_id");
     if (stored) {
       setGuestId(stored);
     } else {
       const newId = uuidv4();
-      localStorage.setItem("guest_session_id", newId);
+      localStorage.setItem("created_by_guest_id", newId);
       setGuestId(newId);
     }
   }, []);
@@ -833,7 +834,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return q.from({ carts: cartsCollection }).where(({ carts }) => {
         if (userId === undefined) {
           // TODO - guest-cart-filtering: Move this logic to server-side filtering in the collection definition
-          return eq(carts.guest_session_id, guestId);
+          return eq(carts.created_by_guest_id, guestId);
         }
         return eq(1, 1);
       });
@@ -841,26 +842,43 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [userId, guestId] // Trigger re-fetches on auth change
   );
 
-  const [activeCartId, setActiveCartId] = useState<string | null>(null);
-
-  // Auto-select cart
-  useEffect(() => {
-    if (isCartsLoading || !carts || carts.length === 0) return;
-    if (activeCartId && carts.find((c) => c.id === activeCartId)) return;
-
-    const defaultCart = carts.find(
-      (c) => c.owner_user_id === userId && c.is_default
-    );
-    if (defaultCart) {
-      setActiveCartId(defaultCart.id);
-    } else if (carts.length > 0) {
-      setActiveCartId(carts[0].id);
-    }
-  }, [userId, carts, isCartsLoading, activeCartId]);
+  const { data } = useLiveQuery(
+    (q) => {
+      if (userId === undefined && guestId === null) return undefined;
+      // filtering is done by the backend
+      return q
+        .from({ usc: userSelectedCartCollection })
+        .where(({ usc }) => {
+          if (userId === undefined) {
+            // TODO - guest-cart-filtering: Move this logic to server-side filtering in the collection definition
+            return eq(usc.guest_id, guestId);
+          }
+          return eq(1, 1);
+        })
+        .findOne();
+    },
+    [userId, guestId]
+  );
+  const cartSelectionId = data?.id;
+  const activeCartId = data?.cart_id;
 
   const activeCart = useMemo(
     () => carts?.find((c) => c.id === activeCartId),
     [carts, activeCartId]
+  );
+
+  const setActiveCartId = useCallback(
+    async (id: string) => {
+      if ((!userId && !guestId) || !cartSelectionId) return undefined;
+      const tx = userSelectedCartCollection.update(
+        cartSelectionId,
+        (drafts) => {
+          drafts.cart_id = id;
+        }
+      );
+      await tx.isPersisted.promise;
+    },
+    [userId, guestId, cartSelectionId]
   );
 
   // Create initial cart if needed
@@ -873,9 +891,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       (userId || guestId)
     ) {
       isInitializing.current = true;
-      trpc.carts.ensureDefault
+      trpc.carts.ensureSelected
         .mutate({
-          guest_session_id: guestId
+          created_by_guest_id: guestId
         })
         .catch((e) => {
           console.error("Failed to init cart", e);
@@ -891,13 +909,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       cartsCollection.insert({
         id,
         name,
-        owner_user_id: userId ?? null,
-        guest_session_id: userId ? null : guestId,
-        is_default: false,
+        created_by_id: userId ?? null,
+        created_by_guest_id: userId ? null : guestId,
         created_at: new Date(),
         updated_at: new Date()
       });
-      setActiveCartId(id);
     },
     [userId, guestId]
   );

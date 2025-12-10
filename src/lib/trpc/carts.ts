@@ -1,51 +1,74 @@
 import { router, authedProcedure, generateTxId, procedure } from "@/lib/trpc";
 import { z } from "zod";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
   cartCollaboratorsTable,
   cartsTable,
   createCartSchema,
-  updateCartSchema
+  updateCartSchema,
+  userSelectedCartTable
 } from "@/db/schema";
-import { TRPCError } from "@trpc/server";
+import {
+  type inferProcedureBuilderResolverOptions,
+  TRPCError
+} from "@trpc/server";
 import { canManage, getCartWithRole } from "@/lib/carts-permissions";
+import { v4 as uuidv4 } from "uuid";
+import { upsertUserSelectedCart } from "@/lib/trpc/user-selected-cart.ts";
 
-export const cartsRouter = router({
-  create: procedure.input(createCartSchema).mutation(async ({ ctx, input }) => {
-    const userId = ctx.session?.user?.id;
-    const guestId = input.guest_session_id;
+// Extract the "Create" logic into a reusable function
+const createCartService = async (
+  ctx: inferProcedureBuilderResolverOptions<typeof procedure>["ctx"],
+  input: z.infer<typeof createCartSchema>
+) => {
+  const userId = ctx.session?.user?.id;
+  const guestId = input.created_by_guest_id;
 
-    // Ensure we have at least one form of identity
-    if (!userId && !guestId) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Must be logged in or provide a guest ID"
+  // Ensure we have at least one form of identity
+  if (!userId && !guestId) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Must be logged in or provide a guest ID"
+    });
+  }
+
+  const result = await ctx.db.transaction(async (tx) => {
+    const txid = await generateTxId(tx);
+    const [newItem] = await tx
+      .insert(cartsTable)
+      .values({
+        ...input,
+        created_by_id: userId ?? null,
+        created_by_guest_id: userId ? null : guestId
+      })
+      .returning();
+
+    // If the user is authenticated, add them as an admin collaborator
+    if (userId) {
+      await tx.insert(cartCollaboratorsTable).values({
+        cart_id: newItem.id,
+        user_id: userId,
+        role: "admin"
       });
     }
 
-    const result = await ctx.db.transaction(async (tx) => {
-      const txid = await generateTxId(tx);
-      const [newItem] = await tx
-        .insert(cartsTable)
-        .values({
-          ...input,
-          owner_user_id: userId ?? null,
-          guest_session_id: userId ? null : guestId
-        })
-        .returning();
-
-      // If the user is authenticated, add them as an admin collaborator immediately
-      if (userId) {
-        await tx.insert(cartCollaboratorsTable).values({
-          cart_id: newItem.id,
-          user_id: userId,
-          role: "admin"
-        });
-      }
-
-      return { item: newItem, txid };
+    // Set as "Selected Cart"
+    await upsertUserSelectedCart(tx, {
+      userId,
+      guestId,
+      cartId: newItem.id
     });
-    return result;
+
+    return { item: newItem, txid };
+  });
+
+  return result;
+};
+
+export const cartsRouter = router({
+  create: procedure.input(createCartSchema).mutation(async ({ ctx, input }) => {
+    // 2. The API endpoint simply calls the service
+    return createCartService(ctx, input);
   }),
 
   update: authedProcedure
@@ -96,12 +119,11 @@ export const cartsRouter = router({
       return result;
     }),
 
-  // Helper mutation to ensure a default cart exists for the user and return it
-  ensureDefault: procedure
-    .input(z.object({ guest_session_id: z.string().nullable() }))
+  ensureSelected: procedure
+    .input(z.object({ created_by_guest_id: z.string().nullable() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session?.user?.id;
-      const guestId = input.guest_session_id;
+      const guestId = input.created_by_guest_id;
 
       if (!userId && !guestId) {
         throw new TRPCError({
@@ -113,57 +135,25 @@ export const cartsRouter = router({
       // 1. Try to find existing default cart
       const [existing] = await ctx.db
         .select()
-        .from(cartsTable)
+        .from(userSelectedCartTable)
         .where(
-          and(
-            eq(cartsTable.is_default, true),
-            userId
-              ? eq(cartsTable.owner_user_id, userId)
-              : eq(cartsTable.guest_session_id, guestId!)
-          )
+          userId
+            ? eq(userSelectedCartTable.user_id, userId)
+            : eq(userSelectedCartTable.guest_id, guestId!)
+        )
+        .innerJoin(
+          cartsTable,
+          eq(userSelectedCartTable.cart_id, cartsTable.id)
         );
 
-      if (existing) return existing;
+      if (existing) return;
 
-      // 2. If none, try to create one.
-      try {
-        const [created] = await ctx.db.transaction(async (tx) => {
-          const [cart] = await tx
-            .insert(cartsTable)
-            .values({
-              name: "My Cart",
-              owner_user_id: userId ?? null,
-              guest_session_id: userId ? null : guestId,
-              is_default: true
-            })
-            .returning();
-
-          // Add owner as admin collaborator if logged in
-          if (userId) {
-            await tx.insert(cartCollaboratorsTable).values({
-              cart_id: cart.id,
-              user_id: userId,
-              role: "admin"
-            });
-          }
-          return [cart];
-        });
-        return created;
-      } catch (_e) {
-        // 3. Race condition handling:
-        // If insertion failed due to unique constraint, fetch the one that won the race.
-        const [winner] = await ctx.db
-          .select()
-          .from(cartsTable)
-          .where(
-            and(
-              eq(cartsTable.is_default, true),
-              userId
-                ? eq(cartsTable.owner_user_id, userId)
-                : eq(cartsTable.guest_session_id, guestId!)
-            )
-          );
-        return winner;
-      }
+      // 2. If none, create one using the SERVICE function
+      await createCartService(ctx, {
+        id: uuidv4(),
+        name: "My Cart",
+        created_by_id: userId ?? null,
+        created_by_guest_id: userId ? null : guestId!
+      });
     })
 });

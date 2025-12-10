@@ -46,7 +46,7 @@ const putHandler = async ({ request }: { request: Request }) => {
       .from(cartsTable)
       .where(eq(cartsTable.id, room));
 
-    if (cart && cart.owner_user_id === session.user.id) {
+    if (cart && cart.created_by_id === session.user.id) {
       hasAccess = true;
     } else {
       // Check collaboration
@@ -67,7 +67,10 @@ const putHandler = async ({ request }: { request: Request }) => {
       .select()
       .from(cartsTable)
       .where(
-        and(eq(cartsTable.id, room), eq(cartsTable.guest_session_id, guestId))
+        and(
+          eq(cartsTable.id, room),
+          eq(cartsTable.created_by_guest_id, guestId)
+        )
       );
     if (cart) hasAccess = true;
   }
