@@ -187,7 +187,8 @@ async function main() {
             url: faker.image.urlPicsumPhotos({
               width: 600,
               height: 600,
-              blur: 0
+              blur: 0,
+              grayscale: false
             }),
             file_extension: "jpg",
             mime_type: "image/jpeg",
