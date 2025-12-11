@@ -4,7 +4,6 @@ import { prepareElectricUrl, proxyElectricRequest } from "@/lib/electric-proxy";
 import { db } from "@/db/connection.ts";
 import {
   ydocUpdatesTable,
-  cartsTable,
   cartCollaboratorsTable,
   cartRoleSchema
 } from "@/db/schema.ts";
@@ -24,10 +23,15 @@ const serve = async ({ request }: { request: Request }) => {
 
 const putHandler = async ({ request }: { request: Request }) => {
   const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "content-type": "application/json" }
+    });
+  }
 
   const url = new URL(request.url);
   const room = url.searchParams.get("room");
-  const guestId = url.searchParams.get("guestId");
 
   if (!room) {
     return new Response(JSON.stringify({ error: "Room is required" }), {
@@ -39,46 +43,19 @@ const putHandler = async ({ request }: { request: Request }) => {
   let hasAccess = false;
 
   if (session) {
-    // Check ownership
-    const [cart] = await db
+    // Check collaboration
+    const [collab] = await db
       .select()
-      .from(cartsTable)
-      .where(eq(cartsTable.id, room));
-
-    if (
-      cart &&
-      (cart.created_by_id === session.user.id ||
-        (cart.created_by_id === undefined &&
-          cart.created_by_guest_id === guestId))
-    ) {
-      hasAccess = true;
-    } else {
-      // Check collaboration
-      const [collab] = await db
-        .select()
-        .from(cartCollaboratorsTable)
-        .where(
-          and(
-            eq(cartCollaboratorsTable.cart_id, room),
-            eq(cartCollaboratorsTable.user_id, session.user.id),
-            // viewers can't edit
-            not(eq(cartCollaboratorsTable.role, cartRoleSchema.enum.viewer))
-          )
-        );
-      if (collab) hasAccess = true;
-    }
-  } else if (guestId) {
-    // Check guest ownership
-    const [cart] = await db
-      .select()
-      .from(cartsTable)
+      .from(cartCollaboratorsTable)
       .where(
         and(
-          eq(cartsTable.id, room),
-          eq(cartsTable.created_by_guest_id, guestId)
+          eq(cartCollaboratorsTable.cart_id, room),
+          eq(cartCollaboratorsTable.user_id, session.user.id),
+          // viewers can't edit
+          not(eq(cartCollaboratorsTable.role, cartRoleSchema.enum.viewer))
         )
       );
-    if (cart) hasAccess = true;
+    if (collab) hasAccess = true;
   }
 
   if (!hasAccess) {

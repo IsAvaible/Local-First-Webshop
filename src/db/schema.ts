@@ -13,8 +13,7 @@ import {
   uniqueIndex,
   customType,
   primaryKey,
-  uuid,
-  check
+  uuid
 } from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
@@ -296,13 +295,11 @@ export const cartsTable = pgTable(
     created_by_id: text("created_by_id").references(() => users.id, {
       onDelete: "cascade"
     }),
-    created_by_guest_id: text("created_by_guest_id"),
     created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updated_at: timestamp({ withTimezone: true }).notNull().defaultNow()
   },
   (table) => ({
-    ownerIdx: index("carts_created_by_id_idx").on(table.created_by_id),
-    guestIdx: index("carts_guest_idx").on(table.created_by_guest_id)
+    ownerIdx: index("carts_created_by_id_idx").on(table.created_by_id)
   })
 );
 
@@ -352,11 +349,10 @@ export const updateCartCollaboratorSchema = createUpdateSchema(
 export const userSelectedCartTable = pgTable(
   "user_selected_cart",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
     user_id: text("user_id")
+      .primaryKey()
       .unique()
       .references(() => users.id, { onDelete: "cascade" }),
-    guest_id: text("guest_id").unique(),
     cart_id: uuid("cart_id")
       .notNull()
       .references(() => cartsTable.id, { onDelete: "cascade" }),
@@ -364,11 +360,7 @@ export const userSelectedCartTable = pgTable(
     updated_at: timestamp({ withTimezone: true }).notNull().defaultNow()
   },
   (table) => ({
-    cartIdIdx: index("user_selected_cart_cart_id_idx").on(table.cart_id),
-    userOrGuestCheck: check(
-      "user_or_guest_check",
-      sql`num_nonnulls(${table.user_id}, ${table.guest_id}) = 1`
-    )
+    cartIdIdx: index("user_selected_cart_cart_id_idx").on(table.cart_id)
   })
 );
 

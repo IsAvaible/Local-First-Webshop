@@ -7,14 +7,17 @@ import {
 
 const serveGet = async ({ request }: { request: Request }) => {
   const session = await auth.api.getSession({ headers: request.headers });
-  const userId = session?.user.id;
+  if (!session) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "content-type": "application/json" }
+    });
+  }
 
   const originUrl = prepareElectricUrl(request.url);
   originUrl.searchParams.set("table", "user_selected_cart");
 
-  // TODO: Filter by guest ID when unauthenticated
-  const filterClause = userId ? `user_id = '${userId}'` : `user_id IS NULL`;
-  originUrl.searchParams.set("where", filterClause);
+  originUrl.searchParams.set("where", `user_id = '${session?.user.id}'`);
 
   return proxyElectricRequest(originUrl);
 };

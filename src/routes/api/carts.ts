@@ -9,41 +9,37 @@ import { db } from "@/db/connection.ts";
 import { eq } from "drizzle-orm";
 
 const serveGet = async ({ request }: { request: Request }) => {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "content-type": "application/json" }
+    });
+  }
+
   const originUrl = prepareElectricUrl(request.url);
   originUrl.searchParams.set("table", "carts");
 
-  const session = await auth.api.getSession({ headers: request.headers });
+  const userId = session.user.id;
 
-  let filterClause = "1 = 0"; // Default deny (false)
+  // Get the list of cart IDs where the user is a collaborator
+  const collaboratorRows = await db
+    .select({ cartId: cartCollaboratorsTable.cart_id })
+    .from(cartCollaboratorsTable)
+    .where(eq(cartCollaboratorsTable.user_id, userId));
 
-  if (session) {
-    const userId = session.user.id;
+  const collaboratorIds = collaboratorRows.map((c) => c.cartId);
 
-    // Get the list of cart IDs where the user is a collaborator
-    const collaboratorRows = await db
-      .select({ cartId: cartCollaboratorsTable.cart_id })
-      .from(cartCollaboratorsTable)
-      .where(eq(cartCollaboratorsTable.user_id, userId));
+  // 2. Build Filter Clause
+  // User is the owner OR User is a collaborator
+  const isOwner = `created_by_id = '${userId}'`;
 
-    const collaboratorIds = collaboratorRows.map((c) => c.cartId);
+  const isCollaborator =
+    collaboratorIds.length > 0
+      ? `id::text IN (${collaboratorIds.map((id) => `'${id}'`).join(", ")})`
+      : "0 = 1";
 
-    // 2. Build Filter Clause
-    // User is the owner OR User is a collaborator
-    const isOwner = `created_by_id = '${userId}'`;
-
-    const isCollaborator =
-      collaboratorIds.length > 0
-        ? `id::text IN (${collaboratorIds.map((id) => `'${id}'`).join(", ")})`
-        : "0 = 1";
-
-    filterClause = `${isOwner} OR ${isCollaborator}`;
-  } else {
-    // Unauthenticated Guest
-    // Must match guest session AND not have an owner (to prevent guests from seeing user carts)
-    // TODO - guest-cart-filtering: Re-enable this clause when a way to pass the guestId is found
-    // filterClause = `created_by_guest_id = '${guestId}' AND created_by_id IS NULL`;
-    filterClause = `created_by_id IS NULL`; // Temporary: Allow access to all guest carts without filtering by guest ID
-  }
+  const filterClause = `${isOwner} OR ${isCollaborator}`;
 
   // Force the filter on the query
   originUrl.searchParams.set("where", filterClause);

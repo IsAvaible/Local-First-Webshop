@@ -82,7 +82,6 @@ const stringToColor = (str: string) => {
 type CartSessionProps = {
   cartId: string;
   userId: string | undefined;
-  guestId: string | null;
   // Global props passed down from Provider
   carts: Cart[];
   activeCart?: Cart;
@@ -97,7 +96,6 @@ type CartSessionProps = {
 function CartSession({
   cartId,
   userId,
-  guestId,
   carts,
   activeCart,
   activeCartId,
@@ -172,11 +170,7 @@ function CartSession({
           params: { table: `ydoc_updates`, where: `room = '${roomName}'` },
           parser: parseToDecoder
         },
-        sendUrl: createApiUrl(
-          `/api/ydoc-updates?room=${roomName}${
-            !userId && guestId ? `&guestId=${guestId}` : ""
-          }`
-        ),
+        sendUrl: createApiUrl(`/api/ydoc-updates?room=${roomName}`),
         getUpdateFromRow: (row) => row.update
       },
       awarenessUpdates: {
@@ -187,9 +181,7 @@ function CartSession({
           parser: parseToDecoder
         },
         sendUrl: createApiUrl(
-          `/api/ydoc-awareness?room=${roomName}&clientId=${ydoc.clientID}${
-            !userId && guestId ? `&guestId=${guestId}` : ""
-          }`
+          `/api/ydoc-awareness?room=${roomName}&clientId=${ydoc.clientID}`
         ),
         getUpdateFromRow: (row) => row.update
       }
@@ -200,7 +192,7 @@ function CartSession({
       electricProvider.destroy();
       setIsSynced(false);
     };
-  }, [roomName, ydoc, awareness, userId, guestId]);
+  }, [roomName, ydoc, awareness, userId]);
 
   // --- Data Fetching: Collaborators & Users ---
 
@@ -264,21 +256,13 @@ function CartSession({
 
   // 5. Determine Current User's Permissions
   const cartRole: CartRole = useMemo(() => {
-    if (
-      !userId &&
-      !currentCart?.created_by_id &&
-      currentCart?.created_by_guest_id === guestId
-    ) {
-      return "admin";
-    }
-
     if (userId) {
       const myCollab = collaborators.find((c) => c.user_id === userId);
       if (myCollab) return myCollab.role;
     }
 
     return "viewer";
-  }, [userId, guestId, currentCart, collaborators]);
+  }, [collaborators, userId]);
   const canManageUsers = cartRole === "admin";
   const canManageItems = cartRole !== "viewer";
 
@@ -331,28 +315,21 @@ function CartSession({
 
   // 1. Identify Current User Details for Awareness
   const currentUserProfile = useMemo(() => {
-    // If logged in
     if (userId) {
-      const myCollab = collaborators.find((c) => c.user_id === userId);
+      const currentUser = usersData?.find((u) => u.id === userId);
       return {
         id: userId,
-        name: myCollab?.name ?? "Unknown User",
-        avatarUrl: myCollab?.avatarUrl,
+        name: currentUser?.name ?? "Unknown User",
+        avatarUrl: currentUser?.image ?? undefined,
         color: stringToColor(userId)
       };
     }
-    // If Guest
-    return {
-      id: guestId ?? "unknown-guest",
-      name: "Guest",
-      color: stringToColor(""),
-      avatarUrl: undefined
-    };
-  }, [userId, guestId, usersData]);
+    return undefined;
+  }, [userId, usersData]);
 
   // 2. Broadcast Local Presence
   useEffect(() => {
-    if (!isSynced) return;
+    if (!isSynced || !currentUserProfile) return;
 
     awareness.setLocalStateField("user", currentUserProfile);
 
@@ -811,55 +788,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const { data: session } = authClient.useSession();
   const userId = session?.user.id;
 
-  // Guest ID Management
-  const [guestId, setGuestId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("created_by_guest_id");
-    if (stored) {
-      setGuestId(stored);
-    } else {
-      const newId = uuidv4();
-      localStorage.setItem("created_by_guest_id", newId);
-      setGuestId(newId);
-    }
-  }, []);
-
   // Fetch all relevant carts
-  // The server handles the filtering for Owner, Collaborator, and Guest logic.
+  // The server handles the filtering for Owner, Collaborator.
   const { data: carts, isLoading: isCartsLoading } = useLiveQuery(
     (q) => {
-      if (userId === undefined && guestId === null) return undefined;
-
-      return q.from({ carts: cartsCollection }).where(({ carts }) => {
-        if (userId === undefined) {
-          // TODO - guest-cart-filtering: Move this logic to server-side filtering in the collection definition
-          return eq(carts.created_by_guest_id, guestId);
-        }
-        return eq(1, 1);
-      });
+      if (userId === undefined) return undefined;
+      return q.from({ carts: cartsCollection });
     },
-    [userId, guestId] // Trigger re-fetches on auth change
+    [userId] // Trigger re-fetches on auth change
   );
 
   const { data } = useLiveQuery(
     (q) => {
-      if (userId === undefined && guestId === null) return undefined;
-      // filtering is done by the backend
-      return q
-        .from({ usc: userSelectedCartCollection })
-        .where(({ usc }) => {
-          if (userId === undefined) {
-            // TODO - guest-cart-filtering: Move this logic to server-side filtering in the collection definition
-            return eq(usc.guest_id, guestId);
-          }
-          return eq(1, 1);
-        })
-        .findOne();
+      if (userId === undefined) return undefined;
+      return q.from({ usc: userSelectedCartCollection }).findOne();
     },
-    [userId, guestId]
+    [userId]
   );
-  const cartSelectionId = data?.id;
   const activeCartId = data?.cart_id;
 
   const activeCart = useMemo(
@@ -869,16 +814,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const setActiveCartId = useCallback(
     async (id: string) => {
-      if ((!userId && !guestId) || !cartSelectionId) return undefined;
-      const tx = userSelectedCartCollection.update(
-        cartSelectionId,
-        (drafts) => {
-          drafts.cart_id = id;
-        }
-      );
+      if (!userId) return undefined;
+      const tx = userSelectedCartCollection.update(userId, (drafts) => {
+        drafts.cart_id = id;
+      });
       await tx.isPersisted.promise;
     },
-    [userId, guestId, cartSelectionId]
+    [userId]
   );
 
   // Create initial cart if needed
@@ -888,19 +830,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       !isCartsLoading &&
       carts?.length === 0 &&
       !isInitializing.current &&
-      (userId || guestId)
+      userId
     ) {
       isInitializing.current = true;
-      trpc.carts.ensureSelected
-        .mutate({
-          created_by_guest_id: guestId
-        })
-        .catch((e) => {
-          console.error("Failed to init cart", e);
-          isInitializing.current = false;
-        });
+      trpc.carts.ensureSelected.mutate().catch((e) => {
+        console.error("Failed to init cart", e);
+        isInitializing.current = false;
+      });
     }
-  }, [isCartsLoading, carts, userId, guestId]);
+  }, [isCartsLoading, carts, userId]);
 
   // Global Actions passed to session
   const createCart = useCallback(
@@ -910,12 +848,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
         id,
         name,
         created_by_id: userId ?? null,
-        created_by_guest_id: userId ? null : guestId,
         created_at: new Date(),
         updated_at: new Date()
       });
     },
-    [userId, guestId]
+    [userId]
   );
 
   const addCollaborator = useCallback(
@@ -946,7 +883,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       key={activeCartId}
       cartId={activeCartId}
       userId={userId}
-      guestId={guestId}
       carts={carts ?? []}
       activeCart={activeCart}
       activeCartId={activeCartId}

@@ -2,11 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { auth } from "@/lib/auth";
 import { prepareElectricUrl, proxyElectricRequest } from "@/lib/electric-proxy";
 import { db } from "@/db/connection.ts";
-import {
-  ydocAwarenessTable,
-  cartsTable,
-  cartCollaboratorsTable
-} from "@/db/schema.ts";
+import { ydocAwarenessTable, cartCollaboratorsTable } from "@/db/schema.ts";
 import { eq, and } from "drizzle-orm";
 
 const serve = async ({ request }: { request: Request }) => {
@@ -23,11 +19,16 @@ const serve = async ({ request }: { request: Request }) => {
 
 const putHandler = async ({ request }: { request: Request }) => {
   const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "content-type": "application/json" }
+    });
+  }
 
   const url = new URL(request.url);
   const room = url.searchParams.get("room");
   const clientId = url.searchParams.get("clientId");
-  const guestId = url.searchParams.get("guestId");
 
   if (!room || !clientId) {
     return new Response(
@@ -39,41 +40,17 @@ const putHandler = async ({ request }: { request: Request }) => {
   // Verify Access
   let hasAccess = false;
 
-  if (session) {
-    // Check ownership
-    const [cart] = await db
-      .select()
-      .from(cartsTable)
-      .where(eq(cartsTable.id, room));
-
-    if (cart && cart.created_by_id === session.user.id) {
-      hasAccess = true;
-    } else {
-      // Check collaboration
-      const [collab] = await db
-        .select()
-        .from(cartCollaboratorsTable)
-        .where(
-          and(
-            eq(cartCollaboratorsTable.cart_id, room),
-            eq(cartCollaboratorsTable.user_id, session.user.id)
-          )
-        );
-      if (collab) hasAccess = true;
-    }
-  } else if (guestId) {
-    // Check guest ownership
-    const [cart] = await db
-      .select()
-      .from(cartsTable)
-      .where(
-        and(
-          eq(cartsTable.id, room),
-          eq(cartsTable.created_by_guest_id, guestId)
-        )
-      );
-    if (cart) hasAccess = true;
-  }
+  // Check collaboration
+  const [collab] = await db
+    .select()
+    .from(cartCollaboratorsTable)
+    .where(
+      and(
+        eq(cartCollaboratorsTable.cart_id, room),
+        eq(cartCollaboratorsTable.user_id, session.user.id)
+      )
+    );
+  if (collab) hasAccess = true;
 
   if (!hasAccess) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {

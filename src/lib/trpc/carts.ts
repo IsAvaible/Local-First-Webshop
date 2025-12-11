@@ -1,4 +1,4 @@
-import { router, authedProcedure, generateTxId, procedure } from "@/lib/trpc";
+import { router, authedProcedure, generateTxId } from "@/lib/trpc";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import {
@@ -18,19 +18,10 @@ import { upsertUserSelectedCart } from "@/lib/trpc/user-selected-cart.ts";
 
 // Extract the "Create" logic into a reusable function
 const createCartService = async (
-  ctx: inferProcedureBuilderResolverOptions<typeof procedure>["ctx"],
+  ctx: inferProcedureBuilderResolverOptions<typeof authedProcedure>["ctx"],
   input: z.infer<typeof createCartSchema>
 ) => {
-  const userId = ctx.session?.user?.id;
-  const guestId = input.created_by_guest_id;
-
-  // Ensure we have at least one form of identity
-  if (!userId && !guestId) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "Must be logged in or provide a guest ID"
-    });
-  }
+  const userId = ctx.session.user.id;
 
   const result = await ctx.db.transaction(async (tx) => {
     const txid = await generateTxId(tx);
@@ -38,24 +29,20 @@ const createCartService = async (
       .insert(cartsTable)
       .values({
         ...input,
-        created_by_id: userId ?? null,
-        created_by_guest_id: userId ? null : guestId
+        created_by_id: userId
       })
       .returning();
 
     // If the user is authenticated, add them as an admin collaborator
-    if (userId) {
-      await tx.insert(cartCollaboratorsTable).values({
-        cart_id: newItem.id,
-        user_id: userId,
-        role: "admin"
-      });
-    }
+    await tx.insert(cartCollaboratorsTable).values({
+      cart_id: newItem.id,
+      user_id: userId,
+      role: "admin"
+    });
 
     // Set as "Selected Cart"
     await upsertUserSelectedCart(tx, {
       userId,
-      guestId,
       cartId: newItem.id
     });
 
@@ -66,10 +53,12 @@ const createCartService = async (
 };
 
 export const cartsRouter = router({
-  create: procedure.input(createCartSchema).mutation(async ({ ctx, input }) => {
-    // 2. The API endpoint simply calls the service
-    return createCartService(ctx, input);
-  }),
+  create: authedProcedure
+    .input(createCartSchema)
+    .mutation(async ({ ctx, input }) => {
+      // 2. The API endpoint simply calls the service
+      return createCartService(ctx, input);
+    }),
 
   update: authedProcedure
     .input(
@@ -119,41 +108,23 @@ export const cartsRouter = router({
       return result;
     }),
 
-  ensureSelected: procedure
-    .input(z.object({ created_by_guest_id: z.string().nullable() }))
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session?.user?.id;
-      const guestId = input.created_by_guest_id;
+  ensureSelected: authedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
 
-      if (!userId && !guestId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "No identity provided"
-        });
-      }
+    // 1. Try to find existing default cart
+    const [existing] = await ctx.db
+      .select()
+      .from(userSelectedCartTable)
+      .where(eq(userSelectedCartTable.user_id, userId))
+      .innerJoin(cartsTable, eq(userSelectedCartTable.cart_id, cartsTable.id));
 
-      // 1. Try to find existing default cart
-      const [existing] = await ctx.db
-        .select()
-        .from(userSelectedCartTable)
-        .where(
-          userId
-            ? eq(userSelectedCartTable.user_id, userId)
-            : eq(userSelectedCartTable.guest_id, guestId!)
-        )
-        .innerJoin(
-          cartsTable,
-          eq(userSelectedCartTable.cart_id, cartsTable.id)
-        );
+    if (existing) return;
 
-      if (existing) return;
-
-      // 2. If none, create one using the SERVICE function
-      await createCartService(ctx, {
-        id: uuidv4(),
-        name: "My Cart",
-        created_by_id: userId ?? null,
-        created_by_guest_id: userId ? null : guestId!
-      });
-    })
+    // 2. If none, create one using the SERVICE function
+    await createCartService(ctx, {
+      id: uuidv4(),
+      name: "My Cart",
+      created_by_id: userId
+    });
+  })
 });

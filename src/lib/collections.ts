@@ -198,8 +198,7 @@ export const cartsCollection = createCollection(
       const { modified: newCart } = transaction.mutations[0];
       const result = await trpc.carts.create.mutate({
         name: newCart.name,
-        created_by_id: newCart.created_by_id,
-        created_by_guest_id: newCart.created_by_guest_id
+        created_by_id: newCart.created_by_id
       });
 
       return { txid: result.txid };
@@ -210,8 +209,7 @@ export const cartsCollection = createCollection(
         id: updatedCart.id,
         data: {
           name: updatedCart.name,
-          created_by_id: updatedCart.created_by_id,
-          created_by_guest_id: updatedCart.created_by_guest_id
+          created_by_id: updatedCart.created_by_id
         }
       });
 
@@ -277,20 +275,18 @@ export const userSelectedCartCollection = createCollection(
       parser: { timestamptz: (date: string) => new Date(date) }
     },
     schema: selectUserSelectedCartSchema,
-    getKey: (item) => item.id,
+    getKey: (item) => item.user_id,
     onInsert: async ({ transaction }) => {
       const { modified: newSelection } = transaction.mutations[0];
       const result = await trpc.userSelectedCart.set.mutate({
-        cart_id: newSelection.cart_id,
-        guest_id: newSelection.guest_id ?? undefined
+        cart_id: newSelection.cart_id
       });
       return { txid: result.txid };
     },
     onUpdate: async ({ transaction }) => {
       const { modified: updatedSelection } = transaction.mutations[0];
       const result = await trpc.userSelectedCart.set.mutate({
-        cart_id: updatedSelection.cart_id,
-        guest_id: updatedSelection.guest_id ?? undefined
+        cart_id: updatedSelection.cart_id
       });
       return { txid: result.txid };
     }

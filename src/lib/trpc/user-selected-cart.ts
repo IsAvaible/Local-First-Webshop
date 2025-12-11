@@ -1,4 +1,4 @@
-import { router, procedure, generateTxId } from "@/lib/trpc";
+import { router, generateTxId, authedProcedure } from "@/lib/trpc";
 import { z } from "zod";
 import { userSelectedCartTable } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
@@ -8,9 +8,8 @@ import type { ExtractTablesWithRelations } from "drizzle-orm";
 
 // --- REUSABLE SERVICE FUNCTION ---
 /**
- * upsertUserSelectedCart
- * Shares logic for setting a selected cart for a User or Guest.
- * Can be called within an existing transaction (tx) or the main db instance.
+ * Shares logic for setting a selected cart for a User
+ * To be called within an existing transaction (tx)
  */
 export const upsertUserSelectedCart = async (
   tx: PgTransaction<
@@ -19,39 +18,29 @@ export const upsertUserSelectedCart = async (
     ExtractTablesWithRelations<Record<string, never>>
   >,
   inputs: {
-    userId?: string | null;
-    guestId?: string | null;
+    userId: string;
     cartId: string;
-    id?: string;
   }
 ) => {
-  const { userId, guestId, cartId, id } = inputs;
+  const { userId, cartId } = inputs;
 
   // Ensure we have an identity
-  if (!userId && !guestId) {
+  if (!userId) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
-      message: "Must be logged in or provide a guest ID"
+      message: "Must be logged in"
     });
   }
-
-  // Determine Conflict Target (User ID takes precedence)
-  const conflictTarget = userId
-    ? userSelectedCartTable.user_id
-    : userSelectedCartTable.guest_id;
 
   const [item] = await tx
     .insert(userSelectedCartTable)
     .values({
-      ...(id ? { id } : {}),
-      user_id: userId ?? null,
-      // Ensure mutually exclusive: if user exists, guest is null
-      guest_id: userId ? null : guestId,
+      user_id: userId,
       cart_id: cartId,
       updated_at: new Date()
     })
     .onConflictDoUpdate({
-      target: conflictTarget,
+      target: userSelectedCartTable.user_id,
       set: {
         cart_id: cartId,
         updated_at: new Date()
@@ -64,12 +53,11 @@ export const upsertUserSelectedCart = async (
 
 // --- ROUTER ---
 export const userSelectedCartRouter = router({
-  set: procedure
+  set: authedProcedure
     .input(
       z.object({
         id: z.uuid().optional(),
-        cart_id: z.uuid(),
-        guest_id: z.uuid().optional()
+        cart_id: z.uuid()
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -80,9 +68,7 @@ export const userSelectedCartRouter = router({
         // Call the reusable service
         const item = await upsertUserSelectedCart(tx, {
           userId,
-          guestId: input.guest_id,
-          cartId: input.cart_id,
-          id: input.id
+          cartId: input.cart_id
         });
 
         return { item, txid };

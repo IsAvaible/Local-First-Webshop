@@ -57,6 +57,13 @@
       "when": 1765391254625,
       "tag": "0007_loose_swordsman",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1765393011600,
+      "tag": "0008_chunky_phantom_reporter",
+      "breakpoints": true
     }
   ]
 }

@@ -9,12 +9,11 @@ import {
 
 export type UserSession = { user: { id: string } } | null;
 
-export type EffectiveRole = CartRole | "owner" | "guest" | "none";
+export type EffectiveRole = CartRole | "owner" | "none";
 
 export async function getCartWithRole(
   cartId: string,
-  session: UserSession,
-  guestSessionId?: string
+  session: UserSession
 ): Promise<{ cart: Cart | undefined; role: EffectiveRole }> {
   const [cart] = await db
     .select()
@@ -40,14 +39,6 @@ export async function getCartWithRole(
     if (collab) return { cart, role: collab.role as EffectiveRole };
   }
 
-  if (
-    !session?.user?.id &&
-    guestSessionId &&
-    cart.created_by_guest_id === guestSessionId
-  ) {
-    return { cart, role: "guest" };
-  }
-
   return { cart, role: "none" };
 }
 
@@ -56,12 +47,7 @@ export function canRead(role: EffectiveRole) {
 }
 
 export function canWriteItems(role: EffectiveRole) {
-  return (
-    role === "owner" ||
-    role === "admin" ||
-    role === "contributor" ||
-    role === "guest"
-  );
+  return role === "owner" || role === "admin" || role === "contributor";
 }
 
 export function canManage(role: EffectiveRole) {
