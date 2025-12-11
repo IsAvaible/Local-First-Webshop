@@ -2,8 +2,9 @@ import { betterAuth } from "better-auth";
 import { anonymous } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db/connection"; // your drizzle instance
-import * as schema from "@/db/auth-schema";
+import * as schema from "@/db/schema";
 import { networkInterfaces } from "os";
+import { eq, and } from "drizzle-orm";
 
 // Get network IP for trusted origins
 const nets = networkInterfaces();
@@ -24,9 +25,118 @@ for (const name of Object.keys(nets)) {
 export const auth = betterAuth({
   plugins: [
     anonymous({
-      // TODO Logic when they convert to a real account later
-      onLinkAccount: async () => {
-        // e.g., Migrate shopping cart or preferences here
+      // When an anonymous user links to a new account, this function is called
+      // to migrate data from the anonymous user to the new user.
+      onLinkAccount: async ({ newUser, anonymousUser }) => {
+        const {
+          cartsTable,
+          cartCollaboratorsTable,
+          userSelectedCartTable,
+          userAddressesTable
+        } = schema;
+
+        await db.transaction(async (tx) => {
+          // 1. Carts: Update creator
+          await tx
+            .update(cartsTable)
+            .set({ created_by_id: newUser.user.id })
+            .where(eq(cartsTable.created_by_id, anonymousUser.user.id));
+
+          // 2. Cart Collaborators: Move collabs
+          const anonCollabs = await tx
+            .select()
+            .from(cartCollaboratorsTable)
+            .where(eq(cartCollaboratorsTable.user_id, anonymousUser.user.id));
+
+          for (const collab of anonCollabs) {
+            // Check if the target user is already a collaborator on this cart
+            const [existing] = await tx
+              .select()
+              .from(cartCollaboratorsTable)
+              .where(
+                and(
+                  eq(cartCollaboratorsTable.cart_id, collab.cart_id),
+                  eq(cartCollaboratorsTable.user_id, newUser.user.id)
+                )
+              );
+
+            if (!existing) {
+              // Move the collaboration to the new user
+              await tx
+                .update(cartCollaboratorsTable)
+                .set({ user_id: newUser.user.id })
+                .where(eq(cartCollaboratorsTable.id, collab.id));
+            } else {
+              // Target user already has access, remove the redundant anonymous record
+              await tx
+                .delete(cartCollaboratorsTable)
+                .where(eq(cartCollaboratorsTable.id, collab.id));
+            }
+          }
+
+          // 3. User Selected Cart
+          const [anonSelection] = await tx
+            .select()
+            .from(userSelectedCartTable)
+            .where(eq(userSelectedCartTable.user_id, anonymousUser.user.id));
+
+          if (anonSelection) {
+            // Update the selection to the new user
+            await tx
+              .update(userSelectedCartTable)
+              .set({ user_id: newUser.user.id })
+              .where(eq(userSelectedCartTable.user_id, anonymousUser.user.id));
+          }
+
+          // 4. Addresses
+          const anonAddresses = await tx
+            .select()
+            .from(userAddressesTable)
+            .where(eq(userAddressesTable.user_id, anonymousUser.user.id));
+
+          for (const address of anonAddresses) {
+            const updates: {
+              user_id: string;
+              is_default_delivery?: boolean;
+              is_default_billing?: boolean;
+            } = { user_id: newUser.user.id };
+
+            // Handle default flags
+            if (address.is_default_delivery) {
+              const [existingDefault] = await tx
+                .select()
+                .from(userAddressesTable)
+                .where(
+                  and(
+                    eq(userAddressesTable.user_id, newUser.user.id),
+                    eq(userAddressesTable.is_default_delivery, true)
+                  )
+                );
+              if (existingDefault) {
+                updates.is_default_delivery = false;
+              }
+            }
+            if (address.is_default_billing) {
+              const [existingDefault] = await tx
+                .select()
+                .from(userAddressesTable)
+                .where(
+                  and(
+                    eq(userAddressesTable.user_id, newUser.user.id),
+                    eq(userAddressesTable.is_default_billing, true)
+                  )
+                );
+              if (existingDefault) {
+                updates.is_default_billing = false;
+              }
+            }
+
+            await tx
+              .update(userAddressesTable)
+              .set(updates)
+              .where(eq(userAddressesTable.id, address.id));
+          }
+        });
       }
     })
   ],
