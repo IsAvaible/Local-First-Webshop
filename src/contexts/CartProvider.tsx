@@ -10,18 +10,13 @@ import {
   type AwarenessUser,
   type CartCollaboratorWithUser,
   CartContext,
-  type EnrichedCartNode,
-  type EnrichedFlatCartNode,
   type Tag
 } from "./useCartContext";
 import { authClient } from "@/lib/auth-client";
 import { eq, inArray, useLiveQuery } from "@tanstack/react-db";
 import {
-  cartsCollection,
-  productsCollection,
-  assetsCollection,
-  pricingTiersCollection,
   cartCollaboratorsCollection,
+  cartsCollection,
   createApiUrl,
   usersCollection,
   userSelectedCartCollection
@@ -35,20 +30,25 @@ import { v4 as uuidv4 } from "uuid";
 import { generateKeyBetween } from "fractional-indexing";
 import * as decoding from "lib0/decoding";
 import { trpc } from "@/lib/trpc-client";
+import { deepEqual } from "fast-equals";
 import {
-  type CartRole,
   type Cart,
-  type YCartNodeShape,
-  type YCartNodeMap,
-  type YTagMap,
-  isYItem,
-  type YCartFolderShape,
-  isYFolderMap,
+  type CartRole,
   isYFolder,
+  isYFolderMap,
+  isYItem,
   isYItemMap,
+  type YCartFolderShape,
   type YCartItemShape,
-  type PricingTier
+  type YCartNodeMap,
+  type YCartNodeShape,
+  type YCartSnapshotShape,
+  type YTagMap
 } from "@/db/schema";
+import {
+  useEnrichedTree,
+  useProductLookups
+} from "@/contexts/useCartContextUtils.ts";
 
 // --- 1. Type Definitions ---
 
@@ -108,7 +108,7 @@ function CartSession({
   const roomName = cartId;
 
   // Initialize YDoc ONCE per session.
-  const [ydoc] = useState(() => new Y.Doc());
+  const [ydoc] = useState(() => new Y.Doc({ gc: false }));
   const [awareness] = useState(() => new Awareness(ydoc));
   const [isSynced, setIsSynced] = useState(false);
 
@@ -117,10 +117,12 @@ function CartSession({
   // --- Yjs Data Binding ---
   const [flatNodes, setFlatNodes] = useState<YCartNodeShape[]>([]);
   const [flatTags, setFlatTags] = useState<Tag[]>([]);
+  const [flatSnapshots, setFlatSnapshots] = useState<YCartSnapshotShape[]>([]);
 
   // The Top-Level maps hold nested Y.Maps (TypedMap<T>)
   const nodesMap = ydoc.getMap<YCartNodeMap>("nodes");
   const tagsMap = ydoc.getMap<YTagMap>("tags");
+  const snapshotsArray = ydoc.getArray<YCartSnapshotShape>("snapshots");
 
   useEffect(() => {
     const updateState = () => {
@@ -138,6 +140,10 @@ function CartSession({
       setFlatTags(tags);
     };
 
+    const updateSnapshots = () => {
+      setFlatSnapshots(snapshotsArray.toJSON() as YCartSnapshotShape[]);
+    };
+
     // It might be smarter to use a hook like use-yjs in the component instead
     // of serializing the whole tree here. Each yjs change causes a re-serialization.
     // Right now we are trading performance with separation of concerns (The component
@@ -145,13 +151,116 @@ function CartSession({
     // As we have at most 100 items in a cart this performance hit should be fine.
     nodesMap.observeDeep(updateState);
     tagsMap.observeDeep(updateState);
+    snapshotsArray.observe(updateSnapshots);
     updateState();
+    updateSnapshots();
 
     return () => {
       nodesMap.unobserveDeep(updateState);
       tagsMap.unobserveDeep(updateState);
+      snapshotsArray.unobserve(updateSnapshots);
     };
-  }, [nodesMap, tagsMap]);
+  }, [nodesMap, tagsMap, snapshotsArray]);
+
+  const currentNodesRef = useRef(flatNodes);
+  const lastSavedNodesRef = useRef<YCartNodeShape[]>([]);
+
+  // Update the ref whenever the incoming prop changes
+  useEffect(() => {
+    currentNodesRef.current = flatNodes;
+  }, [flatNodes]);
+
+  useEffect(() => {
+    if (!isSynced) return;
+
+    // This guarantees a check happens every 60s, regardless of activity intensity.
+    const timer = setInterval(() => {
+      const currentNodes = currentNodesRef.current;
+      const lastSaved = lastSavedNodesRef.current;
+
+      if (currentNodes.length === 0) return;
+
+      ydoc.transact(() => {
+        // A. Calculate Delta
+        // passing clones or ensuring diff logic doesn't mutate
+        const delta = getSnapshotDelta(lastSaved, currentNodes);
+
+        if (
+          delta.addedCount === 0 &&
+          delta.removedCount === 0 &&
+          delta.modifiedCount === 0
+        ) {
+          return; // No changes detected
+        }
+
+        // B. Capture Authors
+        const activeAuthors = Array.from(awareness.getStates().values())
+          .map(
+            (state) => (state.user as AwarenessUser["user"]).name || "Unknown"
+          )
+          .filter((value, index, self) => self.indexOf(value) === index);
+
+        // C. Create Snapshot
+        const snapshotObj = Y.snapshot(ydoc);
+        const encodedSnapshot = Y.encodeSnapshot(snapshotObj);
+
+        const snapshot: YCartSnapshotShape = {
+          id: uuidv4(),
+          timestamp: Date.now(),
+          snapshot: encodedSnapshot,
+          meta: {
+            summary: delta.summary,
+            delta: delta,
+            authors: activeAuthors
+          }
+        };
+
+        snapshotsArray.push([snapshot]);
+
+        // D. Update "Last Saved"
+        lastSavedNodesRef.current = structuredClone(currentNodes);
+      }, "snapshot-origin");
+    }, 60000);
+
+    return () => clearInterval(timer);
+  }, [isSynced, ydoc, snapshotsArray, awareness]);
+
+  // Optimized Helper
+  function getSnapshotDelta(
+    prevItems: YCartNodeShape[],
+    currItems: YCartNodeShape[]
+  ) {
+    const prevMap = new Map(prevItems.map((i) => [i.id, i]));
+    const currMap = new Map(currItems.map((i) => [i.id, i]));
+
+    let added = 0;
+    let removed = 0;
+    let modified = 0;
+
+    // Calculate Added & Modified
+    for (const curr of currItems) {
+      const prev = prevMap.get(curr.id);
+      if (!prev) {
+        added++;
+      } else if (!deepEqual(prev, curr)) {
+        modified++;
+      }
+    }
+
+    // Calculate Removed
+    for (const prev of prevItems) {
+      if (!currMap.has(prev.id)) {
+        removed++;
+      }
+    }
+
+    return {
+      addedCount: added,
+      removedCount: removed,
+      modifiedCount: modified,
+      summary: `+${added} / -${removed} / ~${modified}`
+    };
+  }
 
   // --- Persistence & Sync ---
   useEffect(() => {
@@ -267,48 +376,25 @@ function CartSession({
   const canManageItems = cartRole !== "viewer";
 
   // --- Data Fetching: Products & Assets ---
-
   const uniqueProductIds = useMemo(() => {
     const ids = new Set<number>();
     flatNodes.forEach((n) => {
       if (isYItem(n)) ids.add(n.product_id);
     });
-    return Array.from(ids).sort();
-  }, [
-    // Stable stringify of strictly relevant fields
-    // This might cause issues if flatNodes is out of sync (as it is built from the source of truth from by React)
-    JSON.stringify(flatNodes.map((n) => (isYItem(n) ? n.product_id : "F")))
-  ]);
+    return Array.from(ids);
+  }, [flatNodes]); // Note: using flatNodes directly is safer than stringifying if flatNodes ref is stable
 
-  const { data: productsData, isLoading: isProductsLoading } = useLiveQuery(
-    (q) => {
-      if (uniqueProductIds.length === 0) return undefined;
-      return q
-        .from({ p: productsCollection })
-        .where(({ p }) => inArray(p.id, uniqueProductIds));
-    },
-    [uniqueProductIds]
-  );
+  // 2. Use Shared Hook
+  const { lookupMaps, isLoading: isLoadingLookup } =
+    useProductLookups(uniqueProductIds);
 
-  const { data: assetsData, isLoading: isAssetsLoading } = useLiveQuery(
-    (q) => {
-      if (uniqueProductIds.length === 0) return undefined;
-      return q
-        .from({ a: assetsCollection })
-        .where(({ a }) => inArray(a.product_id, uniqueProductIds))
-        .orderBy(({ a }) => a.id, "desc");
-    },
-    [uniqueProductIds]
-  );
+  const isLoadingData = isLoadingGlobal || isLoadingLookup;
 
-  const { data: tiersData, isLoading: isTiersLoading } = useLiveQuery(
-    (q) => {
-      if (uniqueProductIds.length === 0) return undefined;
-      return q
-        .from({ pt: pricingTiersCollection })
-        .where(({ pt }) => inArray(pt.product_id, uniqueProductIds));
-    },
-    [uniqueProductIds]
+  // Use Shared Enrichment Hook
+  const { rootNodes: enrichedTree, enrichedFlatItems } = useEnrichedTree(
+    flatNodes,
+    lookupMaps,
+    isLoadingData
   );
 
   // --- Awareness Logic ---
@@ -369,112 +455,6 @@ function CartSession({
       awareness.off("change", onAwarenessChange);
     };
   }, [awareness]);
-
-  // --- Tree Construction ---
-
-  const isLoadingData =
-    isLoadingGlobal || isTiersLoading || isProductsLoading || isAssetsLoading;
-
-  // --- 0. Create Lookup Maps (O(M)) ---
-  const { productMap, assetMap, tiersMap } = useMemo(() => {
-    // Map: Product ID -> Product
-    const pMap = new Map(productsData?.map((p) => [p.id, p]));
-
-    // Map: Product ID -> Asset
-    const aMap = new Map(assetsData?.map((a) => [a.product_id, a]));
-
-    // Map: Product ID -> Sorted Tiers Array
-    // Group tiers by product_id once, upfront
-    const tMap = new Map<number, PricingTier[]>();
-    (tiersData ?? []).forEach((tier) => {
-      if (!tMap.has(tier.product_id)) tMap.set(tier.product_id, []);
-      tMap.get(tier.product_id)!.push(tier);
-    });
-    // Sort tiers once
-    tMap.forEach((tiers) =>
-      tiers.sort((a, b) => b.min_quantity - a.min_quantity)
-    );
-
-    return { productMap: pMap, assetMap: aMap, tiersMap: tMap };
-  }, [productsData, assetsData, tiersData]);
-
-  // --- 1. Create Intermediate Enriched Flat Array (O(N)) ---
-  const enrichedFlatNodes: EnrichedFlatCartNode[] = useMemo(() => {
-    if (isLoadingData) return [];
-
-    return flatNodes.map((node) => {
-      if (isYItem(node)) {
-        // O(1) Lookups!
-        const product = productMap.get(node.product_id);
-        const asset = assetMap.get(node.product_id);
-        const validTiers = tiersMap.get(node.product_id) ?? [];
-
-        const bestTier = validTiers.find(
-          (t) => t.min_quantity <= node.quantity
-        );
-
-        return {
-          ...node,
-          product,
-          asset,
-          price: bestTier?.price_per_unit ?? node.price_snapshot
-        };
-      }
-      return { ...node };
-    });
-  }, [flatNodes, productMap, assetMap, tiersMap, isLoadingData]);
-
-  const enrichedFlatItems = useMemo(
-    () => enrichedFlatNodes.filter(isYItem),
-    [enrichedFlatNodes]
-  );
-
-  // Build Tree from Enriched Flat Nodes
-  const enrichedTree: EnrichedCartNode[] = useMemo(() => {
-    if (enrichedFlatNodes.length === 0) return [];
-
-    const nodesByParent: Record<string, EnrichedCartNode[]> = {};
-    const rootNodes: EnrichedCartNode[] = [];
-
-    enrichedFlatNodes.forEach((node) => {
-      let newNode: EnrichedCartNode;
-      if (isYFolder(node)) {
-        newNode = { ...node, children: [] };
-      } else {
-        newNode = node;
-      }
-      if (!node.parent_id) {
-        rootNodes.push(newNode);
-      } else {
-        if (!nodesByParent[node.parent_id]) {
-          nodesByParent[node.parent_id] = [];
-        }
-        nodesByParent[node.parent_id].push(newNode);
-      }
-    });
-
-    const sortNodes = (a: EnrichedCartNode, b: EnrichedCartNode) => {
-      if (a.order === b.order) return a.id.localeCompare(b.id);
-      return a.order < b.order ? -1 : 1;
-    };
-
-    // Recursive builder that grabs children from the lookup table
-    const buildHierarchy = (node: EnrichedCartNode): EnrichedCartNode => {
-      if (node.type === "item") {
-        return { ...node };
-      }
-      const children = nodesByParent[node.id] || [];
-      children.sort(sortNodes);
-
-      return {
-        ...node,
-        children: children.map(buildHierarchy)
-      };
-    };
-
-    rootNodes.sort(sortNodes);
-    return rootNodes.map(buildHierarchy);
-  }, [enrichedFlatNodes]);
 
   // --- Operations (Inner) ---
 
@@ -749,6 +729,7 @@ function CartSession({
     rootNodes: enrichedTree,
     enrichedFlatItems,
     tags: flatTags,
+    snapshots: flatSnapshots,
     collaborators,
     cartRole,
     canManageUsers,
@@ -775,7 +756,8 @@ function CartSession({
     updateTag,
     deleteTag,
     addTagToItem,
-    removeTagFromItem
+    removeTagFromItem,
+    __yDoc: ydoc
   };
 
   return <CartContext value={value}>{children}</CartContext>;

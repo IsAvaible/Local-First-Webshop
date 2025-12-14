@@ -64,9 +64,8 @@ If you run into issues, see the [pre-reqs](#pre-requisites) and [troubleshooting
 Technical Solution
 
 - Frontend / Application Code written in React + Vite + TanStack Router
-- “Shop together” feature is realized via ElectricSQL or Automerge
+- “Shop together” (shared shopping cart) is realized with YJS
 - Data distribution and Caching are done with ElectricSQL
-- Optional LLM Feature is also supported by ElectricSQL
 - Product Variants can inherit properties from a base product variant
 - Company information & branding is stored in a table
 - Products can associate with different types of assets (e.g. images, specifications, 3D models)

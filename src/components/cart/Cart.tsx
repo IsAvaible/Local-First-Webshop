@@ -50,6 +50,7 @@ import { Label } from "@/components/ui/label";
 import { CartShareDialog } from "@/components/cart/CartShareDialog.tsx";
 import { CartFolderComponent } from "@/components/cart/CartFolderComponent.tsx";
 import { Link } from "@tanstack/react-router";
+import { CartHistoryDialog } from "@/components/cart/CartHistory.tsx";
 
 // ------------------------------------------------------------------
 // UTILITIES
@@ -239,10 +240,12 @@ const dropAnimationConfig: DropAnimation = {
 
 interface CartProps {
   displayHeader?: boolean;
+  displayFooter?: boolean;
   displayCheckoutButton?: boolean;
 }
 export function Cart({
   displayHeader,
+  displayFooter,
   displayCheckoutButton,
   className
 }: CartProps & React.ComponentProps<"div">) {
@@ -413,6 +416,8 @@ export function Cart({
               <h2 className="text-lg font-semibold tracking-tight">Cart</h2>
 
               <div className="flex items-center gap-3">
+                <CartHistoryDialog />
+
                 {collaborators.length > 1 && (
                   <div className="flex -space-x-2 overflow-hidden">
                     {collaborators.slice(0, 3).map((user) => (
@@ -521,27 +526,29 @@ export function Cart({
         </RootDroppable>
 
         {/* FOOTER */}
-        <div className="border-t bg-transparent p-4">
-          <div className="flex gap-2">
-            <Button
-              onClick={() => createFolder("New Folder")}
-              variant="outline"
-              className="flex-1"
-              disabled={!canManageItems}
-            >
-              <PlusIcon className="mr-2 h-4 w-4" /> Add Folder
-            </Button>
-            <TagManager disabled={!canManageItems} />
-          </div>
-
-          {displayCheckoutButton !== false && (
-            <Link disabled={!canManageItems} to={"/checkout"}>
-              <Button className="mt-4 w-full" disabled={!canManageItems}>
-                Checkout
+        {displayFooter !== false && (
+          <div className="border-t bg-transparent p-4">
+            <div className="flex gap-2">
+              <Button
+                onClick={() => createFolder("New Folder")}
+                variant="outline"
+                className="flex-1"
+                disabled={!canManageItems}
+              >
+                <PlusIcon className="mr-2 h-4 w-4" /> Add Folder
               </Button>
-            </Link>
-          )}
-        </div>
+              <TagManager disabled={!canManageItems} />
+            </div>
+
+            {displayCheckoutButton !== false && (
+              <Link disabled={!canManageItems} to={"/checkout"}>
+                <Button className="mt-4 w-full" disabled={!canManageItems}>
+                  Checkout
+                </Button>
+              </Link>
+            )}
+          </div>
+        )}
       </div>
 
       <DragOverlay dropAnimation={dropAnimationConfig}>

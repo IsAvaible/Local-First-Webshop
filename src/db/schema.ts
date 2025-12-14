@@ -20,7 +20,7 @@ import { z } from "zod";
 export * from "./auth-schema";
 import { users } from "./auth-schema";
 import { sql } from "drizzle-orm";
-import type { TypedMap } from "yjs-types";
+import type { TypedMap, TypedArray } from "yjs-types";
 import type { Tag } from "@/contexts/useCartContext.ts";
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
@@ -409,10 +409,29 @@ export type YCartFolderShape = BaseNodeShape & {
 // The Union Type representing the raw JSON data
 export type YCartNodeShape = YCartItemShape | YCartFolderShape;
 
+export type YSnapshotDelta = {
+  addedCount: number;
+  removedCount: number;
+  modifiedCount: number;
+  summary: string;
+};
+
+export type YCartSnapshotShape = {
+  id: string;
+  timestamp: number;
+  snapshot: Uint8Array;
+  meta: {
+    summary: string;
+    delta: YSnapshotDelta;
+    authors: string[];
+  };
+};
+
 // --- Yjs Specific Types ---
 // These wrap the JSON shapes into Yjs TypedMaps
 export type YCartNodeMap = TypedMap<YCartNodeShape>;
 export type YTagMap = TypedMap<Tag>;
+export type YSnapshotList = TypedArray<YCartSnapshotShape>;
 
 // Type Guards for narrowing the union
 export function isYItem(node: YCartNodeShape): node is YCartItemShape {

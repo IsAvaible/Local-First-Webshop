@@ -4,8 +4,10 @@ import type {
   YCartItemShape,
   YCartFolderShape,
   Cart,
-  CartRole
+  CartRole,
+  YCartSnapshotShape
 } from "@/db/schema";
+import * as Y from "yjs";
 
 // Enriched types for UI
 export interface EnrichedFlatCartItem extends YCartItemShape {
@@ -54,6 +56,8 @@ export interface CartContextType {
   rootNodes: EnrichedCartNode[] | undefined; // The main tree
   enrichedFlatItems: EnrichedFlatCartItem[] | undefined;
 
+  snapshots: YCartSnapshotShape[];
+
   tags: { id: string; name: string; color: string | null }[] | undefined;
 
   isLoading: boolean;
@@ -100,6 +104,9 @@ export interface CartContextType {
   deleteTag: (tagId: string) => void;
   addTagToItem: (itemId: string, tagId: string) => void;
   removeTagFromItem: (itemId: string, tagId: string) => void;
+
+  // --- Internal Yjs Doc ---
+  __yDoc: Y.Doc;
 }
 
 export const CartContext = createContext<CartContextType | undefined>(
