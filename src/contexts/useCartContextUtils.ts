@@ -9,12 +9,16 @@ import {
   isYFolder,
   isYItem,
   type PricingTier,
-  type YCartNodeShape
+  type YCartNodeShape,
+  type YCartSnapshotShape
 } from "@/db/schema.ts";
 import type {
   EnrichedCartNode,
   EnrichedFlatCartNode
 } from "@/contexts/useCartContext.ts";
+import * as Y from "yjs";
+import { v4 as uuidv4 } from "uuid";
+import { deepEqual } from "fast-equals";
 
 // Given a list of product IDs, fetch the data and return Lookup Maps
 export function useProductLookups(productIds: number[]) {
@@ -155,4 +159,172 @@ export function useEnrichedTree(
   }, [enrichedFlatNodes]);
 
   return { rootNodes, enrichedFlatItems };
+}
+
+/**
+ * Reverts a Y.Doc to the state captured in the provided snapshot update.
+ * From: https://github.com/toeverything/AFFiNE/blob/e5db566ef0fe3114180ccd4eff199fc8032e2696/packages/common/y-indexeddb/src/index.ts#L34-L72
+ */
+export function revertToSnapshot(
+  doc: Y.Doc,
+  snapshotDoc: Y.Doc,
+  getMetadata: (key: string) => "Text" | "Map" | "Array"
+) {
+  const currentStateVector = Y.encodeStateVector(doc);
+  const snapshotStateVector = Y.encodeStateVector(snapshotDoc);
+
+  const changesSinceSnapshotUpdate = Y.encodeStateAsUpdate(
+    doc,
+    snapshotStateVector
+  );
+
+  const undoManager = new Y.UndoManager(
+    [...snapshotDoc.share.keys()]
+      .filter((key) => key !== "snapshots") // keep history intact
+      .map((key) => {
+        const type = getMetadata(key);
+        if (type === "Text") {
+          return snapshotDoc.getText(key);
+        } else if (type === "Map") {
+          return snapshotDoc.getMap(key);
+        } else if (type === "Array") {
+          return snapshotDoc.getArray(key);
+        }
+        throw new Error(`Unknown type for key: ${key}`);
+      }),
+    {
+      trackedOrigins: new Set([SNAPSHOT_ORIGIN])
+    }
+  );
+
+  Y.applyUpdate(snapshotDoc, changesSinceSnapshotUpdate, SNAPSHOT_ORIGIN);
+  undoManager.undo();
+
+  const revertChangesSinceSnapshotUpdate = Y.encodeStateAsUpdate(
+    snapshotDoc,
+    currentStateVector
+  );
+
+  Y.applyUpdate(doc, revertChangesSinceSnapshotUpdate, SNAPSHOT_ORIGIN);
+}
+
+// Define a specific origin for these transactions so they can be tracked/filtered if needed
+export const SNAPSHOT_ORIGIN = "restore-snapshot-action";
+
+/**
+ * Application-specific wrapper to restore a Cart Snapshot.
+ */
+export function restoreCartSnapshot(doc: Y.Doc, snapshot: YCartSnapshotShape) {
+  if (!snapshot.snapshot) {
+    throw Error("Snapshot data is missing");
+  }
+
+  doc.transact(() => {
+    let snapshotDoc: Y.Doc;
+
+    try {
+      const snap = Y.decodeSnapshot(snapshot.snapshot);
+      // Create a temporary doc that reflects the state at the time of the snapshot
+      snapshotDoc = Y.createDocFromSnapshot(doc, snap);
+    } catch (e) {
+      throw Error("Failed to decode snapshot");
+    }
+
+    // Check if all key value pairs are equal
+    const keysToCompare = [...doc.share.keys()].filter(
+      (key) => key !== "snapshots"
+    );
+
+    const isIdentical = keysToCompare.every((key) =>
+      deepEqual(doc.share.get(key)?.toJSON(), snapshotDoc.getMap(key)?.toJSON())
+    );
+
+    if (isIdentical) {
+      throw Error(
+        "Document content is identical to snapshot. Skipping restore."
+      );
+    }
+
+    // 1. Capture State before restore
+    const beforeNodes = Object.values(
+      doc.getMap("nodes").toJSON()
+    ) as YCartNodeShape[];
+
+    // 2. Capture State after restore
+    const targetNodes = Object.values(
+      snapshotDoc.getMap("nodes").toJSON()
+    ) as YCartNodeShape[];
+
+    // Calculate Delta
+    const delta = getSnapshotDelta(beforeNodes, targetNodes);
+
+    // Run the revert logic
+    revertToSnapshot(doc, snapshotDoc, (key) => {
+      switch (key) {
+        case "nodes":
+        case "tags":
+          return "Map";
+        case "snapshots":
+          return "Array";
+        default:
+          return "Map";
+      }
+    });
+
+    // Create a new snapshot of this restored state
+    const restoredStateSnapshot = Y.snapshot(doc);
+    const encodedSnapshot = Y.encodeSnapshot(restoredStateSnapshot);
+
+    const newSnapshotEntry: YCartSnapshotShape = {
+      id: uuidv4(),
+      timestamp: Date.now(),
+      snapshot: encodedSnapshot,
+      restoredFromId: snapshot.id,
+      meta: {
+        summary: `${delta.summary}`,
+        delta: delta,
+        authors: snapshot.meta?.authors || []
+      }
+    };
+
+    // Push to history
+    const snapshotsArray = doc.getArray<YCartSnapshotShape>("snapshots");
+    snapshotsArray.push([newSnapshotEntry]);
+  }, SNAPSHOT_ORIGIN);
+}
+
+export function getSnapshotDelta(
+  prevItems: YCartNodeShape[],
+  currItems: YCartNodeShape[]
+) {
+  const prevMap = new Map(prevItems.map((i) => [i.id, i]));
+  const currMap = new Map(currItems.map((i) => [i.id, i]));
+
+  let added = 0;
+  let removed = 0;
+  let modified = 0;
+
+  // Calculate Added & Modified
+  for (const curr of currItems) {
+    const prev = prevMap.get(curr.id);
+    if (!prev) {
+      added++;
+    } else if (!deepEqual(prev, curr)) {
+      modified++;
+    }
+  }
+
+  // Calculate Removed
+  for (const prev of prevItems) {
+    if (!currMap.has(prev.id)) {
+      removed++;
+    }
+  }
+
+  return {
+    addedCount: added,
+    removedCount: removed,
+    modifiedCount: modified,
+    summary: `+${added} / -${removed} / ~${modified}`
+  };
 }

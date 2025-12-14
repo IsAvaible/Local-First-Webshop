@@ -16,6 +16,7 @@ import Footer from "@/components/layout/Footer/Footer.tsx";
 import { CartProvider } from "@/contexts/CartProvider.tsx";
 import { authClient } from "@/lib/auth-client.ts";
 import { useEffect } from "react";
+import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -83,7 +84,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               <Footer />
             </CartProvider>
           </div>
-          <TanStackRouterDevtools />
+          <Toaster position={"bottom-center"} />
         </ClientOnly>
         <TanStackRouterDevtools position="bottom-right" />
         <Scripts />

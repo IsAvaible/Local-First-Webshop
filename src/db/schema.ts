@@ -420,6 +420,7 @@ export type YCartSnapshotShape = {
   id: string;
   timestamp: number;
   snapshot: Uint8Array;
+  restoredFromId?: string;
   meta: {
     summary: string;
     delta: YSnapshotDelta;

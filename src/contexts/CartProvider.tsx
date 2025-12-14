@@ -30,7 +30,6 @@ import { v4 as uuidv4 } from "uuid";
 import { generateKeyBetween } from "fractional-indexing";
 import * as decoding from "lib0/decoding";
 import { trpc } from "@/lib/trpc-client";
-import { deepEqual } from "fast-equals";
 import {
   type Cart,
   type CartRole,
@@ -46,6 +45,7 @@ import {
   type YTagMap
 } from "@/db/schema";
 import {
+  getSnapshotDelta,
   useEnrichedTree,
   useProductLookups
 } from "@/contexts/useCartContextUtils.ts";
@@ -163,7 +163,6 @@ function CartSession({
   }, [nodesMap, tagsMap, snapshotsArray]);
 
   const currentNodesRef = useRef(flatNodes);
-  const lastSavedNodesRef = useRef<YCartNodeShape[]>([]);
 
   // Update the ref whenever the incoming prop changes
   useEffect(() => {
@@ -173,34 +172,59 @@ function CartSession({
   useEffect(() => {
     if (!isSynced) return;
 
-    // This guarantees a check happens every 60s, regardless of activity intensity.
     const timer = setInterval(() => {
       const currentNodes = currentNodesRef.current;
-      const lastSaved = lastSavedNodesRef.current;
 
+      // Don't snapshot an empty cart
       if (currentNodes.length === 0) return;
 
       ydoc.transact(() => {
-        // A. Calculate Delta
-        // passing clones or ensuring diff logic doesn't mutate
-        const delta = getSnapshotDelta(lastSaved, currentNodes);
+        // Get the Previous State from the Yjs history
+        let lastSavedNodes: YCartNodeShape[] = [];
+
+        if (snapshotsArray.length > 0) {
+          try {
+            // Get the very last snapshot object from the Y.Array
+            const lastSnapshotWrapper = snapshotsArray.get(
+              snapshotsArray.length - 1
+            );
+
+            if (lastSnapshotWrapper?.snapshot) {
+              const snap = Y.decodeSnapshot(lastSnapshotWrapper.snapshot);
+              const tempDoc = Y.createDocFromSnapshot(ydoc, snap);
+
+              // Extract the 'nodes' map
+              const tempMap = tempDoc.getMap("nodes");
+              const tempMapJson = tempMap.toJSON();
+              lastSavedNodes = Object.values(tempMapJson) as YCartNodeShape[];
+            }
+          } catch (e) {
+            console.error(
+              "Failed to decode previous snapshot for comparison",
+              e
+            );
+          }
+        }
+
+        // Calculate Delta
+        const delta = getSnapshotDelta(lastSavedNodes, currentNodes);
 
         if (
           delta.addedCount === 0 &&
           delta.removedCount === 0 &&
           delta.modifiedCount === 0
         ) {
-          return; // No changes detected
+          return; // Exact match found in history. Skipping save.
         }
 
-        // B. Capture Authors
+        // Capture Authors
         const activeAuthors = Array.from(awareness.getStates().values())
           .map(
             (state) => (state.user as AwarenessUser["user"]).name || "Unknown"
           )
           .filter((value, index, self) => self.indexOf(value) === index);
 
-        // C. Create Snapshot
+        // Create New Snapshot
         const snapshotObj = Y.snapshot(ydoc);
         const encodedSnapshot = Y.encodeSnapshot(snapshotObj);
 
@@ -216,51 +240,11 @@ function CartSession({
         };
 
         snapshotsArray.push([snapshot]);
-
-        // D. Update "Last Saved"
-        lastSavedNodesRef.current = structuredClone(currentNodes);
       }, "snapshot-origin");
     }, 60000);
 
     return () => clearInterval(timer);
   }, [isSynced, ydoc, snapshotsArray, awareness]);
-
-  // Optimized Helper
-  function getSnapshotDelta(
-    prevItems: YCartNodeShape[],
-    currItems: YCartNodeShape[]
-  ) {
-    const prevMap = new Map(prevItems.map((i) => [i.id, i]));
-    const currMap = new Map(currItems.map((i) => [i.id, i]));
-
-    let added = 0;
-    let removed = 0;
-    let modified = 0;
-
-    // Calculate Added & Modified
-    for (const curr of currItems) {
-      const prev = prevMap.get(curr.id);
-      if (!prev) {
-        added++;
-      } else if (!deepEqual(prev, curr)) {
-        modified++;
-      }
-    }
-
-    // Calculate Removed
-    for (const prev of prevItems) {
-      if (!currMap.has(prev.id)) {
-        removed++;
-      }
-    }
-
-    return {
-      addedCount: added,
-      removedCount: removed,
-      modifiedCount: modified,
-      summary: `+${added} / -${removed} / ~${modified}`
-    };
-  }
 
   // --- Persistence & Sync ---
   useEffect(() => {
