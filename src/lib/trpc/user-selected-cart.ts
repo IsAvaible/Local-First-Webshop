@@ -12,11 +12,8 @@ import type { ExtractTablesWithRelations } from "drizzle-orm";
  * To be called within an existing transaction (tx)
  */
 export const upsertUserSelectedCart = async (
-  tx: PgTransaction<
-    NodePgQueryResultHKT,
-    Record<string, never>,
-    ExtractTablesWithRelations<Record<string, never>>
-  >,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tx: PgTransaction<NodePgQueryResultHKT, any, ExtractTablesWithRelations<any>>,
   inputs: {
     userId: string;
     cartId: string;

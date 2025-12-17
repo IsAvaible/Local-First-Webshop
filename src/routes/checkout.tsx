@@ -1,9 +1,10 @@
 import { createFileRoute, stripSearchParams } from "@tanstack/react-router";
-import { useLiveQuery, eq, min, Query } from "@tanstack/react-db";
+import { useLiveQuery, eq, min, Query, and } from "@tanstack/react-db";
 import {
   productsCollection,
   pricingTiersCollection,
-  assetsCollection
+  assetsCollection,
+  ordersCollection
 } from "@/lib/collections";
 import type { ProductSuggestion, FlowStepId } from "@/lib/checkout/types";
 import { z } from "zod";
@@ -13,11 +14,13 @@ import { FLOW_ORDER } from "@/lib/checkout/config";
 import SuccessView from "@/components/checkout/views/SuccessView";
 import CheckoutWizardView from "@/components/checkout/views/CheckoutWizardView";
 import CartOverviewView from "@/components/checkout/views/CartOverviewView";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { trpc } from "@/lib/trpc-client";
 import { Loader2 } from "lucide-react";
+import { deepEqual } from "fast-equals";
+import type { UserAddress } from "@/db/schema.ts";
 
 if (!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) {
   throw Error("Stripe Secret missing or not configured");
@@ -39,6 +42,7 @@ const cartUrlSchema = z.object({
   payment_intent: z.string().optional(),
   payment_intent_client_secret: z.string().optional(),
   redirect_status: z.string().optional(),
+  orderId: z.string().optional(),
   error: z.string().optional()
 });
 
@@ -52,7 +56,8 @@ export const Route = createFileRoute("/checkout")({
     await Promise.all([
       productsCollection.preload(),
       pricingTiersCollection.preload(),
-      assetsCollection.preload()
+      assetsCollection.preload(),
+      ordersCollection.preload()
     ]);
   },
   component: CheckoutPage
@@ -79,20 +84,31 @@ function CheckoutPage() {
     }
   });
 
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const { data: activeOrder } = useLiveQuery((q) =>
+    q
+      .from({ o: ordersCollection })
+      .where(({ o }) =>
+        and(eq(o.status, "awaiting_payment"), eq(o.cart_id, state.cartId))
+      )
+      .findOne()
+  );
+  const shippingAddressSnapshotId = activeOrder
+    ? (activeOrder.shipping_address_snapshot as UserAddress).id
+    : null;
+  if (
+    shippingAddressSnapshotId &&
+    shippingAddressSnapshotId != state.formData.selectedAddressId
+  ) {
+    actions.setSelectedAddressId(shippingAddressSnapshotId);
+  }
+
   const [intentError, setIntentError] = useState<string | null>(null);
 
-  const createPaymentIntent = trpc.payment.createPaymentIntent;
+  const upsertOrder = trpc.orders.upsert;
   const [paymentIntentPending, setPaymentIntentPending] = useState(false);
 
-  // Track the JSON string of the payload used for the *current* clientSecret
-  // This prevents infinite loops and detects stale data
-  const [activePayloadJson, setActivePayloadJson] = useState<string | null>(
-    null
-  );
-
   // Construct the payload that determines the price
-  const currentPayload = useMemo(
+  const currentPayload: Parameters<typeof upsertOrder.mutate>[0] = useMemo(
     () => ({
       items: state.cartItems.map((item) => ({
         id: item.id,
@@ -101,10 +117,28 @@ function CheckoutPage() {
       })),
       shippingMethod: state.formData.shippingMethod,
       warranties: state.formData.warranties,
-      appliedCoupon: state.formData.appliedCoupon
+      appliedCoupon: state.formData.appliedCoupon,
+      addressId: state.formData.selectedAddressId,
+      billingAddressId: null,
+      existingOrderId: activeOrder?.id,
+      cartId: state.cartId
     }),
-    [state.cartItems, state.formData]
+    [
+      activeOrder?.id,
+      state.cartId,
+      state.cartItems,
+      state.formData.appliedCoupon,
+      state.formData.selectedAddressId,
+      state.formData.shippingMethod,
+      state.formData.warranties
+    ]
   );
+
+  const [activePayload, setActivePayload] = useState<
+    typeof currentPayload | null
+  >(null);
+
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // --- Intent Management Logic ---
   useEffect(() => {
@@ -113,43 +147,69 @@ function CheckoutPage() {
 
     // If not in wizard, clean up everything
     if (!state.isWizard) {
-      setClientSecret(null);
       setIntentError(null);
-      setActivePayloadJson(null);
+      setActivePayload(null);
       return;
     }
 
-    const currentPayloadJson = JSON.stringify(currentPayload);
+    // If the payload has changed (Stale)
+    if (!deepEqual(currentPayload, activePayload)) {
+      // Clear any existing retry timers from previous payload attempts
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
 
-    // If the payload has changed (Stale) or we have no secret yet
-    if (currentPayloadJson !== activePayloadJson) {
-      // Clear existing secret to show Loader (and prevent paying old amount)
-      setClientSecret(null);
+      // Clear existing secret to show Loader
       setIntentError(null);
 
       // Prevent duplicate firing if already pending
       if (paymentIntentPending) return;
+
       setPaymentIntentPending(true);
 
-      createPaymentIntent
-        .mutate(currentPayload)
-        .then((data) => {
-          setClientSecret(data.clientSecret);
-          setActivePayloadJson(currentPayloadJson);
-        })
-        .catch((error) => {
-          console.error("Stripe Error:", error);
-          setIntentError("Failed to initialize payment. Please try again.");
-        })
-        .finally(() => {
-          setPaymentIntentPending(false);
-        });
+      // 3. Define the recursive backoff function
+      const MAX_RETRIES = 3;
+
+      const attemptUpsert = (attemptCount: number) => {
+        upsertOrder
+          .mutate(currentPayload)
+          .then(() => {
+            setActivePayload(currentPayload);
+            setPaymentIntentPending(false);
+          })
+          .catch((error) => {
+            console.error(`Stripe Error (Attempt ${attemptCount + 1}):`, error);
+
+            if (attemptCount < MAX_RETRIES) {
+              // Calculate delay: 1s, 2s, 4s...
+              const delay = Math.pow(2, attemptCount) * 1000;
+
+              // Wait, then retry.
+              retryTimeoutRef.current = setTimeout(() => {
+                attemptUpsert(attemptCount + 1);
+              }, delay);
+            } else {
+              // Final failure after retries
+              setIntentError(
+                "Failed to initialize payment after multiple attempts. Please try again."
+              );
+              setPaymentIntentPending(false); // Release the lock
+            }
+          });
+      };
+
+      // Trigger the first attempt
+      attemptUpsert(0);
     }
+
+    return () => {
+      if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+    };
   }, [
     state.isWizard,
     currentPayload,
-    activePayloadJson,
-    createPaymentIntent,
+    activePayload,
+    upsertOrder,
     paymentIntentPending,
     redirect_status
   ]);
@@ -215,7 +275,7 @@ function CheckoutPage() {
 
   if (state.isWizard) {
     // Show loader if secret is missing OR we are currently fetching a new one
-    if (!clientSecret || paymentIntentPending) {
+    if (!activeOrder?.stripe_client_secret) {
       return (
         <div className="flex min-h-screen items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
@@ -227,10 +287,10 @@ function CheckoutPage() {
       <Elements
         stripe={stripePromise}
         options={{
-          clientSecret,
+          clientSecret: activeOrder?.stripe_client_secret,
           appearance: { theme: "stripe" }
         }}
-        key={clientSecret}
+        key={activeOrder.stripe_client_secret}
       >
         <CheckoutWizardView state={state} actions={actions} />
       </Elements>

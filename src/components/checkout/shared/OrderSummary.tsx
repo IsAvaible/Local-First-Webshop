@@ -21,6 +21,7 @@ function OrderSummary({
 }) {
   const { subtotal, warrantyCost, shippingCost, tax, discount, total } = totals;
 
+  // TODO: maybe pass the totals as bigs also
   return (
     <div className="flex h-full flex-col justify-between space-y-6">
       <Card className="border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
@@ -30,19 +31,19 @@ function OrderSummary({
         </CardHeader>
         <CardContent className="space-y-4">
           <SummaryRow label="Subtotal" value={subtotal} />
-          {warrantyCost > 0 && (
+          {parseFloat(warrantyCost) > 0 && (
             <SummaryRow label="Warranties" value={warrantyCost} />
           )}
           <SummaryRow
             label="Shipping"
             value={shippingCost}
-            isFree={shippingCost === 0}
+            isFree={shippingCost === "0.00"}
           />
           <SummaryRow label="Tax (19%)" value={tax} />
-          {discount > 0 && (
+          {parseFloat(discount) > 0 && (
             <SummaryRow
               label="Discount"
-              value={-discount}
+              value={`-${discount}`}
               className="font-medium text-green-600"
             />
           )}
@@ -75,7 +76,7 @@ const SummaryRow = ({
   className
 }: {
   label: string;
-  value: number;
+  value: string | number;
   isFree?: boolean;
   className?: string;
 }) => (

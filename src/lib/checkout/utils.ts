@@ -1,7 +1,7 @@
 // --- Utilities ---
-export const formatCurrency = (amount: number) => {
+export const formatCurrency = (amount: number | string) => {
   return new Intl.NumberFormat("de-DE", {
     style: "currency",
     currency: "EUR"
-  }).format(amount);
+  }).format(typeof amount === "string" ? parseFloat(amount) : amount);
 };

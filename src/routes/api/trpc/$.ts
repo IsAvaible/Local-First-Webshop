@@ -9,8 +9,8 @@ import { auth } from "@/lib/auth";
 import { cartsRouter } from "@/lib/trpc/carts.ts";
 import { cartCollaboratorsRouter } from "@/lib/trpc/cartCollaborators";
 import { addressesRouter } from "@/lib/trpc/addresses";
-import { paymentRouter } from "@/lib/trpc/payment";
 import { userSelectedCartRouter } from "@/lib/trpc/user-selected-cart";
+import { ordersRouter } from "@/lib/trpc/orders";
 
 export const appRouter = router({
   projects: projectsRouter,
@@ -19,8 +19,8 @@ export const appRouter = router({
   carts: cartsRouter,
   cartCollaborators: cartCollaboratorsRouter,
   addresses: addressesRouter,
-  payment: paymentRouter,
-  userSelectedCart: userSelectedCartRouter
+  userSelectedCart: userSelectedCartRouter,
+  orders: ordersRouter
 });
 
 export type AppRouter = typeof appRouter;

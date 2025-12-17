@@ -64,6 +64,20 @@
       "when": 1765393011600,
       "tag": "0008_chunky_phantom_reporter",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1765982796020,
+      "tag": "0009_broken_nomad",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1766050919676,
+      "tag": "0010_legal_doctor_strange",
+      "breakpoints": true
     }
   ]
 }

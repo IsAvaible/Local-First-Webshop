@@ -4,6 +4,11 @@ import { useCart } from "@/contexts/useCartContext";
 import { CONFIG, FLOW_ORDER, WIZARD_STEPS } from "@/lib/checkout/config";
 import type { FlowStepId, ShippingMethod } from "@/lib/checkout/types";
 import type { Stripe, StripeElements } from "@stripe/stripe-js";
+import { trpc } from "@/lib/trpc-client.ts";
+import {
+  calculateOrderTotals,
+  type CalculationResult
+} from "@/lib/utils/calcTotals.ts";
 
 // Define the shape of Stripe params based on your Zod schema
 interface StripeReturnParams {
@@ -30,7 +35,7 @@ export function useCheckoutLogic({
   navigate,
   stripeParams
 }: UseCheckoutLogicProps) {
-  const { enrichedFlatItems: rawCartItems } = useCart();
+  const { enrichedFlatItems: rawCartItems, cartId } = useCart();
   const cartItems = useMemo(() => rawCartItems ?? [], [rawCartItems]);
 
   // Determine current position in the linear flow
@@ -55,26 +60,43 @@ export function useCheckoutLogic({
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
+  const finalizeOrderMutation = trpc.orders.finalizeCheckout;
+
   // --- Handle Stripe Return Logic ---
   useEffect(() => {
     // If there are no stripe params, do nothing
     if (!stripeParams?.redirect_status && !stripeParams?.error) return;
 
-    const { redirect_status, error } = stripeParams;
+    const { redirect_status, error, payment_intent } = stripeParams;
+
+    if (!payment_intent) {
+      setPaymentError("Missing payment intent information.");
+      return;
+    }
 
     if (redirect_status === "succeeded") {
-      // If success, we ensure we are on the success step
-      // We strip the stripe params from the URL to prevent dirty history
-      void navigate({
-        search: { step: "success" },
-        replace: true
-      });
+      finalizeOrderMutation
+        .mutate({ paymentIntentId: payment_intent })
+        .then((data) => {
+          setIsProcessing(true);
+          void navigate({
+            search: { step: "success", orderId: data.orderId },
+            replace: true
+          });
+        })
+        .catch((err) => {
+          console.error("Order creation failed:", err);
+          setPaymentError(
+            "Payment succeeded, but order creation failed. Please contact support."
+          );
+        })
+        .finally(() => {
+          setIsProcessing(false);
+        });
     } else if (redirect_status === "failed" || error) {
-      // Extract error message
-      const errorMessage =
-        error ?? "Payment failed or was cancelled. Please try again.";
-
-      setPaymentError(errorMessage);
+      setPaymentError(
+        error ?? "Payment failed or was cancelled. Please try again."
+      );
 
       void navigate({
         search: () => ({
@@ -84,40 +106,27 @@ export function useCheckoutLogic({
         replace: true
       });
     }
-  }, [stripeParams, navigate, step]);
+  }, [stripeParams, navigate, step, finalizeOrderMutation]);
 
-  interface Totals {
-    subtotal: number;
-    warrantyCost: number;
-    shippingCost: number;
-    tax: number;
-    discount: number;
-    total: number;
-  }
+  type Totals = CalculationResult["formatted"];
 
   // Calculate Totals
   const totals = useMemo((): Totals => {
-    const subtotal = cartItems.reduce(
-      (sum, item) => sum + parseFloat(item.price ?? "0") * item.quantity,
-      0
+    // Map Frontend "CartItem" to Shared "CalcItem"
+    const normalizedItems = cartItems.map((item) => ({
+      price: item.price ?? "0",
+      quantity: item.quantity ?? 1,
+      // Look up warranty status from the separate object
+      hasWarranty: warranties[item.id]
+    }));
+
+    const result = calculateOrderTotals(
+      normalizedItems,
+      shippingMethod,
+      appliedCoupon
     );
 
-    const warrantyCost = Object.entries(warranties).reduce(
-      (sum, [itemId, active]) => {
-        if (!active) return sum;
-        const item = cartItems.find((i) => i.id === itemId);
-        const price = parseFloat(item?.price ?? "0");
-        return sum + price * CONFIG.WARRANTY_RATE * (item?.quantity ?? 1);
-      },
-      0
-    );
-
-    const shippingCost = CONFIG.SHIPPING_RATES[shippingMethod];
-    const tax = (subtotal + warrantyCost + shippingCost) * CONFIG.TAX_RATE;
-    const discount = appliedCoupon ? CONFIG.COUPONS[appliedCoupon] || 0 : 0;
-    const total = subtotal + warrantyCost + shippingCost + tax - discount;
-
-    return { subtotal, warrantyCost, shippingCost, tax, discount, total };
+    return result.formatted;
   }, [cartItems, warranties, shippingMethod, appliedCoupon]);
 
   // Actions & Navigation
@@ -211,6 +220,7 @@ export function useCheckoutLogic({
       isSuccess: validatedStep === "success",
       isWizard: isWizardStep,
       wizardProgress,
+      cartId,
       cartItems,
       totals,
       isProcessing,

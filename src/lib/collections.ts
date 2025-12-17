@@ -14,7 +14,8 @@ import {
   selectCartSchema,
   selectCartCollaboratorSchema,
   selectUserAddressSchema,
-  selectUserSelectedCartSchema
+  selectUserSelectedCartSchema,
+  selectOrderSchema
 } from "@/db/schema";
 import { trpc } from "@/lib/trpc-client";
 
@@ -381,3 +382,30 @@ export const userAddressesCollection = createCollection(
     }
   })
 );
+
+export const ordersCollection = createCollection(
+  electricCollectionOptions({
+    id: "orders",
+    shapeOptions: {
+      url: createApiUrl("/api/orders"),
+      parser: { timestamptz: (date: string) => new Date(date) }
+    },
+    schema: selectOrderSchema,
+    getKey: (item) => item.id
+  })
+);
+
+// export const createOrderAction = createOptimisticAction<OrderWithItems>({
+//   onMutate: () => undefined, // No optimistic update needed
+//
+//   // Sends data to the server
+//   mutationFn: async ({ order, items }) => {
+//     const result = await trpc.orders.upsert.mutate({
+//       order: order,
+//       items: items
+//     });
+//
+//     // Wait for the transaction to reflect in Electric
+//     await ordersCollection.utils.awaitTxId(result.txid);
+//   }
+// });

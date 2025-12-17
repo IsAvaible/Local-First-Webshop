@@ -537,3 +537,145 @@ export const updateUserAddressSchema = createUpdateSchema(
 export type UserAddress = z.infer<typeof selectUserAddressSchema>;
 export type CreateUserAddress = z.infer<typeof createUserAddressSchema>;
 export type UpdateUserAddress = z.infer<typeof updateUserAddressSchema>;
+
+// --- ORDERS SCHEMA ---
+
+export const orderStatusEnum = pgEnum("order_status", [
+  "pending",
+  "awaiting_payment",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+  "refunded"
+]);
+
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "unpaid",
+  "paid",
+  "refunded",
+  "partially_refunded",
+  "failed"
+]);
+
+export const ordersTable = pgTable(
+  "orders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // Human readable ID (e.g. ORD-1001)
+    order_number: varchar({ length: 50 }).notNull().unique(),
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+
+    // Financials
+    // Storing as decimal strings for precision
+    subtotal: decimal("subtotal", { precision: 12, scale: 2 }).notNull(),
+    tax_total: decimal("tax_total", { precision: 12, scale: 2 })
+      .notNull()
+      .default("0.00"),
+    shipping_total: decimal("shipping_total", { precision: 12, scale: 2 })
+      .notNull()
+      .default("0.00"),
+    discount_total: decimal("discount_total", { precision: 12, scale: 2 })
+      .notNull()
+      .default("0.00"),
+    grand_total: decimal("grand_total", { precision: 12, scale: 2 }).notNull(),
+    currency_code: varchar({ length: 3 }).notNull().default("EUR"),
+
+    // Status
+    status: orderStatusEnum("status").notNull().default("pending"),
+    payment_status: paymentStatusEnum("payment_status")
+      .notNull()
+      .default("unpaid"),
+    payment_method: varchar({ length: 50 }),
+    transaction_id: varchar({ length: 100 }).notNull().unique(), // Stripe intent id
+    stripe_client_secret: varchar({ length: 255 }),
+    cart_id: uuid("cart_id").references(() => cartsTable.id, {
+      onDelete: "set null"
+    }),
+
+    // Logistics
+    shipping_carrier: varchar({ length: 100 }),
+    tracking_number: varchar({ length: 100 }),
+
+    // Address Snapshots (JSONB to preserve history)
+    shipping_address_snapshot: jsonb("shipping_address_snapshot").notNull(),
+    billing_address_snapshot: jsonb("billing_address_snapshot").notNull(),
+
+    // Metadata
+    notes: text("notes"),
+
+    // Timestamps
+    created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    paid_at: timestamp({ withTimezone: true }),
+    shipped_at: timestamp({ withTimezone: true }),
+    cancelled_at: timestamp({ withTimezone: true })
+  },
+  (table) => ({
+    userIdIdx: index("orders_user_id_idx").on(table.user_id),
+    orderNumberIdx: uniqueIndex("orders_order_number_idx").on(
+      table.order_number
+    )
+  })
+);
+
+export const selectOrderSchema = createSelectSchema(ordersTable);
+// Omit generated/audit fields for creation
+export const createOrderSchema = createInsertSchema(ordersTable).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+  paid_at: true,
+  shipped_at: true,
+  cancelled_at: true
+});
+export const updateOrderSchema = createUpdateSchema(ordersTable).omit({
+  created_at: true,
+  updated_at: true
+});
+
+// --- ORDER ITEMS SCHEMA ---
+
+export const orderItemsTable = pgTable(
+  "order_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    order_id: uuid("order_id")
+      .notNull()
+      .references(() => ordersTable.id, { onDelete: "cascade" }),
+
+    product_id: integer("product_id")
+      .notNull()
+      .references(() => productsTable.id, { onDelete: "restrict" }),
+
+    // Snapshot product details in case product is deleted/changed later
+    product_name_snapshot: varchar({ length: 255 }).notNull(),
+
+    quantity: integer("quantity").notNull().default(1),
+
+    // Price per unit at the moment of purchase
+    price_per_unit: decimal("price_per_unit", {
+      precision: 12,
+      scale: 2
+    }).notNull(),
+
+    // (quantity * price) - line_item_discount
+    total_price: decimal("total_price", { precision: 12, scale: 2 }).notNull()
+  },
+  (table) => ({
+    orderIdIdx: index("order_items_order_id_idx").on(table.order_id)
+  })
+);
+
+export const selectOrderItemSchema = createSelectSchema(orderItemsTable);
+export const createOrderItemSchema = createInsertSchema(orderItemsTable).omit({
+  id: true
+});
+
+// Types export
+export type Order = z.infer<typeof selectOrderSchema>;
+export type CreateOrder = z.infer<typeof createOrderSchema>;
+export type OrderItem = z.infer<typeof selectOrderItemSchema>;
+export type CreateOrderItem = z.infer<typeof createOrderItemSchema>;

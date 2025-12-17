@@ -31,15 +31,11 @@ const serveGet = async ({ request }: { request: Request }) => {
   const collaboratorIds = collaboratorRows.map((c) => c.cartId);
 
   // 2. Build Filter Clause
-  // User is the owner OR User is a collaborator
-  const isOwner = `created_by_id = '${userId}'`;
-
-  const isCollaborator =
+  // User is a collaborator
+  const filterClause =
     collaboratorIds.length > 0
       ? `id::text IN (${collaboratorIds.map((id) => `'${id}'`).join(", ")})`
       : "0 = 1";
-
-  const filterClause = `${isOwner} OR ${isCollaborator}`;
 
   // Force the filter on the query
   originUrl.searchParams.set("where", filterClause);
