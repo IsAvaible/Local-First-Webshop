@@ -45,7 +45,7 @@ export default function Header() {
             className="flex flex-row items-center gap-x-2 text-2xl font-bold text-slate-800"
           >
             <PackageOpenIcon className="h-8 w-8" />
-            <span className="max-sm:hidden">Partlist</span>
+            <span className="max-sm:hidden">Partslist</span>
           </Link>
         </div>
         <div className="flex flex-row items-center justify-center gap-x-6 max-sm:[&>*:not(:nth-child(2))]:hidden">
