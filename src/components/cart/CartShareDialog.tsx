@@ -113,7 +113,7 @@ export function CartShareDialog({ open, onOpenChange }: CartShareDialogProps) {
           Share
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Share "{activeCartName}"</DialogTitle>
         </DialogHeader>

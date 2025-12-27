@@ -11,10 +11,10 @@ import {
 } from "@/components/ui/command.tsx";
 import { Command as CommandPrimitive } from "cmdk";
 import {
-  CreditCard,
   Loader2Icon,
   SearchIcon,
   SettingsIcon,
+  ShoppingCartIcon,
   UserIcon
 } from "lucide-react";
 import * as React from "react";
@@ -28,7 +28,13 @@ import {
   companiesCollection
 } from "@/lib/collections.ts";
 
-// --- Main Component ---
+// Static Navigation Items
+const NAV_ITEMS = [
+  { label: "Profile", icon: UserIcon, to: "/profile", shortcut: "⌘P" },
+  { label: "Cart", icon: ShoppingCartIcon, to: "/cart", shortcut: "⌘B" },
+  { label: "Settings", icon: SettingsIcon, to: undefined, shortcut: "⌘S" }
+];
+
 export function SearchBar() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,6 +64,14 @@ export function SearchBar() {
   const isSearchActive = trimmedSearch.length >= minSearchLength;
   const searchWords = useMemo(() => {
     return isSearchActive ? trimmedSearch.split(" ").filter(Boolean) : [];
+  }, [isSearchActive, trimmedSearch]);
+
+  // Filter navigation items
+  const matchingNavItems = useMemo(() => {
+    if (!isSearchActive) return [];
+    return NAV_ITEMS.filter((item) =>
+      item.label.toLowerCase().includes(trimmedSearch.toLowerCase())
+    );
   }, [isSearchActive, trimmedSearch]);
 
   // --- Live suggestions ---
@@ -175,54 +189,83 @@ export function SearchBar() {
     };
   }, []);
 
-  const submitSearch = () => {
-    if (suggestions?.length === 0 && matchingCategories?.length) {
-      // if there are no product suggestions but there are matching categories,
-      // navigate to search with those categories selected
-      const categoryIds = matchingCategories?.map((c) => c.id) ?? [];
-      void navigate({
-        to: "/search",
-        search: (prev) => ({
-          ...prev,
-          q: undefined,
-          categories: categoryIds,
-          companies: []
-        })
-      });
-    } else if (suggestions?.length === 0 && matchingCompanies?.length) {
-      // if there are no product suggestions but there are matching companies,
-      // navigate to search with those companies selected
-      const companyIds = matchingCompanies?.map((c) => c.id) ?? [];
-      void navigate({
-        to: "/search",
-        search: (prev) => ({
-          ...prev,
-          q: undefined,
-          companies: companyIds,
-          categories: []
-        })
-      });
-    } else if (suggestions?.length == 1) {
-      // if there is only one suggestion, navigate directly to the product
-      void navigate({
-        to: "/products/$productId",
-        params: { productId: suggestions[0].id }
-      });
-    } else {
-      // else navigate to search with the current search term
-      void navigate({
-        to: "/search",
-        search: (prev) => ({
-          ...prev,
-          q: search,
-          categories: [],
-          companies: []
-        })
-      });
+  const submitSearch = (rawSearch = false) => {
+    // Prepare cleanup/UI state updates
+    const handleCleanup = () => {
+      setOpen(false);
+      inputRef.current?.blur();
+    };
+
+    // Define state checks for readability
+    const hasSuggestions = (suggestions?.length ?? 0) > 0;
+    const hasCategories = (matchingCategories?.length ?? 0) > 0;
+    const hasCompanies = (matchingCompanies?.length ?? 0) > 0;
+    const hasSingleNavMatch = (matchingNavItems?.length ?? 0) === 1;
+    const isSingleProduct = (suggestions?.length ?? 0) === 1;
+
+    // Handle "Smart" Navigation (Priority Order)
+    if (!rawSearch) {
+      // Case A: No products, but matching Categories -> Filter Search by Category
+      if (!hasSuggestions && hasCategories) {
+        const categoryIds = matchingCategories!.map((c) => c.id);
+        void navigate({
+          to: "/search",
+          search: (prev) => ({
+            ...prev,
+            q: undefined, // Clear text query when selecting specific filters
+            categories: categoryIds,
+            companies: []
+          })
+        });
+        return handleCleanup();
+      }
+
+      // Case B: No products, but matching Companies -> Filter Search by Company
+      if (!hasSuggestions && hasCompanies) {
+        const companyIds = matchingCompanies!.map((c) => c.id);
+        void navigate({
+          to: "/search",
+          search: (prev) => ({
+            ...prev,
+            q: undefined,
+            companies: companyIds,
+            categories: []
+          })
+        });
+        return handleCleanup();
+      }
+
+      // Case C: No products, exact Nav Item match -> Direct Navigation
+      if (!hasSuggestions && hasSingleNavMatch) {
+        const item = matchingNavItems[0];
+        if (item.to) {
+          void navigate({ to: item.to });
+          return handleCleanup();
+        }
+      }
+
+      // Case D: Exact single Product match -> Product Details Page
+      if (isSingleProduct) {
+        void navigate({
+          to: "/products/$productId",
+          params: { productId: suggestions![0].id }
+        });
+        return handleCleanup();
+      }
     }
 
-    setOpen(false);
-    inputRef.current?.blur();
+    // 4. Default Fallback (Generic Text Search)
+    void navigate({
+      to: "/search",
+      search: (prev) => ({
+        ...prev,
+        q: search,
+        categories: [],
+        companies: []
+      })
+    });
+
+    handleCleanup();
   };
 
   const handleFocus = () => {
@@ -273,7 +316,7 @@ export function SearchBar() {
         type="submit"
         aria-label="Search"
         className="cursor-pointer transition-transform hover:scale-110"
-        onClick={submitSearch}
+        onClick={() => submitSearch()}
       >
         <SearchIcon className="h-6 w-6" />
       </button>
@@ -289,7 +332,8 @@ export function SearchBar() {
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
-            submitSearch();
+            const rawSearch = e.shiftKey;
+            submitSearch(rawSearch);
           }
         }}
         className={cn(
@@ -412,6 +456,31 @@ export function SearchBar() {
                   ))}
                 </CommandGroup>
               )}
+
+              {matchingNavItems.length > 0 && (
+                <CommandGroup heading="Navigation">
+                  {matchingNavItems.map((item) => {
+                    const content = (
+                      <CommandItem
+                        key={item.label}
+                        onSelect={() => setOpen(false)}
+                      >
+                        <item.icon className="mr-2 h-4 w-4" />
+                        <span>{item.label}</span>
+                        <CommandShortcut>{item.shortcut}</CommandShortcut>
+                      </CommandItem>
+                    );
+
+                    return item.to ? (
+                      <Link key={item.label} to={item.to}>
+                        {content}
+                      </Link>
+                    ) : (
+                      <div key={item.label}>{content}</div>
+                    );
+                  })}
+                </CommandGroup>
+              )}
             </>
           ) : (
             <>
@@ -424,17 +493,21 @@ export function SearchBar() {
                 />
               </CommandGroup>
               <CommandSeparator />
-              <CommandGroup heading="Settings">
-                <CommandItem>
-                  <UserIcon />
-                  <span>Profile</span>
-                  <CommandShortcut>⌘P</CommandShortcut>
-                </CommandItem>
-                <CommandItem>
-                  <CreditCard />
-                  <span>Billing</span>
-                  <CommandShortcut>⌘B</CommandShortcut>
-                </CommandItem>
+              <CommandGroup heading="Navigation">
+                <Link to={"/profile"}>
+                  <CommandItem onSelect={() => setOpen(false)}>
+                    <UserIcon />
+                    <span>Profile</span>
+                    <CommandShortcut>⌘P</CommandShortcut>
+                  </CommandItem>
+                </Link>
+                <Link to={"/cart"}>
+                  <CommandItem onSelect={() => setOpen(false)}>
+                    <ShoppingCartIcon />
+                    <span>Cart</span>
+                    <CommandShortcut>⌘B</CommandShortcut>
+                  </CommandItem>
+                </Link>
                 <CommandItem>
                   <SettingsIcon />
                   <span>Settings</span>
@@ -482,11 +555,7 @@ const ProductCommandItem = ({
 }: ProductCommandItemProps & React.ComponentProps<typeof CommandItem>) => {
   return (
     <CommandItem {...props}>
-      <img
-        className="aspect-square h-6 w-6 rounded-md"
-        src={imgUrl}
-        alt={name}
-      />
+      <img className="aspect-3/4 w-6 rounded-sm" src={imgUrl} alt={name} />
       <div className="flex flex-col">
         <span className="font-medium">{name}</span>
         <span className="text-sm text-slate-500">{price}</span>

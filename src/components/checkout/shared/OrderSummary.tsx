@@ -21,9 +21,8 @@ function OrderSummary({
 }) {
   const { subtotal, warrantyCost, shippingCost, tax, discount, total } = totals;
 
-  // TODO: maybe pass the totals as bigs also
   return (
-    <div className="flex h-full flex-col justify-between space-y-6">
+    <div className="flex flex-col justify-between space-y-6">
       <Card className="border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
         <CardHeader>
           <CardTitle>Total Cost</CardTitle>

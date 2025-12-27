@@ -184,7 +184,7 @@ export function EcommerceProfile() {
                 </div>
               </div>
 
-              <TabsList className="flex h-auto flex-col items-stretch space-y-1 bg-transparent p-0">
+              <TabsList className="flex h-auto w-full flex-col items-stretch space-y-1 bg-transparent p-0">
                 {[
                   { id: "dashboard", label: "Dashboard", icon: User },
                   { id: "orders", label: "My Orders", icon: Package },
@@ -195,7 +195,7 @@ export function EcommerceProfile() {
                   <TabsTrigger
                     key={item.id}
                     value={item.id}
-                    className="justify-start gap-3 px-3 py-2.5 text-sm font-medium data-[state=active]:bg-gray-100 data-[state=active]:shadow-none"
+                    className="justify-start gap-3 px-3 py-2.5 text-sm font-medium hover:cursor-pointer data-[state=active]:bg-gray-100 data-[state=active]:shadow-none"
                   >
                     <item.icon className="h-4 w-4" />
                     {item.label}
@@ -308,7 +308,7 @@ export function EcommerceProfile() {
             </Card>
 
             {/* Recent Orders Table Snippet */}
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden py-0">
               <div className="bg-muted/50 flex items-center justify-between border-b px-6 py-4">
                 <h3 className="font-semibold">Recent Orders</h3>
                 <Button variant="link" className="h-auto p-0">

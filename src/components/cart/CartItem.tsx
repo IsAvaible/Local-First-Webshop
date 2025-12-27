@@ -77,7 +77,7 @@ export function CartItemComponent({
         <div className="flex flex-1 justify-between">
           <div className="flex flex-1 flex-col justify-between gap-y-2">
             <h3 className="flex items-center justify-between text-sm font-semibold">
-              <span className="!@sm:max-w-none inline-block max-w-28 truncate @[16rem]:max-w-20">
+              <span className="inline-block max-w-28 truncate @[16rem]:max-w-20 @sm:max-w-none!">
                 {productName}
               </span>
               <span>{`${item.price ?? item.price_snapshot ?? "N/A"}€`}</span>
