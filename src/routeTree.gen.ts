@@ -21,6 +21,7 @@ import { Route as ProductsProductIdRouteImport } from './routes/products.$produc
 import { Route as ApiYdocUpdatesRouteImport } from './routes/api/ydoc-updates'
 import { Route as ApiYdocAwarenessRouteImport } from './routes/api/ydoc-awareness'
 import { Route as ApiUsersRouteImport } from './routes/api/users'
+import { Route as ApiUserSettingsRouteImport } from './routes/api/user-settings'
 import { Route as ApiUserSelectedCartRouteImport } from './routes/api/user-selected-cart'
 import { Route as ApiTodosRouteImport } from './routes/api/todos'
 import { Route as ApiProjectsRouteImport } from './routes/api/projects'
@@ -97,6 +98,11 @@ const ApiYdocAwarenessRoute = ApiYdocAwarenessRouteImport.update({
 const ApiUsersRoute = ApiUsersRouteImport.update({
   id: '/api/users',
   path: '/api/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUserSettingsRoute = ApiUserSettingsRouteImport.update({
+  id: '/api/user-settings',
+  path: '/api/user-settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiUserSelectedCartRoute = ApiUserSelectedCartRouteImport.update({
@@ -216,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/api/projects': typeof ApiProjectsRoute
   '/api/todos': typeof ApiTodosRoute
   '/api/user-selected-cart': typeof ApiUserSelectedCartRoute
+  '/api/user-settings': typeof ApiUserSettingsRoute
   '/api/users': typeof ApiUsersRoute
   '/api/ydoc-awareness': typeof ApiYdocAwarenessRoute
   '/api/ydoc-updates': typeof ApiYdocUpdatesRoute
@@ -247,6 +254,7 @@ export interface FileRoutesByTo {
   '/api/projects': typeof ApiProjectsRoute
   '/api/todos': typeof ApiTodosRoute
   '/api/user-selected-cart': typeof ApiUserSelectedCartRoute
+  '/api/user-settings': typeof ApiUserSettingsRoute
   '/api/users': typeof ApiUsersRoute
   '/api/ydoc-awareness': typeof ApiYdocAwarenessRoute
   '/api/ydoc-updates': typeof ApiYdocUpdatesRoute
@@ -280,6 +288,7 @@ export interface FileRoutesById {
   '/api/projects': typeof ApiProjectsRoute
   '/api/todos': typeof ApiTodosRoute
   '/api/user-selected-cart': typeof ApiUserSelectedCartRoute
+  '/api/user-settings': typeof ApiUserSettingsRoute
   '/api/users': typeof ApiUsersRoute
   '/api/ydoc-awareness': typeof ApiYdocAwarenessRoute
   '/api/ydoc-updates': typeof ApiYdocUpdatesRoute
@@ -313,6 +322,7 @@ export interface FileRouteTypes {
     | '/api/projects'
     | '/api/todos'
     | '/api/user-selected-cart'
+    | '/api/user-settings'
     | '/api/users'
     | '/api/ydoc-awareness'
     | '/api/ydoc-updates'
@@ -344,6 +354,7 @@ export interface FileRouteTypes {
     | '/api/projects'
     | '/api/todos'
     | '/api/user-selected-cart'
+    | '/api/user-settings'
     | '/api/users'
     | '/api/ydoc-awareness'
     | '/api/ydoc-updates'
@@ -376,6 +387,7 @@ export interface FileRouteTypes {
     | '/api/projects'
     | '/api/todos'
     | '/api/user-selected-cart'
+    | '/api/user-settings'
     | '/api/users'
     | '/api/ydoc-awareness'
     | '/api/ydoc-updates'
@@ -408,6 +420,7 @@ export interface RootRouteChildren {
   ApiProjectsRoute: typeof ApiProjectsRoute
   ApiTodosRoute: typeof ApiTodosRoute
   ApiUserSelectedCartRoute: typeof ApiUserSelectedCartRoute
+  ApiUserSettingsRoute: typeof ApiUserSettingsRoute
   ApiUsersRoute: typeof ApiUsersRoute
   ApiYdocAwarenessRoute: typeof ApiYdocAwarenessRoute
   ApiYdocUpdatesRoute: typeof ApiYdocUpdatesRoute
@@ -499,6 +512,13 @@ declare module '@tanstack/react-router' {
       path: '/api/users'
       fullPath: '/api/users'
       preLoaderRoute: typeof ApiUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/user-settings': {
+      id: '/api/user-settings'
+      path: '/api/user-settings'
+      fullPath: '/api/user-settings'
+      preLoaderRoute: typeof ApiUserSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/user-selected-cart': {
@@ -668,6 +688,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiProjectsRoute: ApiProjectsRoute,
   ApiTodosRoute: ApiTodosRoute,
   ApiUserSelectedCartRoute: ApiUserSelectedCartRoute,
+  ApiUserSettingsRoute: ApiUserSettingsRoute,
   ApiUsersRoute: ApiUsersRoute,
   ApiYdocAwarenessRoute: ApiYdocAwarenessRoute,
   ApiYdocUpdatesRoute: ApiYdocUpdatesRoute,

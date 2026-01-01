@@ -199,7 +199,7 @@ export const categoriesCollection = createCollection(
   electricCollectionOptions({
     id: "categories",
     shapeOptions: {
-      url: "/api/categories",
+      url: createApiUrl("/api/categories"),
       parser: {
         timestamptz: (date: string) => new Date(date)
       }

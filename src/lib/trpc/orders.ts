@@ -159,7 +159,7 @@ export const ordersRouter = router({
             : address;
 
           // Determine Mode
-          let activeOrderId = input.existingOrderId;
+          const activeOrderId = input.existingOrderId;
           const activeCartId = input.cartId;
           let existingOrder = null;
 
@@ -169,7 +169,7 @@ export const ordersRouter = router({
               where: and(
                 eq(ordersTable.id, activeOrderId),
                 eq(ordersTable.user_id, ctx.session.user.id),
-                eq(ordersTable.status, "awaiting_payment")
+                eq(ordersTable.status, "pending")
               )
             });
           }
@@ -180,13 +180,9 @@ export const ordersRouter = router({
               where: and(
                 eq(ordersTable.cart_id, activeCartId),
                 eq(ordersTable.user_id, ctx.session.user.id),
-                eq(ordersTable.status, "awaiting_payment")
+                eq(ordersTable.status, "pending")
               )
             });
-          }
-
-          if (existingOrder) {
-            activeOrderId = existingOrder.id;
           }
 
           let clientSecret = "";
@@ -264,7 +260,7 @@ export const ordersRouter = router({
               .values({
                 order_number: `ORD-${Date.now()}`,
                 user_id: ctx.session.user.id,
-                status: "awaiting_payment",
+                status: "pending",
                 payment_status: "unpaid",
                 subtotal: totals.formatted.subtotal,
                 tax_total: totals.formatted.tax,
@@ -382,8 +378,10 @@ export const ordersRouter = router({
         });
       }
 
+      const validStatuses = ["pending", "awaiting_payment"];
+
       // 4. Update Status to Paid
-      if (order.status === "awaiting_payment") {
+      if (validStatuses.includes(order.status)) {
         await ctx.db
           .update(ordersTable)
           .set({

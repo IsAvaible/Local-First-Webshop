@@ -226,7 +226,7 @@ export function restoreCartSnapshot(doc: Y.Doc, snapshot: YCartSnapshotShape) {
       const snap = Y.decodeSnapshot(snapshot.snapshot);
       // Create a temporary doc that reflects the state at the time of the snapshot
       snapshotDoc = Y.createDocFromSnapshot(doc, snap);
-    } catch (e) {
+    } catch {
       throw Error("Failed to decode snapshot");
     }
 

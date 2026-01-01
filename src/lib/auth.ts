@@ -32,7 +32,8 @@ export const auth = betterAuth({
           cartsTable,
           cartCollaboratorsTable,
           userSelectedCartTable,
-          userAddressesTable
+          userAddressesTable,
+          userSettingsTable
         } = schema;
 
         await db.transaction(async (tx) => {
@@ -135,11 +136,46 @@ export const auth = betterAuth({
               .update(userAddressesTable)
               .set(updates)
               .where(eq(userAddressesTable.id, address.id));
+
+            // 5. Settings Migration
+            // If the anonymous user changed settings (e.g. language/currency), copy them over.
+            const [anonSettings] = await tx
+              .select()
+              .from(userSettingsTable)
+              .where(eq(userSettingsTable.user_id, anonymousUser.user.id));
+
+            if (anonSettings) {
+              // Update the NEW user's settings with the anonymous preferences
+              await tx
+                .update(userSettingsTable)
+                .set({
+                  ...anonSettings,
+                  updated_at: new Date()
+                })
+                .where(eq(userSettingsTable.user_id, newUser.user.id));
+            }
           }
         });
       }
     })
   ],
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          // Immediately create the settings row when a user is created
+          try {
+            await db.insert(schema.userSettingsTable).values({
+              user_id: user.id
+            });
+          } catch (e) {
+            console.error("Failed to create user settings:", e);
+          }
+        }
+      }
+    }
+  },
+
   database: drizzleAdapter(db, {
     provider: "pg",
     usePlural: true,

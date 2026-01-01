@@ -78,6 +78,13 @@
       "when": 1766050919676,
       "tag": "0010_legal_doctor_strange",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1767010917893,
+      "tag": "0011_bored_purple_man",
+      "breakpoints": true
     }
   ]
 }

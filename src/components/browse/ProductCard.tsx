@@ -46,7 +46,7 @@ export default function ProductCard({
           </CardDescription>
 
           {customFields && Object.keys(customFields).length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 flex hidden flex-wrap gap-2">
               {Object.entries(customFields).map(([k, v]) => {
                 const humanized = humanizeCustomFieldValue(v?.value, v?.type);
                 return (

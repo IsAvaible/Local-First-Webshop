@@ -88,7 +88,7 @@ function CheckoutPage() {
     q
       .from({ o: ordersCollection })
       .where(({ o }) =>
-        and(eq(o.status, "awaiting_payment"), eq(o.cart_id, state.cartId))
+        and(eq(o.status, "pending"), eq(o.cart_id, state.cartId))
       )
       .findOne()
   );

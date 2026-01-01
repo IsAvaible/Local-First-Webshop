@@ -15,7 +15,8 @@ import {
   selectCartCollaboratorSchema,
   selectUserAddressSchema,
   selectUserSelectedCartSchema,
-  selectOrderSchema
+  selectOrderSchema,
+  selectUserSettingsSchema
 } from "@/db/schema";
 import { trpc } from "@/lib/trpc-client";
 
@@ -395,17 +396,35 @@ export const ordersCollection = createCollection(
   })
 );
 
-// export const createOrderAction = createOptimisticAction<OrderWithItems>({
-//   onMutate: () => undefined, // No optimistic update needed
-//
-//   // Sends data to the server
-//   mutationFn: async ({ order, items }) => {
-//     const result = await trpc.orders.upsert.mutate({
-//       order: order,
-//       items: items
-//     });
-//
-//     // Wait for the transaction to reflect in Electric
-//     await ordersCollection.utils.awaitTxId(result.txid);
-//   }
-// });
+export const userSettingsCollection = createCollection(
+  electricCollectionOptions({
+    id: "user_settings",
+    shapeOptions: {
+      url: createApiUrl("/api/user-settings"),
+      parser: {
+        timestamptz: (date: string) => new Date(date)
+      }
+    },
+    schema: selectUserSettingsSchema,
+    getKey: (item) => item.user_id,
+
+    onUpdate: async ({ transaction }) => {
+      const { modified } = transaction.mutations[0];
+
+      // We use the upsert mutation for updates
+      const result = await trpc.userSettings.upsert.mutate({
+        ...modified
+      });
+      return { txid: result.txid };
+    },
+
+    // Handle case where user creates settings for the first time via the UI
+    onInsert: async ({ transaction }) => {
+      const { modified } = transaction.mutations[0];
+      const result = await trpc.userSettings.upsert.mutate({
+        ...modified
+      });
+      return { txid: result.txid };
+    }
+  })
+);

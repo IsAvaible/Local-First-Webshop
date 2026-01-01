@@ -8,11 +8,16 @@ import {
   Bell,
   Search,
   CheckCircle,
-  Plus
+  Plus,
+  Loader2
 } from "lucide-react";
-import { createFileRoute } from "@tanstack/react-router";
-
-// UI Components
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { eq, not, useLiveQuery } from "@tanstack/react-db";
+import {
+  ordersCollection,
+  userSettingsCollection,
+  usersCollection
+} from "@/lib/collections";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,7 +32,6 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -47,49 +51,28 @@ import {
 } from "@/components/ui/select";
 import ProductCard from "@/components/browse/ProductCard.tsx";
 
-// Mock Data
-const USER = {
-  name: "Alex Johnson",
-  email: "alex.j@example.com",
-  avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-  memberSince: "Nov 2021",
-  totalSpent: "$2,450.00",
-  activeOrders: 2
-};
+// --- Form & Validation Imports ---
+import { z } from "zod";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldError,
+  FieldSet,
+  FieldLegend
+} from "@/components/ui/field";
+import type { Order } from "@/db/schema.ts";
+import { ORDER_STATUS_MAP, PROGRESS_STEPS } from "@/lib/orders/config.ts";
+import { toast } from "sonner";
+import { CurrencySelect } from "@/components/ui/currency-select.tsx";
+import { formatDistanceToNow } from "date-fns";
+import Big from "big.js";
+import { formatCurrency } from "@/lib/checkout/utils.ts";
 
-const ORDERS = [
-  {
-    id: "#ORD-7721",
-    date: "Oct 24, 2023",
-    total: "$120.00",
-    status: "Delivered",
-    items: 3
-  },
-  {
-    id: "#ORD-7720",
-    date: "Oct 10, 2023",
-    total: "$85.50",
-    status: "Delivered",
-    items: 1
-  },
-  {
-    id: "#ORD-7719",
-    date: "Sep 28, 2023",
-    total: "$320.00",
-    status: "Returned",
-    items: 2
-  }
-];
-
-const ACTIVE_ORDER = {
-  id: "#ORD-7722",
-  status: "In Transit",
-  estimatedDelivery: "Oct 28, 2023",
-  step: 2, // 0: Processing, 1: Shipped, 2: In Transit, 3: Delivered
-  items: ["Sony WH-1000XM5", "USB-C Cable"]
-};
-
-const WISHLIST = [
+// Mock Data for items not yet in DB schema
+const WISHLIST_MOCK = [
   {
     id: 1,
     name: "Minimalist Leather Backpack",
@@ -101,65 +84,197 @@ const WISHLIST = [
     image:
       "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=150&q=80",
     created_at: new Date()
-  },
-  {
-    id: 2,
-    name: "Mechanical Keyboard",
-    description: null,
-    min_price: 220.0,
-    company_id: 1,
-    category_id: 2,
-    base_product_id: null,
-    image:
-      "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=150&q=80",
-    created_at: new Date()
   }
 ];
 
-const PAYMENT_METHODS = [
-  { id: 1, type: "Visa", last4: "4242", expiry: "12/24", isDefault: true },
-  {
-    id: 2,
-    type: "Mastercard",
-    last4: "8899",
-    expiry: "08/25",
-    isDefault: false
-  }
+const PAYMENT_METHODS_MOCK = [
+  { id: 1, type: "Visa", last4: "4242", expiry: "12/24", isDefault: true }
 ];
 
+// --- Zod Schema Definition ---
+const userSettingsSchema = z.object({
+  first_name: z
+    .string()
+    .trim()
+    .min(2, "First name must be at least 2 characters"),
+  last_name: z
+    .string()
+    .trim()
+    .min(2, "Last name must be at least 2 characters"),
+  phone_number: z
+    .string()
+    .trim()
+    .refine(
+      (val) => val === "" || /^[\d+\-\s()]+$/.test(val),
+      "Invalid phone number format"
+    )
+    .optional(),
+  birthday: z.string().optional(),
+  currency: z.string().min(1, "Please select a currency"),
+  language: z.string().min(1, "Please select a language"),
+  notify_order_updates: z.boolean(),
+  notify_newsletter: z.boolean(),
+  notify_price_changes: z.boolean()
+});
+
+type UserSettingsFormValues = z.infer<typeof userSettingsSchema>;
+
+// --- Route Definition with Preloading ---
 export const Route = createFileRoute("/profile")({
+  loader: async () => {
+    await Promise.all([
+      ordersCollection.preload(),
+      userSettingsCollection.preload(),
+      usersCollection.preload()
+    ]);
+  },
   component: EcommerceProfile
 });
 
 export function EcommerceProfile() {
-  // Helper to render status badges
-  const renderStatusBadge = (
-    status: "Delivered" | "Processing" | "In Transit" | "Returned"
-  ) => {
-    const customClasses = {
-      Delivered:
-        "bg-green-100 text-green-700 hover:bg-green-100 border-green-200",
-      Processing: "bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200",
-      "In Transit":
-        "bg-purple-100 text-purple-700 hover:bg-purple-100 border-purple-200",
-      Returned: "bg-red-100 text-red-700 hover:bg-red-100 border-red-200"
-    };
+  // --- Data Fetching ---
+
+  // 1. Fetch User (Separate Call)
+  const { data: user, isLoading: isLoadingUser } = useLiveQuery((q) =>
+    q.from({ usersCollection }).findOne()
+  );
+
+  // 2. Fetch User Settings (Separate Call)
+  const { data: userSettings, isLoading: isLoadingSettings } = useLiveQuery(
+    (q) => q.from({ userSettingsCollection }).findOne()
+  );
+
+  // 3. Fetch Orders
+  const { data: orders, isLoading: isLoadingOrders } = useLiveQuery((q) =>
+    q
+      .from({ o: ordersCollection })
+      .where(({ o }) => not(eq(o.status, "pending")))
+      .orderBy(({ o }) => o.created_at, "desc")
+  );
+
+  // Combined Loading State
+  const isLoadingProfile = isLoadingUser || isLoadingSettings;
+
+  // --- Derived State ---
+  const displayName =
+    userSettings?.first_name && userSettings?.last_name
+      ? `${userSettings.first_name} ${userSettings.last_name}`
+      : user?.email;
+
+  // --- Form Setup ---
+  const form = useForm<UserSettingsFormValues>({
+    resolver: zodResolver(userSettingsSchema),
+    values: {
+      first_name: userSettings?.first_name ?? "",
+      last_name: userSettings?.last_name ?? "",
+      phone_number: userSettings?.phone_number ?? "",
+      birthday: userSettings?.birthday ?? "",
+      currency: userSettings?.currency ?? "EUR",
+      language: userSettings?.language ?? "en",
+      notify_order_updates: userSettings?.notify_order_updates ?? true,
+      notify_newsletter: userSettings?.notify_newsletter ?? false,
+      notify_price_changes: userSettings?.notify_price_changes ?? false
+    }
+  });
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors, isSubmitting, dirtyFields }
+  } = form;
+
+  // --- Actions ---
+
+  const onSubmit = async (data: UserSettingsFormValues) => {
+    if (!userSettings?.user_id) return;
+
+    // 1. Get keys of dirty fields only
+    const dirtyKeys = Object.keys(
+      dirtyFields
+    ) as (keyof UserSettingsFormValues)[];
+
+    if (dirtyKeys.length === 0) return;
+
+    // 2. Construct updates object
+    const updates = Object.fromEntries(
+      dirtyKeys.map((key) => [key, data[key]])
+    );
+
+    try {
+      const tx = userSettingsCollection.update(
+        userSettings.user_id,
+        (settings) => {
+          // 3. Merges updates directly into settings
+          return Object.assign(settings, updates);
+        }
+      );
+      await tx.isPersisted.promise;
+    } catch (error) {
+      const message = `Failed to update settings:${JSON.stringify(error)}`;
+      console.error(message);
+      toast(message);
+    }
+  };
+
+  // --- Helper Calculations for Orders (Unchanged) ---
+  const totalSpent =
+    orders?.reduce((acc, order) => {
+      const config = ORDER_STATUS_MAP[order.status];
+
+      if (config?.isPaid && order.grand_total) {
+        return acc.add(new Big(order.grand_total));
+      }
+      return acc;
+    }, new Big(0)) || new Big(0);
+
+  const activeOrders =
+    orders?.filter((o) => ORDER_STATUS_MAP[o.status]?.isActive) || [];
+
+  const activeOrder = activeOrders.length > 0 ? activeOrders[0] : null;
+
+  const getOrderStep = (status: Order["status"]) => {
+    switch (status) {
+      case "pending":
+      case "awaiting_payment":
+        return 0;
+      case "processing":
+        return 1;
+      case "shipped":
+        return 2;
+      case "delivered":
+        return 3;
+      default:
+        return 0;
+    }
+  };
+
+  const renderStatusBadge = (status: string) => {
+    const config = ORDER_STATUS_MAP[status as Order["status"]];
+
+    // Fallback for unknown statuses
+    if (!config) return <Badge variant="outline">Unknown</Badge>;
 
     return (
       <Badge
         variant="outline"
-        className={`${customClasses[status]} border font-medium`}
+        className={`${config.style} border text-xs font-medium uppercase`}
       >
-        {status}
+        {config.label}
       </Badge>
     );
   };
 
+  if (isLoadingProfile || isLoadingOrders) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+      </div>
+    );
+  }
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      {/* We use the Tabs component as the main layout wrapper.
-        flex-col md:flex-row handles the sidebar layout.
-      */}
       <Tabs
         defaultValue="dashboard"
         orientation="vertical"
@@ -170,16 +285,21 @@ export function EcommerceProfile() {
           <Card className="h-full">
             <CardContent className="p-6">
               <div className="mb-6 flex items-center gap-4">
-                <Avatar className="h-16 w-16 border-2">
-                  <AvatarImage src={USER.avatar} alt={USER.name} />
-                  <AvatarFallback>AJ</AvatarFallback>
+                <Avatar className="h-16 w-16 border-2 text-lg">
+                  <AvatarImage
+                    src={user?.image ?? undefined}
+                    alt={displayName ?? "User"}
+                  />
+                  <AvatarFallback>
+                    {displayName?.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
-                <div>
-                  <h2 className="text-lg leading-tight font-bold">
-                    {USER.name}
+                <div className="overflow-hidden">
+                  <h2 className="truncate text-lg leading-tight font-bold">
+                    {displayName}
                   </h2>
-                  <p className="text-muted-foreground text-xs">
-                    Member since {USER.memberSince}
+                  <p className="text-muted-foreground truncate text-xs">
+                    {user?.email}
                   </p>
                 </div>
               </div>
@@ -225,119 +345,134 @@ export function EcommerceProfile() {
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>Total Spent</CardDescription>
-                  <CardTitle className="text-2xl">{USER.totalSpent}</CardTitle>
+                  <CardTitle className="text-2xl">
+                    {formatCurrency(totalSpent.toFixed(2))}
+                  </CardTitle>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>Active Orders</CardDescription>
                   <CardTitle className="text-2xl">
-                    {USER.activeOrders}
+                    {activeOrders.length}
                   </CardTitle>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Reward Points</CardDescription>
-                  <CardTitle className="text-2xl">1,240</CardTitle>
+                  <CardDescription>Account Age</CardDescription>
+                  <CardTitle className="text-2xl">
+                    {user ? formatDistanceToNow(user.created_at) : "unknown"}
+                  </CardTitle>
                 </CardHeader>
               </Card>
             </div>
 
             {/* Active Order Tracking Card */}
-            <Card>
-              <CardHeader className="flex flex-row items-start justify-between pb-6">
-                <div>
-                  <CardTitle className="text-lg">
-                    Active Order {ACTIVE_ORDER.id}
-                  </CardTitle>
-                  <CardDescription className="mt-1">
-                    Est. Delivery:{" "}
-                    <span className="text-foreground font-medium">
-                      {ACTIVE_ORDER.estimatedDelivery}
-                    </span>
-                  </CardDescription>
-                </div>
-                <Button variant="link" className="h-auto p-0">
-                  View Details
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="relative space-y-8">
-                  {/* Shadcn Progress Component */}
-                  <Progress
-                    value={(ACTIVE_ORDER.step / 3) * 100}
-                    className="h-2"
-                  />
-
-                  <div className="flex w-full justify-between">
-                    {["Ordered", "Processing", "Shipped", "Delivered"].map(
-                      (step, index) => {
-                        const isCompleted = index <= ACTIVE_ORDER.step;
-                        const isCurrent = index === ACTIVE_ORDER.step;
-                        return (
-                          <div
-                            key={step}
-                            className="flex flex-col items-center gap-2"
-                          >
-                            <div
-                              className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors duration-300 ${
-                                isCompleted
-                                  ? "border-primary bg-primary text-primary-foreground"
-                                  : "border-muted bg-background text-muted-foreground"
-                              }`}
-                            >
-                              {isCompleted ? (
-                                <CheckCircle className="h-4 w-4" />
-                              ) : (
-                                <div className="bg-muted h-2 w-2 rounded-full" />
-                              )}
-                            </div>
-                            <span
-                              className={`text-xs font-medium ${isCurrent ? "text-primary" : "text-muted-foreground"}`}
-                            >
-                              {step}
-                            </span>
-                          </div>
-                        );
-                      }
-                    )}
+            {activeOrder && (
+              <Card>
+                <CardHeader className="flex flex-row items-start justify-between pb-6">
+                  <div>
+                    <CardTitle className="text-lg">
+                      Order {activeOrder.order_number}
+                    </CardTitle>
+                    <CardDescription className="mt-1">
+                      Date placed:{" "}
+                      <span className="text-foreground font-medium">
+                        {new Date(activeOrder.created_at).toLocaleDateString()}
+                      </span>
+                    </CardDescription>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <Button variant="link" className="h-auto p-0">
+                    View Details
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative space-y-8">
+                    <Progress
+                      value={
+                        ((ORDER_STATUS_MAP[activeOrder.status]?.step ?? 0) /
+                          (PROGRESS_STEPS.length - 1)) *
+                        100
+                      }
+                      className="h-2"
+                    />
 
-            {/* Recent Orders Table Snippet */}
-            <Card className="overflow-hidden py-0">
-              <div className="bg-muted/50 flex items-center justify-between border-b px-6 py-4">
+                    <div className="flex w-full justify-between">
+                      {["Ordered", "Processing", "Shipped", "Delivered"].map(
+                        (step, index) => {
+                          const currentStep = getOrderStep(activeOrder.status);
+                          const isCompleted = index <= currentStep;
+                          const isCurrent = index === currentStep;
+                          return (
+                            <div
+                              key={step}
+                              className="flex flex-col items-center gap-2"
+                            >
+                              <div
+                                className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors duration-300 ${
+                                  isCompleted
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "border-muted bg-background text-muted-foreground"
+                                }`}
+                              >
+                                {isCompleted ? (
+                                  <CheckCircle className="h-4 w-4" />
+                                ) : (
+                                  <div className="bg-muted h-2 w-2 rounded-full" />
+                                )}
+                              </div>
+                              <span
+                                className={`text-xs font-medium ${isCurrent ? "text-primary" : "text-muted-foreground"}`}
+                              >
+                                {step}
+                              </span>
+                            </div>
+                          );
+                        }
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Recent Orders Table */}
+            <Card className="gap-0 overflow-hidden py-0">
+              <div className="flex items-center justify-between border-b px-6 py-4">
                 <h3 className="font-semibold">Recent Orders</h3>
-                <Button variant="link" className="h-auto p-0">
-                  View All
-                </Button>
               </div>
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead>Order ID</TableHead>
+                    <TableHead>Order #</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {ORDERS.map((order) => (
+                  {orders?.slice(0, 5).map((order) => (
                     <TableRow key={order.id}>
-                      <TableCell className="font-medium">{order.id}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {order.date}
+                      <TableCell className="font-medium">
+                        {order.order_number}
                       </TableCell>
-                      {/* @ts-expect-error temporary string assignment */}
+                      <TableCell className="text-muted-foreground">
+                        {new Date(order.created_at).toLocaleDateString()}
+                      </TableCell>
                       <TableCell>{renderStatusBadge(order.status)}</TableCell>
                       <TableCell className="text-right font-medium">
-                        {order.total}
+                        {order.grand_total} {order.currency_code}
                       </TableCell>
                     </TableRow>
                   ))}
+                  {(!orders || orders.length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-24 text-center">
+                        No orders found.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </Card>
@@ -349,23 +484,10 @@ export function EcommerceProfile() {
               <h2 className="text-2xl font-bold tracking-tight">
                 Order History
               </h2>
-              <div className="flex gap-2">
-                <Select defaultValue="all">
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter Date" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Orders</SelectItem>
-                    <SelectItem value="30days">Last 30 Days</SelectItem>
-                    <SelectItem value="2023">2023</SelectItem>
-                    <SelectItem value="2022">2022</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
 
             <div className="space-y-4">
-              {[ACTIVE_ORDER, ...ORDERS].map((order) => (
+              {orders?.map((order) => (
                 <Card key={order.id}>
                   <CardContent className="flex flex-col items-start justify-between gap-6 p-6 md:flex-row md:items-center">
                     <div className="flex items-center gap-4">
@@ -374,28 +496,35 @@ export function EcommerceProfile() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold">{order.id}</span>
-                          {/* @ts-expect-error temporary string assignment */}
+                          <span className="font-bold">
+                            {order.order_number}
+                          </span>
                           {renderStatusBadge(order.status)}
                         </div>
                         <p className="text-muted-foreground mt-1 text-sm">
-                          {typeof order.items === "number"
-                            ? order.items
-                            : order.items.length}{" "}
-                          {/* @ts-expect-error types are not the same, fine for the demo */}
-                          items • {order.total ?? "Paid"}
+                          {new Date(order.created_at).toLocaleDateString()} •{" "}
+                          {order.grand_total} {order.currency_code}
                         </p>
                       </div>
                     </div>
                     <div className="flex w-full gap-3 md:w-auto">
                       <Button variant="outline" className="flex-1">
-                        Invoice
+                        View Receipt
                       </Button>
-                      <Button className="flex-1">Track Order</Button>
+                      <Button className="flex-1">Order Details</Button>
                     </div>
                   </CardContent>
                 </Card>
               ))}
+              {(!orders || orders.length === 0) && (
+                <div className="py-12 text-center">
+                  <Package className="text-muted-foreground mx-auto mb-4 h-12 w-12 opacity-50" />
+                  <h3 className="text-lg font-medium">No orders yet</h3>
+                  <p className="text-muted-foreground mt-1">
+                    Start shopping to see your orders here.
+                  </p>
+                </div>
+              )}
             </div>
           </TabsContent>
 
@@ -403,19 +532,20 @@ export function EcommerceProfile() {
           <TabsContent value="wishlist" className="mt-0 space-y-6">
             <h2 className="text-2xl font-bold tracking-tight">My Wishlist</h2>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {WISHLIST.map((item) => (
+              {WISHLIST_MOCK.map((item) => (
                 <ProductCard
                   key={item.id}
                   product={item}
                   imageUrl={item.image}
                 />
               ))}
-
-              {/* Empty State / Add New */}
-              <div className="border-muted text-muted-foreground hover:border-muted-foreground/50 hover:bg-muted/50 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center transition-all">
+              <Link
+                to={"/search"}
+                className="border-muted text-muted-foreground hover:border-muted-foreground/50 hover:bg-muted/50 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center transition-all"
+              >
                 <Search className="mb-2 h-8 w-8" />
                 <p className="font-medium">Browse products</p>
-              </div>
+              </Link>
             </div>
           </TabsContent>
 
@@ -425,16 +555,14 @@ export function EcommerceProfile() {
               Payment Methods
             </h2>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {PAYMENT_METHODS.map((card) => (
+              {PAYMENT_METHODS_MOCK.map((card) => (
                 <Card
                   key={card.id}
                   className="relative overflow-hidden border-0 bg-gradient-to-br from-slate-800 to-slate-900 text-white shadow-lg"
                 >
                   <CardContent className="p-6">
-                    {/* Decorative Circles */}
                     <div className="absolute top-0 right-0 -mt-8 -mr-8 h-32 w-32 rounded-full bg-white/10 blur-xl"></div>
                     <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-32 w-32 rounded-full bg-indigo-500/20 blur-xl"></div>
-
                     <div className="relative z-10 flex h-32 flex-col justify-between">
                       <div className="flex items-start justify-between">
                         <span className="text-xs tracking-widest text-gray-300 uppercase">
@@ -458,7 +586,7 @@ export function EcommerceProfile() {
                             Card Holder
                           </div>
                           <div className="text-sm font-medium">
-                            {USER.name.toUpperCase()}
+                            {displayName?.toUpperCase()}
                           </div>
                         </div>
                         <div>
@@ -474,8 +602,6 @@ export function EcommerceProfile() {
                   </CardContent>
                 </Card>
               ))}
-
-              {/* Add New Card Button */}
               <div className="border-muted text-muted-foreground hover:bg-muted/30 flex h-full min-h-[190px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all hover:border-indigo-300 hover:text-indigo-600">
                 <div className="bg-muted mb-3 flex h-12 w-12 items-center justify-center rounded-full group-hover:bg-indigo-50">
                   <Plus className="h-6 w-6" />
@@ -485,83 +611,229 @@ export function EcommerceProfile() {
             </div>
           </TabsContent>
 
-          {/* Settings Tab */}
+          {/* Settings Tab - REFACTORED */}
           <TabsContent value="settings" className="mt-0 max-w-2xl space-y-8">
-            <div>
-              <h2 className="mb-6 text-2xl font-bold tracking-tight">
-                Account Settings
-              </h2>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <div>
+                <h2 className="mb-6 text-2xl font-bold tracking-tight">
+                  Account Settings
+                </h2>
 
-              {/* Profile Form */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <User className="h-5 w-5" /> Personal Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="grid gap-6">
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input id="name" defaultValue={USER.name} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        defaultValue={USER.email}
+                {/* Profile Form */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <User className="h-5 w-5" /> Personal Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <FieldSet className="space-y-6">
+                      <FieldLegend className="sr-only">
+                        Personal Info
+                      </FieldLegend>
+                      <FieldGroup>
+                        {/* Row 1: Names */}
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                          <Field data-invalid={!!errors.first_name}>
+                            <FieldLabel htmlFor="first_name">
+                              First Name
+                            </FieldLabel>
+                            <Input
+                              id="first_name"
+                              aria-invalid={!!errors.first_name}
+                              {...register("first_name")}
+                            />
+                            <FieldError>
+                              {errors.first_name?.message}
+                            </FieldError>
+                          </Field>
+
+                          <Field data-invalid={!!errors.last_name}>
+                            <FieldLabel htmlFor="last_name">
+                              Last Name
+                            </FieldLabel>
+                            <Input
+                              id="last_name"
+                              aria-invalid={!!errors.last_name}
+                              {...register("last_name")}
+                            />
+                            <FieldError>{errors.last_name?.message}</FieldError>
+                          </Field>
+                        </div>
+
+                        {/* Row 2: Contact */}
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                          <Field data-invalid={!!errors.phone_number}>
+                            <FieldLabel htmlFor="phone">
+                              Phone Number
+                            </FieldLabel>
+                            <Input
+                              id="phone"
+                              type="tel"
+                              placeholder="+1 (555) 000-0000"
+                              aria-invalid={!!errors.phone_number}
+                              {...register("phone_number")}
+                            />
+                            <FieldError>
+                              {errors.phone_number?.message}
+                            </FieldError>
+                          </Field>
+
+                          <Field data-invalid={!!errors.birthday}>
+                            <FieldLabel htmlFor="birthday">Birthday</FieldLabel>
+                            <Input
+                              id="birthday"
+                              type="date"
+                              aria-invalid={!!errors.birthday}
+                              {...register("birthday")}
+                            />
+                            <FieldError>{errors.birthday?.message}</FieldError>
+                          </Field>
+                        </div>
+
+                        <Separator />
+
+                        {/* Row 3: Preferences (Using Controller for Select) */}
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                          <Field data-invalid={!!errors.currency}>
+                            <FieldLabel htmlFor="currency">Currency</FieldLabel>
+                            <Controller
+                              name="currency"
+                              control={control}
+                              render={({ field }) => (
+                                <CurrencySelect
+                                  defaultValue={field.value}
+                                  onValueChange={field.onChange}
+                                  name="currency"
+                                  placeholder="Select currency"
+                                  currencies="custom"
+                                  variant="default"
+                                />
+                              )}
+                            />
+                            <FieldError>{errors.currency?.message}</FieldError>
+                          </Field>
+
+                          <Field data-invalid={!!errors.language}>
+                            <FieldLabel htmlFor="language">Language</FieldLabel>
+                            <Controller
+                              name="language"
+                              control={control}
+                              render={({ field }) => (
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                  name={field.name}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select language" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="en">English</SelectItem>
+                                    <SelectItem value="de">German</SelectItem>
+                                    <SelectItem value="fr">French</SelectItem>
+                                    <SelectItem value="es">Spanish</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
+                            <FieldError>{errors.language?.message}</FieldError>
+                          </Field>
+                        </div>
+                      </FieldGroup>
+                    </FieldSet>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Notifications */}
+              <div className="mt-8">
+                <Card className="pb-0">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Bell className="h-5 w-5" /> Notifications
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Notify Order Updates */}
+                    <div className="flex items-center justify-between space-x-2">
+                      <div className="space-y-0.5">
+                        <FieldLabel className="text-base font-medium">
+                          Order Updates
+                        </FieldLabel>
+                        <p className="text-muted-foreground text-sm">
+                          Receive updates about your order status.
+                        </p>
+                      </div>
+                      <Controller
+                        name="notify_order_updates"
+                        control={control}
+                        render={({ field }) => (
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        )}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="+1 (555) 000-0000"
+                    <Separator />
+
+                    {/* Notify Newsletter */}
+                    <div className="flex items-center justify-between space-x-2">
+                      <div className="space-y-0.5">
+                        <FieldLabel className="text-base font-medium">
+                          Newsletter
+                        </FieldLabel>
+                        <p className="text-muted-foreground text-sm">
+                          Receive emails about new products and sales.
+                        </p>
+                      </div>
+                      <Controller
+                        name="notify_newsletter"
+                        control={control}
+                        render={({ field }) => (
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        )}
                       />
                     </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex justify-end">
-                  <Button>Save Changes</Button>
-                </CardFooter>
-              </Card>
-            </div>
+                    <Separator />
 
-            {/* Notifications */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Bell className="h-5 w-5" /> Notifications
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between space-x-2">
-                  <div className="space-y-0.5">
-                    <Label className="text-base font-medium">
-                      Order Updates
-                    </Label>
-                    <p className="text-muted-foreground text-sm">
-                      Receive updates about your order status.
-                    </p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between space-x-2">
-                  <div className="space-y-0.5">
-                    <Label className="text-base font-medium">
-                      Promotional Emails
-                    </Label>
-                    <p className="text-muted-foreground text-sm">
-                      Receive emails about new products and sales.
-                    </p>
-                  </div>
-                  <Switch />
-                </div>
-              </CardContent>
-            </Card>
+                    {/* Notify Price Changes */}
+                    <div className="flex items-center justify-between space-x-2">
+                      <div className="space-y-0.5">
+                        <FieldLabel className="text-base font-medium">
+                          Price Changes
+                        </FieldLabel>
+                        <p className="text-muted-foreground text-sm">
+                          Get notified when items in your wishlist change price.
+                        </p>
+                      </div>
+                      <Controller
+                        name="notify_price_changes"
+                        control={control}
+                        render={({ field }) => (
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        )}
+                      />
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-end p-6">
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      {isSubmitting ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
+            </form>
           </TabsContent>
         </div>
       </Tabs>

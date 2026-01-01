@@ -13,7 +13,8 @@ import {
   uniqueIndex,
   customType,
   primaryKey,
-  uuid
+  uuid,
+  date
 } from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
@@ -478,6 +479,51 @@ export type CartCollaborator = z.infer<typeof selectCartCollaboratorSchema>;
 export const cartRoleSchema = z.enum(cartRoleEnum.enumValues);
 export type CartRole = z.infer<typeof cartRoleSchema>;
 export type UserSelectedCart = z.infer<typeof selectUserSelectedCartSchema>;
+
+// --- USER SETTINGS SCHEMA ---
+
+export const userSettingsTable = pgTable("user_settings", {
+  user_id: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+
+  // Personal Info
+  first_name: text("first_name"),
+  last_name: text("last_name"),
+  phone_number: text("phone_number"),
+  birthday: date("birthday"),
+
+  // Notifications
+  notify_order_updates: boolean("notify_order_updates").notNull().default(true),
+  notify_newsletter: boolean("notify_newsletter").notNull().default(false),
+  notify_price_changes: boolean("notify_price_changes")
+    .notNull()
+    .default(false),
+
+  // Localization
+  currency: varchar("currency", { length: 3 }).notNull().default("EUR"), // ISO 4217
+  language: varchar("language", { length: 10 }).notNull().default("en"), // ISO 639-1
+
+  updated_at: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+});
+
+export const selectUserSettingsSchema = createSelectSchema(userSettingsTable);
+export const createUserSettingsSchema = createInsertSchema(
+  userSettingsTable
+).omit({
+  updated_at: true
+});
+export const updateUserSettingsSchema = createUpdateSchema(
+  userSettingsTable
+).omit({
+  updated_at: true
+});
+
+export type UserSettings = z.infer<typeof selectUserSettingsSchema>;
+export type CreateUserSettings = z.infer<typeof createUserSettingsSchema>;
+export type UpdateUserSettings = z.infer<typeof updateUserSettingsSchema>;
 
 // --- USER ADDRESS SCHEMA ---
 

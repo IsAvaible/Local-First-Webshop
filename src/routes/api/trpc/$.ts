@@ -11,6 +11,7 @@ import { cartCollaboratorsRouter } from "@/lib/trpc/cartCollaborators";
 import { addressesRouter } from "@/lib/trpc/addresses";
 import { userSelectedCartRouter } from "@/lib/trpc/user-selected-cart";
 import { ordersRouter } from "@/lib/trpc/orders";
+import { userSettingsRouter } from "@/lib/trpc/user-settings.ts";
 
 export const appRouter = router({
   projects: projectsRouter,
@@ -18,6 +19,7 @@ export const appRouter = router({
   users: usersRouter,
   carts: cartsRouter,
   cartCollaborators: cartCollaboratorsRouter,
+  userSettings: userSettingsRouter,
   addresses: addressesRouter,
   userSelectedCart: userSelectedCartRouter,
   orders: ordersRouter
