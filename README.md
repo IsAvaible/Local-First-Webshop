@@ -102,10 +102,10 @@ export const updateCategorySchema = createUpdateSchema(categoriesTable);
 
 ```sh
 # Generate migration file
-pnpm migrate:generate
+pnpm db:migrate:generate
 
 # Apply migration to database
-pnpm migrate
+pnpm db:migrate
 ```
 
 ### 3. Add Electric Shape Route

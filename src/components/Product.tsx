@@ -93,7 +93,9 @@ export default function Product({
   company,
   assets,
   pricingTiers,
-  customFields
+  customFields,
+  isInWishlist,
+  onToggleWishlist
 }: {
   loading: boolean;
   product?: Product;
@@ -102,6 +104,8 @@ export default function Product({
   assets?: Asset[];
   pricingTiers?: PricingTier[];
   customFields?: (CustomFieldValue & CustomFieldDefinition)[];
+  isInWishlist?: boolean;
+  onToggleWishlist?: () => void;
 }) {
   const [relatedProducts] = useState<RelatedProduct[]>(products);
 
@@ -137,6 +141,8 @@ export default function Product({
             product={product}
             pricingTiers={pricingTiers}
             customFields={customFields}
+            isInWishlist={isInWishlist}
+            onToggleWishlist={onToggleWishlist}
           />
         </div>
       </div>

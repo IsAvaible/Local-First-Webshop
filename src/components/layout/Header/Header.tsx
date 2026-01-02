@@ -61,7 +61,10 @@ export default function Header() {
             <SearchBar />
           </ClientOnly>
 
-          <Link to={"/"} className="transition-transform hover:scale-110">
+          <Link
+            to={"/wishlist"}
+            className="transition-transform hover:scale-110"
+          >
             <HeartIcon className="h-6 w-6" />
           </Link>
           <Link to={"/"} className="transition-transform hover:scale-110">

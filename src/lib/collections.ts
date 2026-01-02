@@ -16,7 +16,8 @@ import {
   selectUserAddressSchema,
   selectUserSelectedCartSchema,
   selectOrderSchema,
-  selectUserSettingsSchema
+  selectUserSettingsSchema,
+  selectWishlistSchema
 } from "@/db/schema";
 import { trpc } from "@/lib/trpc-client";
 
@@ -423,6 +424,32 @@ export const userSettingsCollection = createCollection(
       const { modified } = transaction.mutations[0];
       const result = await trpc.userSettings.upsert.mutate({
         ...modified
+      });
+      return { txid: result.txid };
+    }
+  })
+);
+
+export const wishlistCollection = createCollection(
+  electricCollectionOptions({
+    id: "wishlist",
+    shapeOptions: {
+      url: createApiUrl("/api/wishlist"),
+      parser: { timestamptz: (date: string) => new Date(date) }
+    },
+    schema: selectWishlistSchema,
+    getKey: (item) => item.id,
+    onInsert: async ({ transaction }) => {
+      const { modified: newItem } = transaction.mutations[0];
+      const result = await trpc.wishlist.create.mutate({
+        ...newItem
+      });
+      return { txid: result.txid };
+    },
+    onDelete: async ({ transaction }) => {
+      const { original: deletedItem } = transaction.mutations[0];
+      const result = await trpc.wishlist.delete.mutate({
+        id: deletedItem.id
       });
       return { txid: result.txid };
     }

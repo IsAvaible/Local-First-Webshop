@@ -725,3 +725,43 @@ export type Order = z.infer<typeof selectOrderSchema>;
 export type CreateOrder = z.infer<typeof createOrderSchema>;
 export type OrderItem = z.infer<typeof selectOrderItemSchema>;
 export type CreateOrderItem = z.infer<typeof createOrderItemSchema>;
+
+// --- WISHLIST SCHEMA ---
+export const wishlistTable = pgTable(
+  "wishlist",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    product_id: integer()
+      .notNull()
+      .references(() => productsTable.id, { onDelete: "cascade" }),
+    price_snapshot: decimal("price_snapshot", {
+      precision: 10,
+      scale: 2
+    }).notNull(),
+    created_at: timestamp({ withTimezone: true }).notNull().defaultNow()
+  },
+  (table) => ({
+    userIdIdx: index("wishlist_user_id_idx").on(table.user_id),
+    productIdIdx: index("wishlist_product_id_idx").on(table.product_id),
+    // Ensure a user can't have the same product in their wishlist multiple times
+    userProductUnique: uniqueIndex("wishlist_user_product_unique_idx").on(
+      table.user_id,
+      table.product_id
+    )
+  })
+);
+
+export const selectWishlistSchema = createSelectSchema(wishlistTable);
+export const createWishlistSchema = createInsertSchema(wishlistTable).omit({
+  created_at: true
+});
+export const updateWishlistSchema = createUpdateSchema(wishlistTable).omit({
+  created_at: true
+});
+
+export type Wishlist = z.infer<typeof selectWishlistSchema>;
+export type CreateWishlist = z.infer<typeof createWishlistSchema>;
+export type UpdateWishlist = z.infer<typeof updateWishlistSchema>;

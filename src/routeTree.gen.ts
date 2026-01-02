@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as YjsRouteImport } from './routes/yjs'
+import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as LoginRouteImport } from './routes/login'
@@ -20,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
 import { Route as ApiYdocUpdatesRouteImport } from './routes/api/ydoc-updates'
 import { Route as ApiYdocAwarenessRouteImport } from './routes/api/ydoc-awareness'
+import { Route as ApiWishlistRouteImport } from './routes/api/wishlist'
 import { Route as ApiUsersRouteImport } from './routes/api/users'
 import { Route as ApiUserSettingsRouteImport } from './routes/api/user-settings'
 import { Route as ApiUserSelectedCartRouteImport } from './routes/api/user-selected-cart'
@@ -44,6 +46,11 @@ import { Route as AuthenticatedProjectProjectIdRouteImport } from './routes/_aut
 const YjsRoute = YjsRouteImport.update({
   id: '/yjs',
   path: '/yjs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WishlistRoute = WishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -93,6 +100,11 @@ const ApiYdocUpdatesRoute = ApiYdocUpdatesRouteImport.update({
 const ApiYdocAwarenessRoute = ApiYdocAwarenessRouteImport.update({
   id: '/api/ydoc-awareness',
   path: '/api/ydoc-awareness',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWishlistRoute = ApiWishlistRouteImport.update({
+  id: '/api/wishlist',
+  path: '/api/wishlist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiUsersRoute = ApiUsersRouteImport.update({
@@ -205,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/wishlist': typeof WishlistRoute
   '/yjs': typeof YjsRoute
   '/indexx': typeof AuthenticatedIndexxRoute
   '/api/addresses': typeof ApiAddressesRoute
@@ -224,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/api/user-selected-cart': typeof ApiUserSelectedCartRoute
   '/api/user-settings': typeof ApiUserSettingsRoute
   '/api/users': typeof ApiUsersRoute
+  '/api/wishlist': typeof ApiWishlistRoute
   '/api/ydoc-awareness': typeof ApiYdocAwarenessRoute
   '/api/ydoc-updates': typeof ApiYdocUpdatesRoute
   '/products/$productId': typeof ProductsProductIdRoute
@@ -237,6 +251,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/wishlist': typeof WishlistRoute
   '/yjs': typeof YjsRoute
   '/indexx': typeof AuthenticatedIndexxRoute
   '/api/addresses': typeof ApiAddressesRoute
@@ -256,6 +271,7 @@ export interface FileRoutesByTo {
   '/api/user-selected-cart': typeof ApiUserSelectedCartRoute
   '/api/user-settings': typeof ApiUserSettingsRoute
   '/api/users': typeof ApiUsersRoute
+  '/api/wishlist': typeof ApiWishlistRoute
   '/api/ydoc-awareness': typeof ApiYdocAwarenessRoute
   '/api/ydoc-updates': typeof ApiYdocUpdatesRoute
   '/products/$productId': typeof ProductsProductIdRoute
@@ -271,6 +287,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/wishlist': typeof WishlistRoute
   '/yjs': typeof YjsRoute
   '/_authenticated/indexx': typeof AuthenticatedIndexxRoute
   '/api/addresses': typeof ApiAddressesRoute
@@ -290,6 +307,7 @@ export interface FileRoutesById {
   '/api/user-selected-cart': typeof ApiUserSelectedCartRoute
   '/api/user-settings': typeof ApiUserSettingsRoute
   '/api/users': typeof ApiUsersRoute
+  '/api/wishlist': typeof ApiWishlistRoute
   '/api/ydoc-awareness': typeof ApiYdocAwarenessRoute
   '/api/ydoc-updates': typeof ApiYdocUpdatesRoute
   '/products/$productId': typeof ProductsProductIdRoute
@@ -305,6 +323,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/profile'
     | '/search'
+    | '/wishlist'
     | '/yjs'
     | '/indexx'
     | '/api/addresses'
@@ -324,6 +343,7 @@ export interface FileRouteTypes {
     | '/api/user-selected-cart'
     | '/api/user-settings'
     | '/api/users'
+    | '/api/wishlist'
     | '/api/ydoc-awareness'
     | '/api/ydoc-updates'
     | '/products/$productId'
@@ -337,6 +357,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/profile'
     | '/search'
+    | '/wishlist'
     | '/yjs'
     | '/indexx'
     | '/api/addresses'
@@ -356,6 +377,7 @@ export interface FileRouteTypes {
     | '/api/user-selected-cart'
     | '/api/user-settings'
     | '/api/users'
+    | '/api/wishlist'
     | '/api/ydoc-awareness'
     | '/api/ydoc-updates'
     | '/products/$productId'
@@ -370,6 +392,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/profile'
     | '/search'
+    | '/wishlist'
     | '/yjs'
     | '/_authenticated/indexx'
     | '/api/addresses'
@@ -389,6 +412,7 @@ export interface FileRouteTypes {
     | '/api/user-selected-cart'
     | '/api/user-settings'
     | '/api/users'
+    | '/api/wishlist'
     | '/api/ydoc-awareness'
     | '/api/ydoc-updates'
     | '/products/$productId'
@@ -404,6 +428,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
+  WishlistRoute: typeof WishlistRoute
   YjsRoute: typeof YjsRoute
   ApiAddressesRoute: typeof ApiAddressesRoute
   ApiAssetsRoute: typeof ApiAssetsRoute
@@ -422,6 +447,7 @@ export interface RootRouteChildren {
   ApiUserSelectedCartRoute: typeof ApiUserSelectedCartRoute
   ApiUserSettingsRoute: typeof ApiUserSettingsRoute
   ApiUsersRoute: typeof ApiUsersRoute
+  ApiWishlistRoute: typeof ApiWishlistRoute
   ApiYdocAwarenessRoute: typeof ApiYdocAwarenessRoute
   ApiYdocUpdatesRoute: typeof ApiYdocUpdatesRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
@@ -435,6 +461,13 @@ declare module '@tanstack/react-router' {
       path: '/yjs'
       fullPath: '/yjs'
       preLoaderRoute: typeof YjsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wishlist': {
+      id: '/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof WishlistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -505,6 +538,13 @@ declare module '@tanstack/react-router' {
       path: '/api/ydoc-awareness'
       fullPath: '/api/ydoc-awareness'
       preLoaderRoute: typeof ApiYdocAwarenessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/wishlist': {
+      id: '/api/wishlist'
+      path: '/api/wishlist'
+      fullPath: '/api/wishlist'
+      preLoaderRoute: typeof ApiWishlistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/users': {
@@ -672,6 +712,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
+  WishlistRoute: WishlistRoute,
   YjsRoute: YjsRoute,
   ApiAddressesRoute: ApiAddressesRoute,
   ApiAssetsRoute: ApiAssetsRoute,
@@ -690,6 +731,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUserSelectedCartRoute: ApiUserSelectedCartRoute,
   ApiUserSettingsRoute: ApiUserSettingsRoute,
   ApiUsersRoute: ApiUsersRoute,
+  ApiWishlistRoute: ApiWishlistRoute,
   ApiYdocAwarenessRoute: ApiYdocAwarenessRoute,
   ApiYdocUpdatesRoute: ApiYdocUpdatesRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,

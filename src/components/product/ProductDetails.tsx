@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Heart } from "lucide-react";
 import ProductConfigurator from "@/components/product/ProductConfigurator";
 import type {
   CustomFieldDefinition,
@@ -13,11 +13,15 @@ import { humanizeCustomFieldValue } from "@/lib/utils.ts";
 export default function ProductDetails({
   product,
   pricingTiers,
-  customFields
+  customFields,
+  isInWishlist,
+  onToggleWishlist
 }: {
   product: Product;
   pricingTiers: PricingTier[];
   customFields?: (CustomFieldValue & CustomFieldDefinition)[];
+  isInWishlist?: boolean;
+  onToggleWishlist?: () => void;
 }) {
   return (
     <div className="flex h-full flex-col">
@@ -61,10 +65,22 @@ export default function ProductDetails({
 
       <div className="flex-grow" />
 
-      <div className="mt-auto">
-        <Button size="lg" className="w-full">
+      <div className="mt-auto flex gap-4">
+        <Button size="lg" className="flex-1">
           <ShoppingCart className="mr-2 h-5 w-5" />
           Add to cart
+        </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          onClick={onToggleWishlist}
+          disabled={!onToggleWishlist}
+          className={isInWishlist ? "text-red-500 hover:text-red-600" : ""}
+        >
+          <Heart className={`h-5 w-5 ${isInWishlist ? "fill-current" : ""}`} />
+          <span className="sr-only">
+            {isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+          </span>
         </Button>
       </div>
     </div>

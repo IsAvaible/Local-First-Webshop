@@ -7,9 +7,12 @@ import {
   assetsCollection,
   pricingTiersCollection,
   customFieldDefinitionsCollection,
-  customFieldValuesCollection
+  customFieldValuesCollection,
+  wishlistCollection
 } from "@/lib/collections";
 import Product from "@/components/Product.tsx";
+import { authClient } from "@/lib/auth-client";
+import { v4 as uuidv4 } from "uuid";
 
 // 1. Preload all necessary collections in the route loader
 export const Route = createFileRoute("/products/$productId")({
@@ -22,6 +25,7 @@ export const Route = createFileRoute("/products/$productId")({
 
 function ProductPageComponent() {
   const { productId } = Route.useParams();
+  const { data: session } = authClient.useSession();
 
   // 2. Query the data with useLiveQuery
   const { data: productData, isLoading: isProductLoading } = useLiveQuery(
@@ -67,13 +71,41 @@ function ProductPageComponent() {
         }))
     );
 
+  const { data: wishlistData, isLoading: isWishlistLoading } = useLiveQuery(
+    (q) => {
+      return q
+        .from({ w: wishlistCollection })
+        .where(({ w }) => eq(w.product_id, productId));
+    },
+    [productId]
+  );
+
   const isLoading =
     isProductLoading ||
     isAssetsLoading ||
     isPricingTiersLoading ||
-    isCustomFieldsLoading;
+    isCustomFieldsLoading ||
+    isWishlistLoading;
 
   const { product, category, company } = productData[0] || {};
+  const wishlistItem = wishlistData?.[0];
+  const isInWishlist = !!wishlistItem;
+
+  const handleToggleWishlist = () => {
+    if (!session || !product || !pricingTiersData.length) return;
+
+    if (isInWishlist) {
+      wishlistCollection.delete(wishlistItem.id);
+    } else {
+      wishlistCollection.insert({
+        user_id: session.user.id,
+        product_id: product.id,
+        price_snapshot: pricingTiersData[0].price_per_unit.toString(),
+        id: uuidv4(),
+        created_at: new Date()
+      });
+    }
+  };
 
   return (
     <Product
@@ -84,6 +116,8 @@ function ProductPageComponent() {
       assets={assetsData}
       pricingTiers={pricingTiersData}
       customFields={customFieldData}
+      isInWishlist={isInWishlist}
+      onToggleWishlist={handleToggleWishlist}
     />
   );
 }
