@@ -11,7 +11,11 @@ import {
   Plus,
   Loader2
 } from "lucide-react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  stripSearchParams
+} from "@tanstack/react-router";
 import { eq, not, useLiveQuery } from "@tanstack/react-db";
 import {
   ordersCollection,
@@ -70,6 +74,7 @@ import { CurrencySelect } from "@/components/ui/currency-select.tsx";
 import { formatDistanceToNow } from "date-fns";
 import Big from "big.js";
 import { formatCurrency } from "@/lib/checkout/utils.ts";
+import { zodValidator } from "@tanstack/zod-adapter";
 
 // Mock Data for items not yet in DB schema
 const WISHLIST_MOCK = [
@@ -119,8 +124,27 @@ const userSettingsSchema = z.object({
 
 type UserSettingsFormValues = z.infer<typeof userSettingsSchema>;
 
+// --- Search Params Schema ---
+const profileUrlSchema = z.object({
+  tab: z
+    .enum(["dashboard", "orders", "wishlist", "payment", "settings"])
+    .optional()
+    .default("dashboard")
+    .catch("dashboard")
+});
+
+type Tab = z.infer<typeof profileUrlSchema>["tab"];
+
+const urlDefaultValues = {
+  tab: "dashboard" as Tab
+};
+
 // --- Route Definition with Preloading ---
 export const Route = createFileRoute("/profile")({
+  validateSearch: zodValidator(profileUrlSchema),
+  search: {
+    middlewares: [stripSearchParams(urlDefaultValues)]
+  },
   loader: async () => {
     await Promise.all([
       ordersCollection.preload(),
@@ -132,6 +156,17 @@ export const Route = createFileRoute("/profile")({
 });
 
 export function EcommerceProfile() {
+  // --- URL State Management ---
+  const { tab } = Route.useSearch();
+  const navigate = Route.useNavigate();
+
+  const handleTabChange = async (newTab: string) => {
+    await navigate({
+      search: (prev) => ({ ...prev, tab: newTab as Tab }),
+      replace: true
+    });
+  };
+
   // --- Data Fetching ---
 
   // 1. Fetch User (Separate Call)
@@ -276,7 +311,8 @@ export function EcommerceProfile() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <Tabs
-        defaultValue="dashboard"
+        value={tab}
+        onValueChange={handleTabChange}
         orientation="vertical"
         className="flex flex-col gap-8 md:flex-row"
       >
