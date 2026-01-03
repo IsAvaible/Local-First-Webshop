@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { eq, useLiveQuery, Query, min } from "@tanstack/react-db";
+import { eq, useLiveQuery, Query, min, max } from "@tanstack/react-db";
 import {
   wishlistCollection,
   productsCollection,
@@ -22,7 +22,7 @@ function WishlistPage() {
       .groupBy(({ pt }) => pt.product_id)
       .select(({ pt }) => ({
         product_id: pt.product_id,
-        min_price: min(pt.price_per_unit)
+        max_price: max(pt.price_per_unit)
       }));
 
     // 2. Subquery: Find the ID of the first asset for each product
@@ -57,7 +57,7 @@ function WishlistPage() {
           wishlistId: w.id,
           product: p,
           asset: a,
-          calculated_price: price!.min_price,
+          calculated_price: price!.max_price,
           price_snapshot: w.price_snapshot
         }))
     );
