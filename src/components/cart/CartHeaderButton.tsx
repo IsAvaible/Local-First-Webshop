@@ -11,8 +11,9 @@ export function CartHeaderButton() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="icon">
-          <ShoppingCartIcon className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="group">
+          <ShoppingCartIcon className="size-6! transition-transform group-hover:scale-110" />
+          <span className="sr-only">Toggle Cart Dialog</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[unset]!">
