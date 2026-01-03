@@ -1,5 +1,10 @@
-import { useCart } from "@/contexts/useCartContext.ts";
+import React, { useEffect, useState, useMemo } from "react";
+import { Link } from "@tanstack/react-router";
+import { ShoppingCartIcon, Plus, Minus, type LucideIcon } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -8,18 +13,20 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
-import { ShoppingCartIcon } from "lucide-react";
-import type { Product } from "@/db/schema.ts";
-import { Link } from "@tanstack/react-router";
-import type { JsonValue } from "@/lib/utils.ts";
-import { humanizeCustomFieldValue } from "@/lib/utils.ts";
+
+import { useCart } from "@/contexts/useCartContext";
+import { cn, humanizeCustomFieldValue, type JsonValue } from "@/lib/utils";
+import type { Product } from "@/db/schema";
+
+const CURRENCY_FORMATTER = new Intl.NumberFormat("de-DE", {
+  style: "currency",
+  currency: "EUR"
+});
 
 interface ProductCardProps {
   product: Product & { min_price?: number | null };
-  customFields?:
-    | Record<string, { value: JsonValue; type?: string }>
-    | undefined;
-  imageUrl?: string | undefined;
+  customFields?: Record<string, { value: JsonValue; type?: string }>;
+  imageUrl?: string;
 }
 
 export default function ProductCard({
@@ -27,35 +34,61 @@ export default function ProductCard({
   customFields,
   imageUrl
 }: ProductCardProps) {
-  const { addItem, canManageItems } = useCart();
+  const {
+    addItem,
+    canManageItems,
+    enrichedFlatItems,
+    updateItemQuantity,
+    removeItem
+  } = useCart();
+
+  const cartItem = useMemo(
+    () => enrichedFlatItems?.find((item) => item.product?.id === product.id),
+    [enrichedFlatItems, product.id]
+  );
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    addItem(product.id, (product.min_price ?? 0).toFixed(2));
+  };
+
+  const hasCustomFields = customFields && Object.keys(customFields).length > 0;
 
   return (
-    <Card className="flex h-full flex-col overflow-hidden pt-0">
-      <Link to={"/products/$productId"} params={{ productId: product.id }}>
+    <Card className="flex h-full flex-col overflow-hidden pt-0 transition-shadow hover:shadow-md">
+      <Link
+        to="/products/$productId"
+        params={{ productId: product.id }}
+        className="flex grow flex-col"
+      >
         <CardHeader className="relative p-0">
           <img
             src={imageUrl}
             alt={product.name}
             className="aspect-square w-full rounded-t-lg object-cover"
+            loading="lazy"
           />
         </CardHeader>
         <CardContent className="flex-grow p-4">
-          <CardTitle>{product.name}</CardTitle>
-          <CardDescription className="mt-2 text-sm">
+          <CardTitle className="line-clamp-1">{product.name}</CardTitle>
+          <CardDescription className="mt-2 line-clamp-2 text-sm">
             {product.description}
           </CardDescription>
 
-          {customFields && Object.keys(customFields).length > 0 && (
-            <div className="mt-3 flex hidden flex-wrap gap-2">
-              {Object.entries(customFields).map(([k, v]) => {
-                const humanized = humanizeCustomFieldValue(v?.value, v?.type);
+          {hasCustomFields && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {Object.entries(customFields).map(([key, field]) => {
+                const humanized = humanizeCustomFieldValue(
+                  field?.value,
+                  field?.type
+                );
                 return (
                   <span
-                    key={k}
+                    key={key}
                     className="rounded bg-gray-100 px-2 py-1 text-xs font-medium"
                     title={humanized}
                   >
-                    {k}: {humanized}
+                    {key}: {humanized}
                   </span>
                 );
               })}
@@ -63,23 +96,157 @@ export default function ProductCard({
           )}
         </CardContent>
       </Link>
-      <CardFooter className="mt-auto flex items-center justify-between px-4">
-        <p className="text-slate-600">
-          {new Intl.NumberFormat("de-DE", {
-            style: "currency",
-            currency: "EUR"
-          }).format(product.min_price ?? 0)}
+
+      <CardFooter className="mt-auto flex items-center justify-between px-4 pb-4">
+        <p className="font-semibold text-slate-700">
+          {CURRENCY_FORMATTER.format(product.min_price ?? 0)}
         </p>
-        <Button
-          size="icon"
-          onClick={() => {
-            addItem(product.id, (product.min_price ?? 0).toFixed(2));
-          }}
-          disabled={!canManageItems}
-        >
-          <ShoppingCartIcon />
-        </Button>
+
+        {!cartItem ? (
+          <Button
+            size="icon"
+            onClick={handleAddToCart}
+            disabled={!canManageItems}
+            className="size-9 shrink-0 transition-transform active:scale-95"
+            aria-label="Add to cart"
+          >
+            <ShoppingCartIcon className="h-4 w-4" />
+          </Button>
+        ) : (
+          <CartQuantitySelector
+            itemId={cartItem.id}
+            quantity={cartItem.quantity ?? 0}
+            onUpdate={updateItemQuantity}
+            onRemove={removeItem}
+          />
+        )}
       </CardFooter>
     </Card>
+  );
+}
+
+interface QuantityActionButtonProps {
+  onClick: () => void;
+  icon: LucideIcon;
+  label: string;
+}
+
+/**
+ * Reusable button for Increment/Decrement actions.
+ */
+function QuantityActionButton({
+  onClick,
+  icon: Icon,
+  label
+}: QuantityActionButtonProps) {
+  return (
+    <button
+      onClick={(e) => {
+        e.preventDefault();
+        onClick();
+      }}
+      className={cn(
+        "bg-primary-foreground/10 hover:bg-primary-foreground/20 active:bg-primary-foreground/10",
+        "flex h-full w-0 flex-col items-center justify-center",
+        "opacity-0 transition-all duration-300",
+        // Expand and fade in when parent group is focused or hovered
+        "group-focus-within:w-8 group-focus-within:opacity-100",
+        "group-hover:w-8 group-hover:opacity-100"
+      )}
+      aria-label={label}
+      type="button"
+    >
+      <Icon className="h-3 w-3" />
+    </button>
+  );
+}
+
+interface CartQuantitySelectorProps {
+  itemId: string;
+  quantity: number;
+  onUpdate: (id: string, qty: number) => void;
+  onRemove: (id: string) => void;
+}
+
+function CartQuantitySelector({
+  itemId,
+  quantity,
+  onUpdate,
+  onRemove
+}: CartQuantitySelectorProps) {
+  const [inputValue, setInputValue] = useState(quantity.toString());
+
+  useEffect(() => {
+    setInputValue(quantity.toString());
+  }, [quantity]);
+
+  const handleIncrement = () => onUpdate(itemId, quantity + 1);
+
+  const handleDecrement = () => {
+    if (quantity <= 1) {
+      onRemove(itemId);
+    } else {
+      onUpdate(itemId, quantity - 1);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valStr = e.target.value;
+    setInputValue(valStr);
+
+    const val = parseInt(valStr, 10);
+    if (!isNaN(val) && val > 0) {
+      onUpdate(itemId, val);
+    } else if (val === 0) {
+      onRemove(itemId);
+    }
+  };
+
+  return (
+    <div
+      className={cn(
+        "group bg-primary text-primary-foreground relative flex h-9 min-w-9 items-center overflow-hidden rounded-md shadow-sm transition-all duration-300 ease-in-out",
+        "hover:ring-primary/20 focus-within:ring-primary/20 focus-within:ring-2 hover:ring-2"
+      )}
+    >
+      <QuantityActionButton
+        onClick={handleDecrement}
+        icon={Minus}
+        label="Decrease quantity"
+      />
+
+      {/* Center Display (Icon/Badge vs Input) */}
+      <div className="relative flex h-full items-center justify-center">
+        {/* IDLE State: Icon + Badge */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center transition-opacity duration-300 group-focus-within:opacity-0 group-hover:opacity-0">
+          <ShoppingCartIcon className="h-4 w-4" />
+          <Badge className="absolute -top-0.5 -right-0 flex size-4 items-center justify-center bg-transparent p-0">
+            {quantity}
+          </Badge>
+        </div>
+
+        {/* ACTIVE State: Input Field */}
+        <div className="flex h-full items-center justify-center opacity-0 transition-opacity duration-300 group-focus-within:opacity-100 group-hover:opacity-100">
+          <Input
+            type="number"
+            min={1}
+            value={inputValue}
+            onChange={handleInputChange}
+            className={cn(
+              "size-9 border-0 bg-transparent p-0 text-center text-sm font-bold shadow-none",
+              "text-primary-foreground placeholder:text-primary-foreground/50",
+              "focus-visible:ring-0 focus-visible:ring-offset-0",
+              "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            )}
+          />
+        </div>
+      </div>
+
+      <QuantityActionButton
+        onClick={handleIncrement}
+        icon={Plus}
+        label="Increase quantity"
+      />
+    </div>
   );
 }
