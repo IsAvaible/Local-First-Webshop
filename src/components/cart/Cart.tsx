@@ -13,7 +13,9 @@ import {
   closestCorners,
   defaultDropAnimationSideEffects,
   type DropAnimation,
-  MeasuringStrategy
+  MeasuringStrategy,
+  pointerWithin,
+  type CollisionDetection
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -272,6 +274,24 @@ export function Cart({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
+  const customCollisionDetection: CollisionDetection = React.useCallback(
+    (args) => {
+      const pointerCollisions = pointerWithin(args);
+
+      // If the pointer is strictly over the "root-droppable" background we prioritize the root immediately.
+      if (
+        pointerCollisions.length > 0 &&
+        pointerCollisions[0].id === "root-droppable"
+      ) {
+        return pointerCollisions;
+      }
+
+      // Otherwise, fallback to closestCorners for smooth sorting between items
+      return closestCorners(args);
+    },
+    []
+  );
+
   const handleDragStart = (event: DragStartEvent) => {
     if (!canManageItems) return;
     setActiveId(String(event.active.id));
@@ -341,7 +361,6 @@ export function Cart({
       if (activeContext?.parentId !== null) {
         moveNode(activeNodeId, null, rootNodes.length);
       }
-      return;
     }
 
     // 2. Handle dropping explicitly onto a Folder Droppable Zone
@@ -398,7 +417,7 @@ export function Cart({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={customCollisionDetection}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
