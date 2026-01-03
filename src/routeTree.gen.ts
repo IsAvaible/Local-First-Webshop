@@ -30,6 +30,7 @@ import { Route as ApiProjectsRouteImport } from './routes/api/projects'
 import { Route as ApiProductsRouteImport } from './routes/api/products'
 import { Route as ApiPricingTiersRouteImport } from './routes/api/pricing-tiers'
 import { Route as ApiOrdersRouteImport } from './routes/api/orders'
+import { Route as ApiNotificationsRouteImport } from './routes/api/notifications'
 import { Route as ApiCustomFieldValuesRouteImport } from './routes/api/custom-field-values'
 import { Route as ApiCustomFieldDefinitionsRouteImport } from './routes/api/custom-field-definitions'
 import { Route as ApiCompaniesRouteImport } from './routes/api/companies'
@@ -147,6 +148,11 @@ const ApiOrdersRoute = ApiOrdersRouteImport.update({
   path: '/api/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiNotificationsRoute = ApiNotificationsRouteImport.update({
+  id: '/api/notifications',
+  path: '/api/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCustomFieldValuesRoute = ApiCustomFieldValuesRouteImport.update({
   id: '/api/custom-field-values',
   path: '/api/custom-field-values',
@@ -229,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/api/companies': typeof ApiCompaniesRoute
   '/api/custom-field-definitions': typeof ApiCustomFieldDefinitionsRoute
   '/api/custom-field-values': typeof ApiCustomFieldValuesRoute
+  '/api/notifications': typeof ApiNotificationsRoute
   '/api/orders': typeof ApiOrdersRoute
   '/api/pricing-tiers': typeof ApiPricingTiersRoute
   '/api/products': typeof ApiProductsRoute
@@ -263,6 +270,7 @@ export interface FileRoutesByTo {
   '/api/companies': typeof ApiCompaniesRoute
   '/api/custom-field-definitions': typeof ApiCustomFieldDefinitionsRoute
   '/api/custom-field-values': typeof ApiCustomFieldValuesRoute
+  '/api/notifications': typeof ApiNotificationsRoute
   '/api/orders': typeof ApiOrdersRoute
   '/api/pricing-tiers': typeof ApiPricingTiersRoute
   '/api/products': typeof ApiProductsRoute
@@ -299,6 +307,7 @@ export interface FileRoutesById {
   '/api/companies': typeof ApiCompaniesRoute
   '/api/custom-field-definitions': typeof ApiCustomFieldDefinitionsRoute
   '/api/custom-field-values': typeof ApiCustomFieldValuesRoute
+  '/api/notifications': typeof ApiNotificationsRoute
   '/api/orders': typeof ApiOrdersRoute
   '/api/pricing-tiers': typeof ApiPricingTiersRoute
   '/api/products': typeof ApiProductsRoute
@@ -335,6 +344,7 @@ export interface FileRouteTypes {
     | '/api/companies'
     | '/api/custom-field-definitions'
     | '/api/custom-field-values'
+    | '/api/notifications'
     | '/api/orders'
     | '/api/pricing-tiers'
     | '/api/products'
@@ -369,6 +379,7 @@ export interface FileRouteTypes {
     | '/api/companies'
     | '/api/custom-field-definitions'
     | '/api/custom-field-values'
+    | '/api/notifications'
     | '/api/orders'
     | '/api/pricing-tiers'
     | '/api/products'
@@ -404,6 +415,7 @@ export interface FileRouteTypes {
     | '/api/companies'
     | '/api/custom-field-definitions'
     | '/api/custom-field-values'
+    | '/api/notifications'
     | '/api/orders'
     | '/api/pricing-tiers'
     | '/api/products'
@@ -439,6 +451,7 @@ export interface RootRouteChildren {
   ApiCompaniesRoute: typeof ApiCompaniesRoute
   ApiCustomFieldDefinitionsRoute: typeof ApiCustomFieldDefinitionsRoute
   ApiCustomFieldValuesRoute: typeof ApiCustomFieldValuesRoute
+  ApiNotificationsRoute: typeof ApiNotificationsRoute
   ApiOrdersRoute: typeof ApiOrdersRoute
   ApiPricingTiersRoute: typeof ApiPricingTiersRoute
   ApiProductsRoute: typeof ApiProductsRoute
@@ -603,6 +616,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/notifications': {
+      id: '/api/notifications'
+      path: '/api/notifications'
+      fullPath: '/api/notifications'
+      preLoaderRoute: typeof ApiNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/custom-field-values': {
       id: '/api/custom-field-values'
       path: '/api/custom-field-values'
@@ -723,6 +743,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCompaniesRoute: ApiCompaniesRoute,
   ApiCustomFieldDefinitionsRoute: ApiCustomFieldDefinitionsRoute,
   ApiCustomFieldValuesRoute: ApiCustomFieldValuesRoute,
+  ApiNotificationsRoute: ApiNotificationsRoute,
   ApiOrdersRoute: ApiOrdersRoute,
   ApiPricingTiersRoute: ApiPricingTiersRoute,
   ApiProductsRoute: ApiProductsRoute,

@@ -2,13 +2,13 @@ import { useState, useEffect } from "react"; // 1. Import hooks
 import {
   HomeIcon,
   HeartIcon,
-  BellIcon,
   UserIcon,
   MenuIcon,
   PackageOpenIcon
 } from "lucide-react";
 import { SearchBar } from "@/components/layout/Header/SearchBar.tsx";
 import { CartHeaderButton } from "@/components/cart/CartHeaderButton.tsx";
+import { NotificationPanel } from "@/components/notifications/NotificationPanel.tsx";
 import { ClientOnly } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 
@@ -67,9 +67,7 @@ export default function Header() {
           >
             <HeartIcon className="h-6 w-6" />
           </Link>
-          <Link to={"/"} className="transition-transform hover:scale-110">
-            <BellIcon className="h-6 w-6" />
-          </Link>
+          <NotificationPanel />
         </div>
         <div className="flex flex-row items-center justify-end gap-x-4">
           <CartHeaderButton />

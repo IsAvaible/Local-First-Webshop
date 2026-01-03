@@ -92,6 +92,13 @@
       "when": 1767365970938,
       "tag": "0012_flippant_amphibian",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1767385988774,
+      "tag": "0013_ordinary_wilson_fisk",
+      "breakpoints": true
     }
   ]
 }

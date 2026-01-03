@@ -17,7 +17,8 @@ import {
   selectUserSelectedCartSchema,
   selectOrderSchema,
   selectUserSettingsSchema,
-  selectWishlistSchema
+  selectWishlistSchema,
+  selectNotificationSchema
 } from "@/db/schema";
 import { trpc } from "@/lib/trpc-client";
 
@@ -449,6 +450,44 @@ export const wishlistCollection = createCollection(
     onDelete: async ({ transaction }) => {
       const { original: deletedItem } = transaction.mutations[0];
       const result = await trpc.wishlist.delete.mutate({
+        id: deletedItem.id
+      });
+      return { txid: result.txid };
+    }
+  })
+);
+
+export const notificationsCollection = createCollection(
+  electricCollectionOptions({
+    id: "notifications",
+    shapeOptions: {
+      url: createApiUrl("/api/notifications"),
+      parser: {
+        timestamptz: (date: string) => new Date(date)
+      }
+    },
+    schema: selectNotificationSchema,
+    getKey: (item) => item.id,
+    // onInsert: async ({ transaction }) => {
+    //   const { modified: newItem } = transaction.mutations[0];
+    //   const result = await trpc.notifications.create.mutate({
+    //     ...newItem
+    //   });
+    //   return { txid: result.txid };
+    // },
+    onUpdate: async ({ transaction }) => {
+      const { modified: updatedItem } = transaction.mutations[0];
+      const result = await trpc.notifications.update.mutate({
+        id: updatedItem.id,
+        data: {
+          ...updatedItem
+        }
+      });
+      return { txid: result.txid };
+    },
+    onDelete: async ({ transaction }) => {
+      const { original: deletedItem } = transaction.mutations[0];
+      const result = await trpc.notifications.delete.mutate({
         id: deletedItem.id
       });
       return { txid: result.txid };

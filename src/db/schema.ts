@@ -765,3 +765,111 @@ export const updateWishlistSchema = createUpdateSchema(wishlistTable).omit({
 export type Wishlist = z.infer<typeof selectWishlistSchema>;
 export type CreateWishlist = z.infer<typeof createWishlistSchema>;
 export type UpdateWishlist = z.infer<typeof updateWishlistSchema>;
+
+// --- NOTIFICATIONS SCHEMA ---
+export const notificationCategoryEnum = pgEnum("notification_category", [
+  "order", // Transactional updates
+  "shipping", // Logistics and delivery
+  "payment", // Billing and refunds
+  "account", // Security and profile
+  "marketing", // Promos and newsletters
+  "inventory", // Stock and price alerts
+  "social", // Reviews, cart sharing
+  "system" // Maintenance, terms updates
+]);
+
+export const notificationTypeEnum = pgEnum("notification_type", [
+  // Order Events
+  "order_confirmation",
+  "order_cancelled",
+  "order_item_unavailable",
+
+  // Shipping Events
+  "shipment_dispatched",
+  "shipment_out_for_delivery",
+  "shipment_delivered",
+  "shipment_delayed",
+  "pickup_ready",
+
+  // Payment Events
+  "payment_failed",
+  "payment_succeeded",
+  "refund_processed",
+  "invoice_available",
+
+  // Inventory/Product Events
+  "price_drop",
+  "back_in_stock",
+  "low_stock_alert",
+
+  // Social/Collaboration Events
+  "cart_shared",
+  "cart_collaborator_add",
+
+  // Marketing Events
+  "promo_code",
+  "flash_sale_start",
+  "abandoned_cart_reminder",
+  "recommendation",
+
+  // Account/Security Events
+  "welcome",
+  "password_changed",
+  "new_device_login"
+]);
+
+export const notificationsTable = pgTable(
+  "notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    actor_id: text("actor_id").references(() => users.id, {
+      onDelete: "set null"
+    }),
+
+    // Batching logic (e.g., "cart_123_likes")
+    group_key: text("group_key"),
+
+    category: notificationCategoryEnum("category").notNull(),
+    type: notificationTypeEnum("type").notNull(),
+
+    // this would not work with localization
+    title: varchar("title", { length: 255 }).notNull(),
+    body: text("body").notNull(),
+
+    route: text("route"),
+    route_params: jsonb("route_params"),
+
+    // Specific icons are only used in edge cases, most of the time derived from type
+    icon: varchar("icon", { length: 50 }),
+
+    // Status tracking
+    seen_at: timestamp("seen_at", { withTimezone: true }),
+    read_at: timestamp("read_at", { withTimezone: true }),
+    clicked_at: timestamp("clicked_at", { withTimezone: true }),
+
+    created_at: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    expires_at: timestamp("expires_at", { withTimezone: true })
+  },
+  (table) => ({
+    userIdIdx: index("notifications_user_id_idx").on(table.user_id)
+  })
+);
+
+export const selectNotificationSchema = createSelectSchema(notificationsTable);
+export const createNotificationSchema = createInsertSchema(
+  notificationsTable
+).omit({
+  id: true,
+  created_at: true
+});
+export const updateNotificationSchema = createUpdateSchema(notificationsTable);
+
+export type Notification = z.infer<typeof selectNotificationSchema>;
+export type CreateNotification = z.infer<typeof createNotificationSchema>;
+export type UpdateNotification = z.infer<typeof updateNotificationSchema>;
+export type NotificationType = (typeof notificationTypeEnum.enumValues)[number];

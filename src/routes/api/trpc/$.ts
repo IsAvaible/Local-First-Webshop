@@ -13,6 +13,7 @@ import { userSelectedCartRouter } from "@/lib/trpc/user-selected-cart";
 import { ordersRouter } from "@/lib/trpc/orders";
 import { userSettingsRouter } from "@/lib/trpc/user-settings.ts";
 import { wishlistRouter } from "@/lib/trpc/wishlist";
+import { notificationsRouter } from "@/lib/trpc/notifications";
 
 export const appRouter = router({
   projects: projectsRouter,
@@ -24,7 +25,8 @@ export const appRouter = router({
   addresses: addressesRouter,
   userSelectedCart: userSelectedCartRouter,
   orders: ordersRouter,
-  wishlist: wishlistRouter
+  wishlist: wishlistRouter,
+  notifications: notificationsRouter
 });
 
 export type AppRouter = typeof appRouter;

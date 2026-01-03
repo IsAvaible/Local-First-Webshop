@@ -1,5 +1,6 @@
 import { createTRPCProxyClient, httpBatchLink } from "@trpc/client";
 import type { AppRouter } from "@/routes/api/trpc/$";
+import superjson from "superjson";
 
 export const trpc = createTRPCProxyClient<AppRouter>({
   links: [
@@ -9,7 +10,8 @@ export const trpc = createTRPCProxyClient<AppRouter>({
         return {
           cookie: typeof document !== "undefined" ? document.cookie : ""
         };
-      }
+      },
+      transformer: superjson
     })
   ]
 });
