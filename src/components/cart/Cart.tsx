@@ -67,64 +67,6 @@ const getInitials = (name: string) => {
     .slice(0, 2);
 };
 
-const findActiveNode = (
-  nodes: EnrichedCartNode[] | undefined,
-  id: string
-): EnrichedCartNode | null => {
-  if (!nodes) return null;
-  for (const node of nodes) {
-    if (node.id === id) return node;
-    if (node.type === "folder") {
-      const found = findActiveNode(node.children, id);
-      if (found) return found;
-    }
-  }
-  return null;
-};
-
-// Helper to check if a node contains another node (prevent circular folder drops)
-const doesNodeContain = (
-  nodes: EnrichedCartNode[],
-  parentId: string,
-  childId: string
-): boolean => {
-  const parent = findActiveNode(nodes, parentId);
-  if (parent?.type !== "folder" || !parent.children) return false;
-  if (parent?.type !== "folder" || !parent.children) return false;
-
-  const checkChildren = (children: EnrichedCartNode[]): boolean => {
-    for (const child of children) {
-      if (child.id === childId) return true;
-      if (child.type === "folder" && child.children) {
-        if (checkChildren(child.children)) return true;
-      }
-    }
-    return false;
-  };
-  return checkChildren(parent.children);
-};
-
-const findNodeContext = (
-  nodes: EnrichedCartNode[],
-  targetId: string,
-  parentId: string | null = null
-): {
-  siblings: EnrichedCartNode[];
-  index: number;
-  parentId: string | null;
-} | null => {
-  const index = nodes.findIndex((n) => n.id === targetId);
-  if (index !== -1) return { siblings: nodes, index, parentId };
-
-  for (const node of nodes) {
-    if (node.type === "folder" && node.children) {
-      const result = findNodeContext(node.children, targetId, node.id);
-      if (result) return result;
-    }
-  }
-  return null;
-};
-
 // ------------------------------------------------------------------
 // SUB-COMPONENTS
 // ------------------------------------------------------------------
@@ -211,12 +153,9 @@ export const SortableNode = React.memo(
     );
   },
   (prevProps, nextProps) => {
-    // Custom comparison function (optional but recommended for objects)
-    // Only re-render if the node ID, type, or children count changes
-    // or if the "disabled" state changes.
     return (
       prevProps.node.id === nextProps.node.id &&
-      prevProps.node === nextProps.node && // Reference check usually sufficient if data is immutable
+      prevProps.node === nextProps.node &&
       prevProps.disabled === nextProps.disabled
     );
   }
@@ -245,6 +184,15 @@ interface CartProps {
   displayFooter?: boolean;
   displayCheckoutButton?: boolean;
 }
+
+// Type for our optimized lookup map
+type NodeMetadata = {
+  node: EnrichedCartNode;
+  parentId: string | null;
+  index: number;
+  depth: number;
+};
+
 export function Cart({
   displayHeader,
   displayFooter,
@@ -274,22 +222,62 @@ export function Cart({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
+  // Flatten the tree for O(1) lookups during drag
+  const nodesMap = React.useMemo(() => {
+    const map = new Map<string, NodeMetadata>();
+    const traverse = (
+      nodes: EnrichedCartNode[],
+      parentId: string | null = null,
+      depth = 0
+    ) => {
+      nodes.forEach((node, index) => {
+        map.set(node.id, { node, parentId, index, depth });
+        if (node.type === "folder" && node.children) {
+          traverse(node.children, node.id, depth + 1);
+        }
+      });
+    };
+    if (rootNodes) traverse(rootNodes);
+    return map;
+  }, [rootNodes]);
+
+  const activeNode = activeId ? nodesMap.get(activeId)?.node : null;
+  const rootIds = React.useMemo(
+    () => rootNodes?.map((node) => node.id) ?? [],
+    [rootNodes]
+  );
+
+  // Custom Collision to prioritize containers correctly
   const customCollisionDetection: CollisionDetection = React.useCallback(
     (args) => {
+      // First, check if pointer is over a specific sorting container or root
       const pointerCollisions = pointerWithin(args);
+      const rootCollision = pointerCollisions.find(
+        (c) => c.id === "root-droppable"
+      );
 
-      // If the pointer is strictly over the "root-droppable" background we prioritize the root immediately.
-      if (
-        pointerCollisions.length > 0 &&
-        pointerCollisions[0].id === "root-droppable"
-      ) {
+      // If we are strictly over the root background (and no other items), return root
+      if (pointerCollisions.length === 1 && rootCollision) {
         return pointerCollisions;
       }
 
-      // Otherwise, fallback to closestCorners for smooth sorting between items
+      // Otherwise use closestCorners for item reordering
       return closestCorners(args);
     },
     []
+  );
+
+  // Helper: Check if target is a descendant of source to prevent circular drops
+  const isAncestor = React.useCallback(
+    (activeId: string, overId: string) => {
+      let currentId: string | null = overId;
+      while (currentId) {
+        if (currentId === activeId) return true;
+        currentId = nodesMap.get(currentId)?.parentId ?? null;
+      }
+      return false;
+    },
+    [nodesMap]
   );
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -297,114 +285,91 @@ export function Cart({
     setActiveId(String(event.active.id));
   };
 
-  /**
-   * Handles moving items BETWEEN containers (e.g. Root -> Folder)
-   * This updates the state *during* the drag to allow visual nesting.
-   */
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
-    const overId = over?.id;
-    const activeId = active.id;
+    const activeId = String(active.id);
+    const overId = over ? String(over.id) : null;
 
-    if (!overId || activeId === overId || !rootNodes) return;
+    if (!overId || activeId === overId) return;
 
-    const activeContext = findNodeContext(rootNodes, String(activeId));
-    const overContext = findNodeContext(rootNodes, String(overId));
+    const activeMeta = nodesMap.get(activeId);
+    const overMeta = nodesMap.get(overId);
 
-    if (!activeContext || !overContext) return;
+    if (!activeMeta || !overMeta) return;
 
-    const activeParentId = activeContext.parentId;
-    const overParentId = overContext.parentId;
+    // Prevent dragging parent into child
+    if (isAncestor(activeId, overId)) return;
 
-    const overNode = findActiveNode(rootNodes, String(overId));
+    const isOverDifferentParent = activeMeta.parentId !== overMeta.parentId;
 
-    // SCENARIO 1: Dropping OVER a Folder (Drilling down)
-    // We are hovering over a Folder Node, not an item inside it yet.
-    if (overNode?.type === "folder" && activeParentId !== overNode.id) {
-      // Prevent circular dependency
-      if (doesNodeContain(rootNodes, String(activeId), String(overId))) return;
-
-      // Move item into the folder (at the end)
-      // This allows the user to hover a folder to "open" it and drop inside
-      moveNode(
-        String(activeId),
-        String(overId),
-        overNode.children?.length || 0
-      );
+    // SCENARIO 1: Dropping INTO a folder
+    // If we are over a folder, and we are not already inside it, and not merely sorting past it
+    if (overMeta.node.type === "folder" && activeMeta.parentId !== overId) {
+      const folderChildren = overMeta.node.children || [];
+      // Move into folder (append to end)
+      moveNode(activeId, overId, folderChildren.length);
       return;
     }
 
-    // SCENARIO 2: Moving between lists or reordering in same list
-    if (activeParentId !== overParentId) {
-      moveNode(String(activeId), overParentId, overContext.index);
-      // SCENARIO 3: Reordering within the same list
-    } else if (activeContext.index !== overContext.index) {
-      moveNode(String(activeId), activeParentId, overContext.index);
+    // SCENARIO 2: Moving between lists (Parent change)
+    // We only update state in DragOver when changing containers.
+    // In-list sorting (index change) is handled by DragEnd to prevent jitter.
+    if (isOverDifferentParent) {
+      moveNode(activeId, overMeta.parentId, overMeta.index);
     }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (!canManageItems) return;
-
-    const { active, over } = event;
     setActiveId(null);
 
-    if (!over || !rootNodes) return;
+    const { active, over } = event;
+    const activeId = String(active.id);
+    const overId = over ? String(over.id) : null;
 
-    const activeNodeId = String(active.id);
-    const overId = String(over.id);
+    if (!overId) return;
 
-    // 1. Explicit drop on Root (White space)
+    // 1. Explicit drop on Root (Empty Space)
     if (overId === "root-droppable") {
-      const activeContext = findNodeContext(rootNodes, activeNodeId);
-      // Only move if it wasn't already in the root
-      if (activeContext?.parentId !== null) {
-        moveNode(activeNodeId, null, rootNodes.length);
+      const activeMeta = nodesMap.get(activeId);
+      if (activeMeta?.parentId !== null) {
+        moveNode(activeId, null, rootNodes?.length ?? 0);
       }
+      return;
     }
 
-    // 2. Handle dropping explicitly onto a Folder Droppable Zone
+    // 2. Explicit drop on Folder Zone
     if (overId.startsWith("folder-droppable-")) {
       const targetFolderId = overId.replace("folder-droppable-", "");
-      // Safety: Don't drag folder into itself
-      if (targetFolderId === activeNodeId) return;
+      if (activeId === targetFolderId) return;
+      if (isAncestor(activeId, targetFolderId)) return;
 
-      const folderContext = findNodeContext(rootNodes, targetFolderId);
-      if (folderContext) {
-        const targetFolder = folderContext.siblings[folderContext.index];
-        if (targetFolder.type !== "folder") return;
-        // Don't drag folder into its own child
-        if (doesNodeContain(rootNodes, activeNodeId, targetFolderId)) return;
-
+      const folderMeta = nodesMap.get(targetFolderId);
+      if (folderMeta?.node.type === "folder") {
         moveNode(
-          activeNodeId,
+          activeId,
           targetFolderId,
-          targetFolder.children?.length || 0
+          folderMeta.node.children?.length || 0
         );
       }
       return;
     }
 
-    // 3. Handle Sorting (Reordering within the same container)
-    if (activeNodeId !== overId) {
-      const activeContext = findNodeContext(rootNodes, activeNodeId);
-      const overContext = findNodeContext(rootNodes, overId);
+    // 3. Reordering / Sorting (Index Change)
+    if (activeId !== overId) {
+      const activeMeta = nodesMap.get(activeId);
+      const overMeta = nodesMap.get(overId);
 
       if (
-        activeContext &&
-        overContext &&
-        activeContext.parentId === overContext.parentId
+        activeMeta &&
+        overMeta &&
+        activeMeta.parentId === overMeta.parentId &&
+        activeMeta.index !== overMeta.index
       ) {
-        // Only trigger move if indices are different
-        if (activeContext.index !== overContext.index) {
-          moveNode(activeNodeId, activeContext.parentId, overContext.index);
-        }
+        moveNode(activeId, activeMeta.parentId, overMeta.index);
       }
     }
   };
-
-  const activeNode = activeId ? findActiveNode(rootNodes, activeId) : null;
-  const rootIds = rootNodes?.map((node) => node.id) ?? [];
 
   if (isLoading) {
     return (
