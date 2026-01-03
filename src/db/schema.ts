@@ -841,6 +841,7 @@ export const notificationsTable = pgTable(
 
     route: text("route"),
     route_params: jsonb("route_params"),
+    search_params: jsonb("search_params"),
 
     // Specific icons are only used in edge cases, most of the time derived from type
     icon: varchar("icon", { length: 50 }),
@@ -850,6 +851,9 @@ export const notificationsTable = pgTable(
     read_at: timestamp("read_at", { withTimezone: true }),
     clicked_at: timestamp("clicked_at", { withTimezone: true }),
 
+    updated_at: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
     created_at: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

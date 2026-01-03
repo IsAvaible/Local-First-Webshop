@@ -23,7 +23,7 @@ export function NotificationPanel() {
   const { data: notifications = [] } = useLiveQuery((q) => {
     return q
       .from({ n: notificationsCollection })
-      .orderBy(({ n }) => n.created_at, "desc");
+      .orderBy(({ n }) => n.updated_at, "desc");
   });
 
   const { data: unseenRows = [] } = useLiveQuery((q) => {
@@ -154,7 +154,9 @@ export function NotificationPanel() {
                   <Link
                     to={notification.route ?? undefined}
                     // @ts-expect-error route_params is JSON type
-                    search={notification.route_params ?? undefined}
+                    params={notification.route_params ?? undefined}
+                    // @ts-expect-error search_params is JSON type
+                    search={notification.search_params ?? undefined}
                     role={"button"}
                     key={virtualRow.key}
                     ref={rowVirtualizer.measureElement}

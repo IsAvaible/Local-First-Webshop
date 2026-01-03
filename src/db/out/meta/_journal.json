@@ -99,6 +99,41 @@
       "when": 1767385988774,
       "tag": "0013_ordinary_wilson_fisk",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1767435075023,
+      "tag": "0014_notification_order_status_trigger",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1767435108529,
+      "tag": "0015_notification_wishlist_price_drop_trigger",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1767435738089,
+      "tag": "0016_notification_cart_collaborator_add_trigger",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1767435837400,
+      "tag": "0017_notification_password_changed_trigger",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1767436612126,
+      "tag": "0018_red_albert_cleary",
+      "breakpoints": true
     }
   ]
 }
