@@ -1,10 +1,11 @@
 import { betterAuth } from "better-auth";
 import { anonymous } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "@/db/connection"; // your drizzle instance
+import { db } from "@/db/connection";
 import * as schema from "@/db/schema";
 import { networkInterfaces } from "os";
-import { eq, and } from "drizzle-orm";
+import { eq, and, exists, sql } from "drizzle-orm";
+import { ydocUpdatesTable } from "@/db/schema";
 
 // Get network IP for trusted origins
 const nets = networkInterfaces();
@@ -37,10 +38,28 @@ export const auth = betterAuth({
         } = schema;
 
         await db.transaction(async (tx) => {
-          // 1. Carts: Update creator
+          // 1.1. Carts: Update creator
           await tx
             .update(cartsTable)
             .set({ created_by_id: newUser.user.id })
+            .where(
+              and(
+                eq(cartsTable.created_by_id, anonymousUser.user.id),
+                // Only if there was activity (ydoc_updates) on this cart
+                exists(
+                  tx
+                    .select()
+                    .from(ydocUpdatesTable)
+                    .where(
+                      eq(ydocUpdatesTable.room, sql`${cartsTable.id}::text`)
+                    )
+                )
+              )
+            );
+
+          // 1.2. Delete the remaining carts (that do NOT have entries in ydoc_updates)
+          await tx
+            .delete(cartsTable)
             .where(eq(cartsTable.created_by_id, anonymousUser.user.id));
 
           // 2. Cart Collaborators: Move collabs
@@ -82,11 +101,20 @@ export const auth = betterAuth({
             .where(eq(userSelectedCartTable.user_id, anonymousUser.user.id));
 
           if (anonSelection) {
-            // Update the selection to the new user
-            await tx
-              .update(userSelectedCartTable)
-              .set({ user_id: newUser.user.id })
-              .where(eq(userSelectedCartTable.user_id, anonymousUser.user.id));
+            const [existingSelection] = await tx
+              .select()
+              .from(userSelectedCartTable)
+              .where(eq(userSelectedCartTable.user_id, newUser.user.id));
+
+            if (!existingSelection) {
+              // Move selection to new user only if they don't have one already
+              await tx
+                .update(userSelectedCartTable)
+                .set({ user_id: newUser.user.id })
+                .where(
+                  eq(userSelectedCartTable.user_id, anonymousUser.user.id)
+                );
+            }
           }
 
           // 4. Addresses
