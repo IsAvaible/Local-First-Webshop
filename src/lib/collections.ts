@@ -201,6 +201,7 @@ export const cartsCollection = createCollection(
     onInsert: async ({ transaction }) => {
       const { modified: newCart } = transaction.mutations[0];
       const result = await trpc.carts.create.mutate({
+        id: newCart.id,
         name: newCart.name,
         created_by_id: newCart.created_by_id
       });

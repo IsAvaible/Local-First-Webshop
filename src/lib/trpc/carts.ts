@@ -19,21 +19,26 @@ import { upsertUserSelectedCart } from "@/lib/trpc/user-selected-cart.ts";
 // Extract the "Create" logic into a reusable function
 const createCartService = async (
   ctx: inferProcedureBuilderResolverOptions<typeof authedProcedure>["ctx"],
-  input: z.infer<typeof createCartSchema>
+  input: z.infer<typeof createCartSchema> & { id?: string } // Allow optional ID
 ) => {
   const userId = ctx.session.user.id;
 
   const result = await ctx.db.transaction(async (tx) => {
     const txid = await generateTxId(tx);
+
+    // Use the provided optimistic ID or generate a new one
+    const cartId = input.id ?? uuidv4();
+
     const [newItem] = await tx
       .insert(cartsTable)
       .values({
         ...input,
+        id: cartId,
         created_by_id: userId
       })
       .returning();
 
-    // If the user is authenticated, add them as an admin collaborator
+    // Add the user as an admin collaborator
     await tx.insert(cartCollaboratorsTable).values({
       cart_id: newItem.id,
       user_id: userId,

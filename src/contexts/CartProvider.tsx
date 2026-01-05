@@ -781,12 +781,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const setActiveCartId = useCallback(
     async (id: string) => {
       if (!userId) return undefined;
-      const tx = userSelectedCartCollection.update(userId, (drafts) => {
-        drafts.cart_id = id;
-      });
-      await tx.isPersisted.promise;
+
+      if (activeCartId) {
+        await userSelectedCartCollection.update(userId, (drafts) => {
+          drafts.cart_id = id;
+        }).isPersisted.promise;
+      } else {
+        await userSelectedCartCollection.insert({
+          user_id: userId,
+          cart_id: id,
+          created_at: new Date(),
+          updated_at: new Date()
+        }).isPersisted.promise;
+      }
     },
-    [userId]
+    [activeCartId, userId]
   );
 
   // Create initial cart if needed

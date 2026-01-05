@@ -118,6 +118,7 @@ export default function ProductCard({
             quantity={cartItem.quantity ?? 0}
             onUpdate={updateItemQuantity}
             onRemove={removeItem}
+            disabled={!canManageItems}
           />
         )}
       </CardFooter>
@@ -129,6 +130,7 @@ interface QuantityActionButtonProps {
   onClick: () => void;
   icon: LucideIcon;
   label: string;
+  disabled?: boolean;
 }
 
 /**
@@ -137,21 +139,24 @@ interface QuantityActionButtonProps {
 function QuantityActionButton({
   onClick,
   icon: Icon,
-  label
+  label,
+  disabled
 }: QuantityActionButtonProps) {
   return (
     <button
       onClick={(e) => {
         e.preventDefault();
-        onClick();
+        if (!disabled) onClick();
       }}
+      disabled={disabled}
       className={cn(
         "bg-primary-foreground/10 hover:bg-primary-foreground/20 active:bg-primary-foreground/10",
         "flex h-full w-0 flex-col items-center justify-center",
         "opacity-0 transition-all duration-300",
         // Expand and fade in when parent group is focused or hovered
         "group-focus-within:w-8 group-focus-within:opacity-100",
-        "group-hover:w-8 group-hover:opacity-100"
+        "group-hover:w-8 group-hover:opacity-100",
+        disabled && "cursor-not-allowed"
       )}
       aria-label={label}
       type="button"
@@ -166,23 +171,39 @@ interface CartQuantitySelectorProps {
   quantity: number;
   onUpdate: (id: string, qty: number) => void;
   onRemove: (id: string) => void;
+  disabled?: boolean;
 }
 
 function CartQuantitySelector({
   itemId,
   quantity,
   onUpdate,
-  onRemove
+  onRemove,
+  disabled
 }: CartQuantitySelectorProps) {
   const [inputValue, setInputValue] = useState(quantity.toString());
+  const [isHoverEnabled, setIsHoverEnabled] = useState(false);
 
+  // Sync prop changes to local input state
   useEffect(() => {
     setInputValue(quantity.toString());
   }, [quantity]);
 
-  const handleIncrement = () => onUpdate(itemId, quantity + 1);
+  // Grace period on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsHoverEnabled(true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleIncrement = () => {
+    if (disabled) return;
+    onUpdate(itemId, quantity + 1);
+  };
 
   const handleDecrement = () => {
+    if (disabled) return;
     if (quantity <= 1) {
       onRemove(itemId);
     } else {
@@ -205,14 +226,19 @@ function CartQuantitySelector({
   return (
     <div
       className={cn(
-        "group bg-primary text-primary-foreground relative flex h-9 min-w-9 items-center overflow-hidden rounded-md shadow-sm transition-all duration-300 ease-in-out",
-        "hover:ring-primary/20 focus-within:ring-primary/20 focus-within:ring-2 hover:ring-2"
+        // The 'group' class controls the hover expansion of children.
+        !disabled && isHoverEnabled && "group",
+        "bg-primary text-primary-foreground relative flex h-9 min-w-9 items-center overflow-hidden rounded-md shadow-sm transition-all duration-300 ease-in-out",
+        !disabled &&
+          "hover:ring-primary/20 focus-within:ring-primary/20 focus-within:ring-2 hover:ring-2",
+        disabled && "cursor-default opacity-50"
       )}
     >
       <QuantityActionButton
         onClick={handleDecrement}
         icon={Minus}
         label="Decrease quantity"
+        disabled={disabled}
       />
 
       {/* Center Display (Icon/Badge vs Input) */}
@@ -232,11 +258,13 @@ function CartQuantitySelector({
             min={1}
             value={inputValue}
             onChange={handleInputChange}
+            disabled={disabled}
             className={cn(
               "size-9 border-0 bg-transparent p-0 text-center text-sm font-bold shadow-none",
               "text-primary-foreground placeholder:text-primary-foreground/50",
               "focus-visible:ring-0 focus-visible:ring-offset-0",
-              "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+              disabled && "cursor-not-allowed opacity-50"
             )}
           />
         </div>
@@ -246,6 +274,7 @@ function CartQuantitySelector({
         onClick={handleIncrement}
         icon={Plus}
         label="Increase quantity"
+        disabled={disabled}
       />
     </div>
   );
