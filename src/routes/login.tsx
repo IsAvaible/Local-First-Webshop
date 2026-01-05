@@ -1,14 +1,24 @@
 import * as React from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
+import { zodValidator } from "@tanstack/zod-adapter";
+import { z } from "zod";
+
+const cartUrlSchema = z.object({
+  redirect: z.string().optional().default("/")
+});
 
 export const Route = createFileRoute("/login")({
+  validateSearch: zodValidator(cartUrlSchema),
   component: Layout,
   ssr: false
 });
 
 function Layout() {
+  const search = Route.useSearch();
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -19,6 +29,14 @@ function Layout() {
     setIsLoading(true);
     setError("");
 
+    // Helper to handle the final navigation
+    const handleSuccess = async () => {
+      await navigate({
+        to: search.redirect,
+        replace: true
+      });
+    };
+
     try {
       let { data: _data, error } = await authClient.signUp.email(
         {
@@ -27,9 +45,7 @@ function Layout() {
           name: email
         },
         {
-          onSuccess: () => {
-            window.location.href = "/";
-          }
+          onSuccess: handleSuccess
         }
       );
 
@@ -42,7 +58,7 @@ function Layout() {
           {
             onSuccess: async () => {
               await authClient.getSession();
-              window.location.href = "/";
+              await handleSuccess();
             }
           }
         );

@@ -71,7 +71,10 @@ export default function Header() {
         </div>
         <div className="flex flex-row items-center justify-end gap-x-4">
           <CartHeaderButton />
-          <Link to={"/login"} className="transition-transform hover:scale-110">
+          <Link
+            to={"/profile"}
+            className="transition-transform hover:scale-110"
+          >
             <UserIcon className="h-6 w-6" />
           </Link>
           <Link to={"/"} className="transition-transform hover:scale-110">

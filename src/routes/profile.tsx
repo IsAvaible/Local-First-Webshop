@@ -7,7 +7,11 @@ import {
   LogOut,
   Loader2
 } from "lucide-react";
-import { createFileRoute, stripSearchParams } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  redirect,
+  stripSearchParams
+} from "@tanstack/react-router";
 import { eq, not, useLiveQuery } from "@tanstack/react-db";
 import {
   ordersCollection,
@@ -26,6 +30,7 @@ import { ProfileOrders } from "@/components/profile/ProfileOrders";
 import { ProfileWishlist } from "@/components/profile/ProfileWishlist";
 import { ProfilePaymentMethods } from "@/components/profile/ProfilePaymentMethods";
 import { ProfileSettings } from "@/components/profile/ProfileSettings";
+import { authClient } from "@/lib/auth-client.ts";
 
 // --- Search Params Schema ---
 const profileUrlSchema = z.object({
@@ -47,6 +52,21 @@ export const Route = createFileRoute("/profile")({
   validateSearch: zodValidator(profileUrlSchema),
   search: {
     middlewares: [stripSearchParams(urlDefaultValues)]
+  },
+  // 3. Add the Authentication Guard
+  beforeLoad: async ({ location }) => {
+    // Fetch the session using the Better Auth client
+    const { data: session } = await authClient.getSession();
+
+    // Check if there is no session, or if the user is an anonymous guest
+    if (!session || session.user.isAnonymous) {
+      throw redirect({
+        to: "/login",
+        search: {
+          redirect: location.href
+        }
+      });
+    }
   },
   loader: async () => {
     await Promise.all([
