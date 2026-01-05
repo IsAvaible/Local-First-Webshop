@@ -9,6 +9,8 @@ import {
   CarouselPrevious,
   CarouselNext
 } from "@/components/ui/carousel";
+import type { Asset } from "@/db/schema";
+import { AssetImage } from "@/components/ui/assetImage.tsx";
 
 // A simple and reusable hook to check for a media query
 const useMediaQuery = (query: string) => {
@@ -27,12 +29,7 @@ const useMediaQuery = (query: string) => {
   return matches;
 };
 
-interface Image {
-  src: string;
-  alt: string;
-}
-
-export default function ProductImageCarousel({ images }: { images: Image[] }) {
+export default function ProductImageCarousel({ images }: { images: Asset[] }) {
   const [api, setApi] = useState<CarouselApi>();
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -93,7 +90,7 @@ export default function ProductImageCarousel({ images }: { images: Image[] }) {
           <CarouselContent>
             {images.map((image, index) => (
               <CarouselItem
-                key={image.src}
+                key={image.id}
                 className={`w-full p-1 lg:basis-1/4 ${
                   orientation == "vertical"
                     ? index != 0
@@ -103,10 +100,9 @@ export default function ProductImageCarousel({ images }: { images: Image[] }) {
                 }`}
                 onClick={() => handleThumbnailClick(index)}
               >
-                <img
-                  src={image.src}
-                  alt={image.alt}
-                  className={`aspect-3/4 h-full w-full rounded-md object-cover transition-shadow lg:cursor-pointer ${
+                <AssetImage
+                  asset={image}
+                  containerClassName={`aspect-3/4 h-full w-full rounded-md object-cover transition-shadow lg:cursor-pointer ${
                     orientation == "vertical"
                       ? selectedIndex === index
                         ? "ring-2 ring-offset-2"
@@ -131,10 +127,9 @@ export default function ProductImageCarousel({ images }: { images: Image[] }) {
         <Card className="overflow-hidden py-0">
           <CardContent className="flex aspect-3/4 items-center justify-center p-0">
             {images[selectedIndex] && (
-              <img
-                src={images[selectedIndex].src}
-                alt={images[selectedIndex].alt}
-                className="h-full w-full object-cover"
+              <AssetImage
+                asset={images[selectedIndex]}
+                containerClassName="h-full w-full"
               />
             )}
           </CardContent>

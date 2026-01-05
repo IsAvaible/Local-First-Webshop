@@ -12,6 +12,7 @@ import { formatCurrency } from "@/lib/checkout/utils";
 import { PackageIcon, ShieldCheckIcon, CreditCardIcon } from "lucide-react";
 import { useLiveQuery, eq } from "@tanstack/react-db";
 import { userAddressesCollection } from "@/lib/collections";
+import { AssetImage } from "@/components/ui/assetImage.tsx";
 
 function ReviewStep({
   cartItems,
@@ -107,10 +108,9 @@ function ReviewStep({
             <div key={item.id} className="flex gap-4">
               <div className="h-16 w-16 overflow-hidden rounded border bg-gray-100">
                 {item.asset ? (
-                  <img
-                    src={item.asset.url}
-                    alt={item.asset.alt}
-                    className="h-full w-full object-cover"
+                  <AssetImage
+                    asset={item.asset}
+                    containerClassName="h-full w-full object-cover"
                   />
                 ) : (
                   <PackageIcon className="h-full w-full p-4 text-gray-300" />

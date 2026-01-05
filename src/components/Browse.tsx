@@ -155,7 +155,7 @@ export default function Browse({
                       key={product.id}
                       product={product}
                       customFields={productCustomFields.get(product.id)}
-                      imageUrl={product.asset?.url}
+                      asset={product.asset}
                     />
                   ))}
                 </section>

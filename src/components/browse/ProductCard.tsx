@@ -16,7 +16,8 @@ import {
 
 import { useCart } from "@/contexts/useCartContext";
 import { cn, humanizeCustomFieldValue, type JsonValue } from "@/lib/utils";
-import type { Product } from "@/db/schema";
+import type { Asset, Product } from "@/db/schema";
+import { AssetImage } from "@/components/ui/assetImage.tsx";
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat("de-DE", {
   style: "currency",
@@ -26,13 +27,13 @@ const CURRENCY_FORMATTER = new Intl.NumberFormat("de-DE", {
 interface ProductCardProps {
   product: Product & { min_price?: number | null };
   customFields?: Record<string, { value: JsonValue; type?: string }>;
-  imageUrl?: string;
+  asset?: Asset;
 }
 
 export default function ProductCard({
   product,
   customFields,
-  imageUrl
+  asset
 }: ProductCardProps) {
   const {
     addItem,
@@ -62,10 +63,10 @@ export default function ProductCard({
         className="flex grow flex-col"
       >
         <CardHeader className="relative p-0">
-          <img
-            src={imageUrl}
+          <AssetImage
+            asset={asset}
             alt={product.name}
-            className="aspect-square w-full rounded-t-lg object-cover"
+            containerClassName="aspect-square w-full rounded-t-lg"
             loading="lazy"
           />
         </CardHeader>

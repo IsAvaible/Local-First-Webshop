@@ -27,6 +27,8 @@ import {
   categoriesCollection,
   companiesCollection
 } from "@/lib/collections.ts";
+import type { Asset } from "@/db/schema.ts";
+import { AssetImage } from "@/components/ui/assetImage.tsx";
 
 // Static Navigation Items
 const NAV_ITEMS = [
@@ -385,7 +387,7 @@ export function SearchBar() {
                         }}
                       >
                         <ProductCommandItem
-                          imgUrl={p.asset?.url ?? "/src/assets/react.svg"}
+                          asset={p.asset}
                           name={p.name}
                           price={
                             p.min_price != null
@@ -485,13 +487,9 @@ export function SearchBar() {
           ) : (
             <>
               {/* Default content when search is not active */}
-              <CommandGroup heading="Suggestions">
-                <ProductCommandItem
-                  imgUrl={"/src/assets/react.svg"}
-                  name={"Test Product"}
-                  price={"14.99 €"}
-                />
-              </CommandGroup>
+              {/* TODO: Show some popular products or recent searches */}
+              {/*<CommandGroup heading="Suggestions">*/}
+              {/*</CommandGroup>*/}
               <CommandSeparator />
               <CommandGroup heading="Navigation">
                 <Link to={"/profile"}>
@@ -543,19 +541,22 @@ const XCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 interface ProductCommandItemProps {
-  imgUrl: string;
+  asset?: Asset;
   name: string;
   price: string;
 }
 const ProductCommandItem = ({
-  imgUrl,
+  asset,
   name,
   price,
   ...props
 }: ProductCommandItemProps & React.ComponentProps<typeof CommandItem>) => {
   return (
     <CommandItem {...props}>
-      <img className="aspect-3/4 w-6 rounded-sm" src={imgUrl} alt={name} />
+      <AssetImage
+        asset={asset}
+        containerClassName="aspect-3/4 w-6 rounded-sm"
+      />
       <div className="flex flex-col">
         <span className="font-medium">{name}</span>
         <span className="text-sm text-slate-500">{price}</span>

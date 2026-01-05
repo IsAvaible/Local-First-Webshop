@@ -134,6 +134,13 @@
       "when": 1767436612126,
       "tag": "0018_red_albert_cleary",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1767646524694,
+      "tag": "0019_public_nick_fury",
+      "breakpoints": true
     }
   ]
 }

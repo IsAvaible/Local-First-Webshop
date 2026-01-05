@@ -3,13 +3,16 @@ import "dotenv/config";
 import { db } from "@/db/connection.ts";
 import { reset } from "drizzle-seed";
 import { faker } from "@faker-js/faker";
+import sharp from "sharp";
+import { encode } from "blurhash";
 import type { Product } from "./schema";
 
 // --- Configuration ---
 const COMPANIES_TO_CREATE = 5;
 const CATEGORIES_TO_CREATE = 4;
-const PRODUCTS_PER_CATEGORY = 10; // Each category will have this many products
-const VARIANT_CHANCE = 0.2; // 20% chance a product is a variant of the previous one
+const PRODUCTS_PER_CATEGORY = 10;
+const VARIANT_CHANCE = 0.2;
+const CONCURRENCY_LIMIT = 5; // How many images to process into blurhashes in parallel
 // ---------------------
 
 const connectionString = process.env.DATABASE_URL;
@@ -17,19 +20,44 @@ if (!connectionString) {
   throw new Error("DATABASE_URL environment variable is not set.");
 }
 
-// Helper type for the custom field definitions
 type FieldDef = typeof schema.customFieldDefinitionsTable.$inferSelect;
+
+/**
+ * Downloads an image from a URL, resizes it for performance,
+ * and calculates the BlurHash.
+ */
+async function generateBlurHash(imageUrl: string): Promise<string | null> {
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) throw new Error(`Failed to fetch ${imageUrl}`);
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Resize to small width (e.g., 32px) for faster hashing.
+    // BlurHash doesn't need full res.
+    const { data, info } = await sharp(buffer)
+      .resize(32, 32, { fit: "inside" })
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+
+    return encode(new Uint8ClampedArray(data), info.width, info.height, 4, 4);
+  } catch (error) {
+    console.warn(`Failed to generate blurhash for ${imageUrl}:`, error);
+    return null;
+  }
+}
 
 async function main() {
   console.log("Seeding database... 🌱");
 
-  // 1. Reset the database
   await reset(db, schema);
 
   await db.transaction(async (tx) => {
     console.log("Cleared old data.");
 
-    // 2. Insert Companies
+    // 1. Insert Companies
     console.log(`Inserting ${COMPANIES_TO_CREATE} companies...`);
     const companyData = Array.from({ length: COMPANIES_TO_CREATE }, () => ({
       name: faker.company.name()
@@ -39,18 +67,18 @@ async function main() {
       .values(companyData)
       .returning();
 
-    // 3. Insert Categories
+    // 2. Insert Categories
     console.log(`Inserting ${CATEGORIES_TO_CREATE} categories...`);
     const categoryData = Array.from({ length: CATEGORIES_TO_CREATE }, () => ({
       name: faker.commerce.department(),
-      description: faker.commerce.productDescription().slice(0, 250) // Truncate to avoid errors
+      description: faker.commerce.productDescription().slice(0, 250)
     }));
     const insertedCategories = await tx
       .insert(schema.categoriesTable)
       .values(categoryData)
       .returning();
 
-    // 4. Insert Custom Field Definitions (linked to categories)
+    // 3. Insert Custom Field Definitions
     console.log("Inserting custom field definitions...");
     const fieldDefData = [];
     const fieldTypes: ("text" | "number" | "boolean" | "date" | "select")[] = [
@@ -62,7 +90,6 @@ async function main() {
     ];
 
     for (const category of insertedCategories) {
-      // Create 2-4 fields for each category
       const numFields = faker.number.int({ min: 2, max: 4 });
       for (let i = 0; i < numFields; i++) {
         const fieldType = faker.helpers.arrayElement(fieldTypes);
@@ -88,31 +115,29 @@ async function main() {
       .values(fieldDefData)
       .returning();
 
-    // Create a map for easy lookup: { categoryId: [fieldDef1, fieldDef2] }
     const categoryFieldDefs = insertedFieldDefs.reduce(
       (acc, def) => {
-        if (!acc[def.category_id]) {
-          acc[def.category_id] = [];
-        }
+        if (!acc[def.category_id]) acc[def.category_id] = [];
         acc[def.category_id].push(def);
         return acc;
       },
       {} as Record<string, FieldDef[]>
     );
 
-    // 5. Insert Products
-    console.log("Inserting products (with variants)...");
+    // 4. Prepare Data Arrays
     const insertedProducts = [];
     const customValueData = [];
-    const assetData = [];
     const pricingTierData = [];
 
-    // We pass the whole FieldDef to access options for 'select'
-    const generateValue = (
-      fieldDef: FieldDef
-    ): string | number | boolean | Date => {
-      const options = fieldDef.options ?? [];
+    // Store "pending" assets here to process them in a batch later
+    const pendingAssets: {
+      product_id: number;
+      url: string;
+      alt: string;
+    }[] = [];
 
+    const generateValue = (fieldDef: FieldDef) => {
+      const options = fieldDef.options ?? [];
       switch (fieldDef.field_type) {
         case "text":
           return faker.lorem.words(3);
@@ -121,17 +146,18 @@ async function main() {
         case "boolean":
           return faker.datatype.boolean();
         case "date":
-          return faker.date.future(); // Generates a Date object
+          return faker.date.future();
         case "select":
-          // Pick a random value from the defined options
-          if (options.length > 0) {
-            return faker.helpers.arrayElement(options);
-          }
-          return faker.word.noun(); // Fallback if no options
+          return options.length > 0
+            ? faker.helpers.arrayElement(options)
+            : faker.word.noun();
         default:
-          return faker.lorem.word(); // Fallback for any unknown type
+          return faker.lorem.word();
       }
     };
+
+    // 5. Build Product & Asset Stubs
+    console.log("Generating product data...");
 
     for (const category of insertedCategories) {
       let lastBaseProductId: number | null = null;
@@ -151,19 +177,15 @@ async function main() {
           base_product_id: isVariant ? lastBaseProductId : null
         };
 
-        // We insert one-by-one here to get the 'id' for variants.
         const [product] = await tx
           .insert(schema.productsTable)
           .values(productData)
           .returning();
 
         insertedProducts.push(product);
+        if (!isVariant) lastBaseProductId = product.id;
 
-        if (!isVariant) {
-          lastBaseProductId = product.id; // This is a new base product
-        }
-
-        // 6. Insert Pricing Tiers (while we have the product)
+        // Pricing Tiers
         const numTiers = faker.number.int({ min: 1, max: 3 });
         const basePrice = parseFloat(
           faker.commerce.price({ min: 10, max: 2000 })
@@ -171,33 +193,29 @@ async function main() {
         const minQuantities = [1, 10, 50];
 
         for (let t = 0; t < numTiers; t++) {
-          const price = basePrice * (1 - t * 0.1); // 10% discount per tier
           pricingTierData.push({
             product_id: product.id,
             min_quantity: minQuantities[t],
-            price_per_unit: price.toFixed(2)
+            price_per_unit: (basePrice * (1 - t * 0.1)).toFixed(2)
           });
         }
 
-        // 7. Insert Assets (while we have the product)
+        // Assets (Queue them up)
         const numImages = faker.number.int({ min: 1, max: 3 });
         for (let a = 0; a < numImages; a++) {
-          assetData.push({
+          const seed = faker.string.uuid();
+          const width = 600;
+          const height = 600;
+          const url = `https://picsum.photos/seed/${seed}/${width}/${height}`;
+
+          pendingAssets.push({
             product_id: product.id,
-            url: faker.image.urlPicsumPhotos({
-              width: 600,
-              height: 600,
-              blur: 0,
-              grayscale: false
-            }),
-            file_extension: "jpg",
-            mime_type: "image/jpeg",
-            file_size: faker.number.int({ min: 50000, max: 500000 }),
+            url: url,
             alt: `${product.name} Image ${a + 1}`
           });
         }
 
-        // 8. Insert Custom Field Values (while we have product and fields)
+        // Custom Fields
         for (const fieldDef of fieldsForThisCategory) {
           customValueData.push({
             product_id: product.id,
@@ -208,19 +226,44 @@ async function main() {
       }
     }
 
-    // Now, bulk-insert all the dependent data
+    // 6. Process Assets (Download & Hash in Batches)
+    console.log(
+      `Processing ${pendingAssets.length} assets (calculating BlurHashes)...`
+    );
+
+    const finalAssetData = [];
+
+    // Simple batch processor
+    for (let i = 0; i < pendingAssets.length; i += CONCURRENCY_LIMIT) {
+      const batch = pendingAssets.slice(i, i + CONCURRENCY_LIMIT);
+
+      const results = await Promise.all(
+        batch.map(async (assetStub) => {
+          const hash = await generateBlurHash(assetStub.url);
+          process.stdout.write("."); // Progress indicator
+          return {
+            ...assetStub,
+            blur_hash: hash,
+            file_extension: "jpg",
+            mime_type: "image/jpeg",
+            file_size: faker.number.int({ min: 50000, max: 500000 }) // Fake size
+          };
+        })
+      );
+      finalAssetData.push(...results);
+    }
+    console.log("\nAsset processing complete.");
+
+    // 7. Bulk Insert
     if (pricingTierData.length > 0) {
-      console.log(`Inserting ${pricingTierData.length} pricing tiers...`);
       await tx.insert(schema.pricingTiersTable).values(pricingTierData);
     }
 
-    if (assetData.length > 0) {
-      console.log(`Inserting ${assetData.length} assets...`);
-      await tx.insert(schema.assetsTable).values(assetData);
+    if (finalAssetData.length > 0) {
+      await tx.insert(schema.assetsTable).values(finalAssetData);
     }
 
     if (customValueData.length > 0) {
-      console.log(`Inserting ${customValueData.length} custom field values...`);
       await tx.insert(schema.customFieldValuesTable).values(customValueData);
     }
   });

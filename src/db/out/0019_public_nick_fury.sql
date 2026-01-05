@@ -1,0 +1,1 @@
+ALTER TABLE "assets" ADD COLUMN "blur_hash" varchar(50);

@@ -166,6 +166,7 @@ export const assetsTable = pgTable("assets", {
   file_extension: varchar({ length: 10 }).notNull(),
   file_size: integer().notNull(),
   mime_type: varchar({ length: 100 }).notNull(),
+  blur_hash: varchar({ length: 50 }),
   alt: text("alt").notNull(),
   description: text("description"),
   created_at: timestamp({ withTimezone: true }).notNull().defaultNow()

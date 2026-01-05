@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import * as React from "react";
 import { cn } from "@/lib/utils.ts";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
+import { AssetImage } from "@/components/ui/assetImage.tsx";
 
 export function CartItemComponent({
   item,
@@ -55,8 +56,6 @@ export function CartItemComponent({
   const product = item.product;
   const asset = item.asset;
 
-  const imageSrc =
-    asset?.url ?? `https://placehold.co/200x200.png?text=${item.product_id}`;
   const productName = product?.name ?? `Product ${item.product_id}`;
 
   return (
@@ -68,10 +67,9 @@ export function CartItemComponent({
           className
         )}
       >
-        <img
-          src={imageSrc}
-          alt={productName}
-          className="my-auto aspect-3/4 w-20 rounded-md object-cover @max-[16rem]:hidden @sm:w-28"
+        <AssetImage
+          asset={asset}
+          containerClassName="my-auto aspect-3/4 w-20 rounded-md object-cover @max-[16rem]:hidden @sm:w-28"
         />
 
         <div className="flex flex-1 justify-between">

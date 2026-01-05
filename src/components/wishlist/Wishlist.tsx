@@ -100,7 +100,7 @@ export function Wishlist() {
                 ...item.product,
                 min_price: finalPrice as number
               }}
-              imageUrl={item.asset?.url}
+              asset={item.asset}
             />
             <Button
               variant={"outline"}

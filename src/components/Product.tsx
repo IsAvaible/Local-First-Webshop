@@ -77,6 +77,7 @@ for (let i = 0; i < 6; i++) {
       product_id: i + 1,
       url: `${mock.image}?text=Product+${i + 1}`,
       alt: mock.name,
+      blur_hash: null,
       file_extension: "jpg",
       file_size: 1024,
       mime_type: "image/jpeg",
@@ -107,6 +108,7 @@ export default function Product({
   isInWishlist?: boolean;
   onToggleWishlist?: () => void;
 }) {
+  // TODO: Fetch "real" recommendations
   const [relatedProducts] = useState<RelatedProduct[]>(products);
 
   if (loading) {
@@ -131,9 +133,9 @@ export default function Product({
       <div className="grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2">
         <div>
           <ProductImageCarousel
-            images={assets
-              .filter((asset) => asset.mime_type.startsWith("image/"))
-              .map((asset) => ({ src: asset.url, alt: asset.alt }))}
+            images={assets.filter((asset) =>
+              asset.mime_type.startsWith("image/")
+            )}
           />
         </div>
         <div>

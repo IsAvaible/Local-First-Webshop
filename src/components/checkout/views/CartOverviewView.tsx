@@ -67,7 +67,7 @@ function CartOverviewView({
               <ProductCard
                 key={product.id}
                 product={product}
-                imageUrl={product.asset?.url}
+                asset={product.asset}
               />
             ))}
           </div>
