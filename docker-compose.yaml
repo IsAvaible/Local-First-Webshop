@@ -31,6 +31,7 @@ services:
       # Not suitable for production. Only use insecure mode in development or if you've otherwise secured the Electric API.
       # See https://electric-sql.com/docs/guides/security
       ELECTRIC_INSECURE: true
+      ELECTRIC_FEATURE_FLAGS: "allow_subqueries"
     ports:
       - "3000:3000"
     depends_on:

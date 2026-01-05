@@ -4,9 +4,6 @@ import {
   proxyElectricRequest
 } from "@/lib/electric-proxy.ts";
 import { auth } from "@/lib/auth.ts";
-import { cartCollaboratorsTable } from "@/db/schema.ts";
-import { db } from "@/db/connection.ts";
-import { eq } from "drizzle-orm";
 
 const serveGet = async ({ request }: { request: Request }) => {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -22,20 +19,8 @@ const serveGet = async ({ request }: { request: Request }) => {
 
   const userId = session.user.id;
 
-  // Get the list of cart IDs where the user is a collaborator
-  const collaboratorRows = await db
-    .select({ cartId: cartCollaboratorsTable.cart_id })
-    .from(cartCollaboratorsTable)
-    .where(eq(cartCollaboratorsTable.user_id, userId));
-
-  const collaboratorIds = collaboratorRows.map((c) => c.cartId);
-
-  // 2. Build Filter Clause
-  // User is a collaborator
-  const filterClause =
-    collaboratorIds.length > 0
-      ? `id::text IN (${collaboratorIds.map((id) => `'${id}'`).join(", ")})`
-      : "0 = 1";
+  // Build Filter Clause using a Subquery
+  const filterClause = `id IN (SELECT cart_id FROM cart_collaborators WHERE user_id = '${userId}')`;
 
   // Force the filter on the query
   originUrl.searchParams.set("where", filterClause);

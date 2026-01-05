@@ -35,11 +35,11 @@ importers:
         specifier: ^3.2.2
         version: 3.2.2(react@19.2.0)
       "@electric-sql/client":
-        specifier: ^1.0.14
-        version: 1.0.14
+        specifier: ^1.3.1
+        version: 1.3.1
       "@electric-sql/y-electric":
-        specifier: ^0.1.16
-        version: 0.1.16
+        specifier: ^0.1.22
+        version: 0.1.22
       "@hookform/resolvers":
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.67.0(react@19.2.0))
@@ -828,22 +828,16 @@ packages:
         integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==
       }
 
-  "@electric-sql/client@1.0.14":
+  "@electric-sql/client@1.3.1":
     resolution:
       {
-        integrity: sha512-LtPAfeMxXRiYS0hyDQ5hue2PjljUiK9stvzsVyVb4nwxWQxfOWTSF42bHTs/o5i3x1T4kAQ7mwHpxa4A+f8X7Q==
+        integrity: sha512-Tr7jY60acKfxuODOzGcJYzEXtTJyiE8l237hMpCPHjflr+qSGYVZ0NkOnFgAE2xIPFgP1zn05nQb3+mkUu8qUQ==
       }
 
-  "@electric-sql/client@1.1.4":
+  "@electric-sql/y-electric@0.1.22":
     resolution:
       {
-        integrity: sha512-88M2iEg5LYSE388wNWjrQMpsIgLzwge60cCN5znQSDEnUEprJZ13vB3r+S8IRNYbmOtUSNVEODuXn+nlqEhEGw==
-      }
-
-  "@electric-sql/y-electric@0.1.16":
-    resolution:
-      {
-        integrity: sha512-W23d0yAdG6osfG6cBDQol26NDEiEPm7wUrMKaAkRjWe4b59dY6JUB0c6h5/3FgdP6s4T94yZuxf3x8lUH0uZ+g==
+        integrity: sha512-kd5G9rEYAcRyRslV2lJvWuV0VRfcSYXn0g9hSfSQB0MIJ5F4lt4D7HhwkWQP1m4ndgpigEJL60KFeI/Sdd9FUg==
       }
 
   "@emnapi/core@1.5.0":
@@ -6705,21 +6699,15 @@ snapshots:
 
   "@drizzle-team/brocli@0.10.2": {}
 
-  "@electric-sql/client@1.0.14":
+  "@electric-sql/client@1.3.1":
     dependencies:
       "@microsoft/fetch-event-source": 2.0.1
     optionalDependencies:
       "@rollup/rollup-darwin-arm64": 4.52.5
 
-  "@electric-sql/client@1.1.4":
+  "@electric-sql/y-electric@0.1.22":
     dependencies:
-      "@microsoft/fetch-event-source": 2.0.1
-    optionalDependencies:
-      "@rollup/rollup-darwin-arm64": 4.52.5
-
-  "@electric-sql/y-electric@0.1.16":
-    dependencies:
-      "@electric-sql/client": 1.1.4
+      "@electric-sql/client": 1.3.1
       lib0: 0.2.114
       y-protocols: 1.0.6(yjs@13.6.27)
       yjs: 13.6.27
@@ -7726,7 +7714,7 @@ snapshots:
 
   "@tanstack/electric-db-collection@0.1.35(typescript@5.9.3)":
     dependencies:
-      "@electric-sql/client": 1.0.14
+      "@electric-sql/client": 1.3.1
       "@standard-schema/spec": 1.0.0
       "@tanstack/db": 0.4.11(typescript@5.9.3)
       "@tanstack/store": 0.8.0
