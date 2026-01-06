@@ -1,8 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { router } from "@/lib/trpc";
-import { projectsRouter } from "@/lib/trpc/projects";
-import { todosRouter } from "@/lib/trpc/todos";
 import { usersRouter } from "@/lib/trpc/users";
 import { db } from "@/db/connection";
 import { auth } from "@/lib/auth";
@@ -16,8 +14,6 @@ import { wishlistRouter } from "@/lib/trpc/wishlist";
 import { notificationsRouter } from "@/lib/trpc/notifications";
 
 export const appRouter = router({
-  projects: projectsRouter,
-  todos: todosRouter,
   users: usersRouter,
   carts: cartsRouter,
   cartCollaborators: cartCollaboratorsRouter,

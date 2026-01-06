@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 
 function Command({
+  unstyled,
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive> & { unstyled?: boolean }) {
@@ -21,7 +22,7 @@ function Command({
     <CommandPrimitive
       data-slot="command"
       className={cn(
-        !props.unstyled &&
+        !unstyled &&
           "bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md",
         className
       )}

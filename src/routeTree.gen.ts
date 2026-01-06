@@ -25,8 +25,6 @@ import { Route as ApiWishlistRouteImport } from './routes/api/wishlist'
 import { Route as ApiUsersRouteImport } from './routes/api/users'
 import { Route as ApiUserSettingsRouteImport } from './routes/api/user-settings'
 import { Route as ApiUserSelectedCartRouteImport } from './routes/api/user-selected-cart'
-import { Route as ApiTodosRouteImport } from './routes/api/todos'
-import { Route as ApiProjectsRouteImport } from './routes/api/projects'
 import { Route as ApiProductsRouteImport } from './routes/api/products'
 import { Route as ApiPricingTiersRouteImport } from './routes/api/pricing-tiers'
 import { Route as ApiOrdersRouteImport } from './routes/api/orders'
@@ -40,9 +38,7 @@ import { Route as ApiCartCollaboratorsRouteImport } from './routes/api/cart-coll
 import { Route as ApiAuthRouteImport } from './routes/api/auth'
 import { Route as ApiAssetsRouteImport } from './routes/api/assets'
 import { Route as ApiAddressesRouteImport } from './routes/api/addresses'
-import { Route as AuthenticatedIndexxRouteImport } from './routes/_authenticated/indexx'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
-import { Route as AuthenticatedProjectProjectIdRouteImport } from './routes/_authenticated/project/$projectId'
 
 const YjsRoute = YjsRouteImport.update({
   id: '/yjs',
@@ -123,16 +119,6 @@ const ApiUserSelectedCartRoute = ApiUserSelectedCartRouteImport.update({
   path: '/api/user-selected-cart',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTodosRoute = ApiTodosRouteImport.update({
-  id: '/api/todos',
-  path: '/api/todos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiProjectsRoute = ApiProjectsRouteImport.update({
-  id: '/api/projects',
-  path: '/api/projects',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiProductsRoute = ApiProductsRouteImport.update({
   id: '/api/products',
   path: '/api/products',
@@ -199,22 +185,11 @@ const ApiAddressesRoute = ApiAddressesRouteImport.update({
   path: '/api/addresses',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedIndexxRoute = AuthenticatedIndexxRouteImport.update({
-  id: '/indexx',
-  path: '/indexx',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
   id: '/api/trpc/$',
   path: '/api/trpc/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedProjectProjectIdRoute =
-  AuthenticatedProjectProjectIdRouteImport.update({
-    id: '/project/$projectId',
-    path: '/project/$projectId',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -225,7 +200,6 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/wishlist': typeof WishlistRoute
   '/yjs': typeof YjsRoute
-  '/indexx': typeof AuthenticatedIndexxRoute
   '/api/addresses': typeof ApiAddressesRoute
   '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
@@ -239,8 +213,6 @@ export interface FileRoutesByFullPath {
   '/api/orders': typeof ApiOrdersRoute
   '/api/pricing-tiers': typeof ApiPricingTiersRoute
   '/api/products': typeof ApiProductsRoute
-  '/api/projects': typeof ApiProjectsRoute
-  '/api/todos': typeof ApiTodosRoute
   '/api/user-selected-cart': typeof ApiUserSelectedCartRoute
   '/api/user-settings': typeof ApiUserSettingsRoute
   '/api/users': typeof ApiUsersRoute
@@ -248,7 +220,6 @@ export interface FileRoutesByFullPath {
   '/api/ydoc-awareness': typeof ApiYdocAwarenessRoute
   '/api/ydoc-updates': typeof ApiYdocUpdatesRoute
   '/products/$productId': typeof ProductsProductIdRoute
-  '/project/$projectId': typeof AuthenticatedProjectProjectIdRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesByTo {
@@ -260,7 +231,6 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/wishlist': typeof WishlistRoute
   '/yjs': typeof YjsRoute
-  '/indexx': typeof AuthenticatedIndexxRoute
   '/api/addresses': typeof ApiAddressesRoute
   '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
@@ -274,8 +244,6 @@ export interface FileRoutesByTo {
   '/api/orders': typeof ApiOrdersRoute
   '/api/pricing-tiers': typeof ApiPricingTiersRoute
   '/api/products': typeof ApiProductsRoute
-  '/api/projects': typeof ApiProjectsRoute
-  '/api/todos': typeof ApiTodosRoute
   '/api/user-selected-cart': typeof ApiUserSelectedCartRoute
   '/api/user-settings': typeof ApiUserSettingsRoute
   '/api/users': typeof ApiUsersRoute
@@ -283,13 +251,12 @@ export interface FileRoutesByTo {
   '/api/ydoc-awareness': typeof ApiYdocAwarenessRoute
   '/api/ydoc-updates': typeof ApiYdocUpdatesRoute
   '/products/$productId': typeof ProductsProductIdRoute
-  '/project/$projectId': typeof AuthenticatedProjectProjectIdRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/_authenticated': typeof AuthenticatedRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/login': typeof LoginRoute
@@ -297,7 +264,6 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/wishlist': typeof WishlistRoute
   '/yjs': typeof YjsRoute
-  '/_authenticated/indexx': typeof AuthenticatedIndexxRoute
   '/api/addresses': typeof ApiAddressesRoute
   '/api/assets': typeof ApiAssetsRoute
   '/api/auth': typeof ApiAuthRoute
@@ -311,8 +277,6 @@ export interface FileRoutesById {
   '/api/orders': typeof ApiOrdersRoute
   '/api/pricing-tiers': typeof ApiPricingTiersRoute
   '/api/products': typeof ApiProductsRoute
-  '/api/projects': typeof ApiProjectsRoute
-  '/api/todos': typeof ApiTodosRoute
   '/api/user-selected-cart': typeof ApiUserSelectedCartRoute
   '/api/user-settings': typeof ApiUserSettingsRoute
   '/api/users': typeof ApiUsersRoute
@@ -320,7 +284,6 @@ export interface FileRoutesById {
   '/api/ydoc-awareness': typeof ApiYdocAwarenessRoute
   '/api/ydoc-updates': typeof ApiYdocUpdatesRoute
   '/products/$productId': typeof ProductsProductIdRoute
-  '/_authenticated/project/$projectId': typeof AuthenticatedProjectProjectIdRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRouteTypes {
@@ -334,7 +297,6 @@ export interface FileRouteTypes {
     | '/search'
     | '/wishlist'
     | '/yjs'
-    | '/indexx'
     | '/api/addresses'
     | '/api/assets'
     | '/api/auth'
@@ -348,8 +310,6 @@ export interface FileRouteTypes {
     | '/api/orders'
     | '/api/pricing-tiers'
     | '/api/products'
-    | '/api/projects'
-    | '/api/todos'
     | '/api/user-selected-cart'
     | '/api/user-settings'
     | '/api/users'
@@ -357,7 +317,6 @@ export interface FileRouteTypes {
     | '/api/ydoc-awareness'
     | '/api/ydoc-updates'
     | '/products/$productId'
-    | '/project/$projectId'
     | '/api/trpc/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -369,7 +328,6 @@ export interface FileRouteTypes {
     | '/search'
     | '/wishlist'
     | '/yjs'
-    | '/indexx'
     | '/api/addresses'
     | '/api/assets'
     | '/api/auth'
@@ -383,8 +341,6 @@ export interface FileRouteTypes {
     | '/api/orders'
     | '/api/pricing-tiers'
     | '/api/products'
-    | '/api/projects'
-    | '/api/todos'
     | '/api/user-selected-cart'
     | '/api/user-settings'
     | '/api/users'
@@ -392,7 +348,6 @@ export interface FileRouteTypes {
     | '/api/ydoc-awareness'
     | '/api/ydoc-updates'
     | '/products/$productId'
-    | '/project/$projectId'
     | '/api/trpc/$'
   id:
     | '__root__'
@@ -405,7 +360,6 @@ export interface FileRouteTypes {
     | '/search'
     | '/wishlist'
     | '/yjs'
-    | '/_authenticated/indexx'
     | '/api/addresses'
     | '/api/assets'
     | '/api/auth'
@@ -419,8 +373,6 @@ export interface FileRouteTypes {
     | '/api/orders'
     | '/api/pricing-tiers'
     | '/api/products'
-    | '/api/projects'
-    | '/api/todos'
     | '/api/user-selected-cart'
     | '/api/user-settings'
     | '/api/users'
@@ -428,13 +380,12 @@ export interface FileRouteTypes {
     | '/api/ydoc-awareness'
     | '/api/ydoc-updates'
     | '/products/$productId'
-    | '/_authenticated/project/$projectId'
     | '/api/trpc/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AuthenticatedRoute: typeof AuthenticatedRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   LoginRoute: typeof LoginRoute
@@ -455,8 +406,6 @@ export interface RootRouteChildren {
   ApiOrdersRoute: typeof ApiOrdersRoute
   ApiPricingTiersRoute: typeof ApiPricingTiersRoute
   ApiProductsRoute: typeof ApiProductsRoute
-  ApiProjectsRoute: typeof ApiProjectsRoute
-  ApiTodosRoute: typeof ApiTodosRoute
   ApiUserSelectedCartRoute: typeof ApiUserSelectedCartRoute
   ApiUserSettingsRoute: typeof ApiUserSettingsRoute
   ApiUsersRoute: typeof ApiUsersRoute
@@ -581,20 +530,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUserSelectedCartRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/todos': {
-      id: '/api/todos'
-      path: '/api/todos'
-      fullPath: '/api/todos'
-      preLoaderRoute: typeof ApiTodosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/projects': {
-      id: '/api/projects'
-      path: '/api/projects'
-      fullPath: '/api/projects'
-      preLoaderRoute: typeof ApiProjectsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/products': {
       id: '/api/products'
       path: '/api/products'
@@ -686,13 +621,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAddressesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/indexx': {
-      id: '/_authenticated/indexx'
-      path: '/indexx'
-      fullPath: '/indexx'
-      preLoaderRoute: typeof AuthenticatedIndexxRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/api/trpc/$': {
       id: '/api/trpc/$'
       path: '/api/trpc/$'
@@ -700,33 +628,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTrpcSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/project/$projectId': {
-      id: '/_authenticated/project/$projectId'
-      path: '/project/$projectId'
-      fullPath: '/project/$projectId'
-      preLoaderRoute: typeof AuthenticatedProjectProjectIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
   }
 }
 
-interface AuthenticatedRouteChildren {
-  AuthenticatedIndexxRoute: typeof AuthenticatedIndexxRoute
-  AuthenticatedProjectProjectIdRoute: typeof AuthenticatedProjectProjectIdRoute
-}
-
-const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedIndexxRoute: AuthenticatedIndexxRoute,
-  AuthenticatedProjectProjectIdRoute: AuthenticatedProjectProjectIdRoute,
-}
-
-const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
-  AuthenticatedRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AuthenticatedRoute: AuthenticatedRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   LoginRoute: LoginRoute,
@@ -747,8 +654,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiOrdersRoute: ApiOrdersRoute,
   ApiPricingTiersRoute: ApiPricingTiersRoute,
   ApiProductsRoute: ApiProductsRoute,
-  ApiProjectsRoute: ApiProjectsRoute,
-  ApiTodosRoute: ApiTodosRoute,
   ApiUserSelectedCartRoute: ApiUserSelectedCartRoute,
   ApiUserSettingsRoute: ApiUserSettingsRoute,
   ApiUsersRoute: ApiUsersRoute,
