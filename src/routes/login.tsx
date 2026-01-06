@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
 import { zodValidator } from "@tanstack/zod-adapter";
@@ -17,7 +17,6 @@ export const Route = createFileRoute("/login")({
 
 function Layout() {
   const search = Route.useSearch();
-  const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,11 +29,9 @@ function Layout() {
     setError("");
 
     // Helper to handle the final navigation
-    const handleSuccess = async () => {
-      await navigate({
-        to: search.redirect,
-        replace: true
-      });
+    const handleSuccess = () => {
+      // Force a hard reload to tear down the stale Electric sync stream
+      window.location.href = search.redirect;
     };
 
     try {
@@ -58,7 +55,7 @@ function Layout() {
           {
             onSuccess: async () => {
               await authClient.getSession();
-              await handleSuccess();
+              handleSuccess();
             }
           }
         );
