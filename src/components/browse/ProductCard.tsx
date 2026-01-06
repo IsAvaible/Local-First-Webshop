@@ -28,12 +28,14 @@ interface ProductCardProps {
   product: Product & { min_price?: number | null };
   customFields?: Record<string, { value: JsonValue; type?: string }>;
   asset?: Asset;
+  lazy?: boolean;
 }
 
 export default function ProductCard({
   product,
   customFields,
-  asset
+  asset,
+  lazy = false
 }: ProductCardProps) {
   const {
     addItem,
@@ -67,7 +69,7 @@ export default function ProductCard({
             asset={asset}
             alt={product.name}
             containerClassName="aspect-square w-full rounded-t-lg"
-            loading="lazy"
+            loading={lazy ? "lazy" : "eager"}
           />
         </CardHeader>
         <CardContent className="flex-grow p-4">

@@ -150,12 +150,13 @@ export default function Browse({
                   aria-description="List of articles"
                   className="col-span-full grid grid-cols-[inherit] gap-[inherit] 2xl:min-w-[1024px]"
                 >
-                  {products.map((product) => (
+                  {products.map((product, index) => (
                     <ProductCard
                       key={product.id}
                       product={product}
                       customFields={productCustomFields.get(product.id)}
                       asset={product.asset}
+                      lazy={index > 5}
                     />
                   ))}
                 </section>
