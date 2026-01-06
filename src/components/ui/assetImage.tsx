@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Blurhash } from "react-blurhash";
 import { ImageOff } from "lucide-react";
 import type { Asset } from "@/db/schema.ts";
 
-// 2. Define Props
 interface AssetImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   asset?: Asset | null;
   containerClassName?: string;
@@ -12,15 +11,16 @@ interface AssetImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 export function AssetImage({
   asset,
   alt,
-  className,
+  className = "",
   containerClassName = "",
   ...props
 }: AssetImageProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [enableTransition, setEnableTransition] = useState(false);
-
   const [showBlurhash, setShowBlurhash] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
+
+  const imgRef = useRef<HTMLImageElement>(null);
 
   // Effect 1: Handle Missing Asset Delay
   useEffect(() => {
@@ -35,16 +35,20 @@ export function AssetImage({
     }
   }, [asset]);
 
-  // Effect 2: Handle Existing Image Loading Delay & Transition Timing
+  // Effect 2: Handle Existing Image Loading & Transition Timing
   useEffect(() => {
     if (asset) {
-      // Reset all states when asset changes
+      // Reset states
       setImageLoaded(false);
       setEnableTransition(false);
       setShowBlurhash(false);
 
+      // If the image is already cached/loaded, set state immediately.
+      if (imgRef.current?.complete) {
+        setImageLoaded(true);
+      }
+
       // Timer A: Wait 500ms before showing the Blurhash
-      // (Prevents flashing if image loads instantly)
       const blurHashTimer = setTimeout(() => {
         setShowBlurhash(true);
       }, 500);
@@ -103,6 +107,8 @@ export function AssetImage({
 
       {/* Actual Image */}
       <img
+        ref={imgRef}
+        key={asset.url}
         src={asset.url}
         alt={alt ?? asset.alt}
         onLoad={() => setImageLoaded(true)}
