@@ -456,9 +456,7 @@ export const userSettingsTable = pgTable("user_settings", {
   // Notifications
   notify_order_updates: boolean("notify_order_updates").notNull().default(true),
   notify_newsletter: boolean("notify_newsletter").notNull().default(false),
-  notify_price_changes: boolean("notify_price_changes")
-    .notNull()
-    .default(false),
+  notify_price_changes: boolean("notify_price_changes").notNull().default(true),
 
   // Localization
   currency: varchar("currency", { length: 3 }).notNull().default("EUR"), // ISO 4217
