@@ -1,5 +1,7 @@
 # Secrets
 .env
+/test-results/
+/playwright-report/
 
 # Tanstack
 .tanstack
