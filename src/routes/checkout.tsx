@@ -270,7 +270,7 @@ function CheckoutPage() {
   }
 
   if (state.isSuccess) {
-    return <SuccessView onReset={actions.resetFlow} />;
+    return <SuccessView />;
   }
 
   if (state.isWizard) {

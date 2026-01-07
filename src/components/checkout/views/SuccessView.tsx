@@ -7,8 +7,11 @@ import {
   CardTitle
 } from "@/components/ui/card";
 import { ShieldCheckIcon } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 
-function SuccessView({ onReset }: { onReset: () => void }) {
+function SuccessView() {
+  const navigate = useNavigate();
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50/50 py-16 dark:bg-slate-950">
       <div className="container max-w-lg px-4 text-center">
@@ -29,7 +32,19 @@ function SuccessView({ onReset }: { onReset: () => void }) {
               Thank you for your purchase. We have sent a confirmation email to
               your inbox.
             </p>
-            <Button onClick={onReset} className="mt-4 w-full">
+            <Button
+              onClick={() =>
+                navigate({ to: "/profile", search: { tab: "orders" } })
+              }
+              className="mt-4 w-full"
+            >
+              Track Order
+            </Button>
+            <Button
+              onClick={() => navigate({ to: "/search" })}
+              variant="outline"
+              className="w-full"
+            >
               Return to Store
             </Button>
           </CardContent>
