@@ -40,7 +40,7 @@ BEGIN
                         notif_type,
                         notif_title,
                         notif_body,
-                        '/orders/[orderId]',
+                        '/orders/$orderId',
                         jsonb_build_object('orderId', NEW.id),
                         NOW());
             END IF;
@@ -51,7 +51,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_order_status_update
+CREATE OR REPLACE TRIGGER trigger_order_status_update
     AFTER UPDATE ON orders
     FOR EACH ROW
 EXECUTE FUNCTION notify_order_status_update();
