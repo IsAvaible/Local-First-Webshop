@@ -115,7 +115,7 @@ export function ProfileSettings({ userSettings }: ProfileSettingsProps) {
       toast("Settings updated successfully");
     } catch (error) {
       const message = `Failed to update settings:${JSON.stringify(error)}`;
-      console.error(message);
+      console.error(error);
       toast(message);
     }
   };

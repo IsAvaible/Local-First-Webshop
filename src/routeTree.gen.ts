@@ -25,6 +25,7 @@ import { Route as ApiWishlistRouteImport } from './routes/api/wishlist'
 import { Route as ApiUsersRouteImport } from './routes/api/users'
 import { Route as ApiUserSettingsRouteImport } from './routes/api/user-settings'
 import { Route as ApiUserSelectedCartRouteImport } from './routes/api/user-selected-cart'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe-webhook'
 import { Route as ApiProductsRouteImport } from './routes/api/products'
 import { Route as ApiPricingTiersRouteImport } from './routes/api/pricing-tiers'
 import { Route as ApiOrdersRouteImport } from './routes/api/orders'
@@ -117,6 +118,11 @@ const ApiUserSettingsRoute = ApiUserSettingsRouteImport.update({
 const ApiUserSelectedCartRoute = ApiUserSelectedCartRouteImport.update({
   id: '/api/user-selected-cart',
   path: '/api/user-selected-cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe-webhook',
+  path: '/api/stripe-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiProductsRoute = ApiProductsRouteImport.update({
@@ -213,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/api/orders': typeof ApiOrdersRoute
   '/api/pricing-tiers': typeof ApiPricingTiersRoute
   '/api/products': typeof ApiProductsRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/api/user-selected-cart': typeof ApiUserSelectedCartRoute
   '/api/user-settings': typeof ApiUserSettingsRoute
   '/api/users': typeof ApiUsersRoute
@@ -244,6 +251,7 @@ export interface FileRoutesByTo {
   '/api/orders': typeof ApiOrdersRoute
   '/api/pricing-tiers': typeof ApiPricingTiersRoute
   '/api/products': typeof ApiProductsRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/api/user-selected-cart': typeof ApiUserSelectedCartRoute
   '/api/user-settings': typeof ApiUserSettingsRoute
   '/api/users': typeof ApiUsersRoute
@@ -277,6 +285,7 @@ export interface FileRoutesById {
   '/api/orders': typeof ApiOrdersRoute
   '/api/pricing-tiers': typeof ApiPricingTiersRoute
   '/api/products': typeof ApiProductsRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/api/user-selected-cart': typeof ApiUserSelectedCartRoute
   '/api/user-settings': typeof ApiUserSettingsRoute
   '/api/users': typeof ApiUsersRoute
@@ -310,6 +319,7 @@ export interface FileRouteTypes {
     | '/api/orders'
     | '/api/pricing-tiers'
     | '/api/products'
+    | '/api/stripe-webhook'
     | '/api/user-selected-cart'
     | '/api/user-settings'
     | '/api/users'
@@ -341,6 +351,7 @@ export interface FileRouteTypes {
     | '/api/orders'
     | '/api/pricing-tiers'
     | '/api/products'
+    | '/api/stripe-webhook'
     | '/api/user-selected-cart'
     | '/api/user-settings'
     | '/api/users'
@@ -373,6 +384,7 @@ export interface FileRouteTypes {
     | '/api/orders'
     | '/api/pricing-tiers'
     | '/api/products'
+    | '/api/stripe-webhook'
     | '/api/user-selected-cart'
     | '/api/user-settings'
     | '/api/users'
@@ -406,6 +418,7 @@ export interface RootRouteChildren {
   ApiOrdersRoute: typeof ApiOrdersRoute
   ApiPricingTiersRoute: typeof ApiPricingTiersRoute
   ApiProductsRoute: typeof ApiProductsRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   ApiUserSelectedCartRoute: typeof ApiUserSelectedCartRoute
   ApiUserSettingsRoute: typeof ApiUserSettingsRoute
   ApiUsersRoute: typeof ApiUsersRoute
@@ -528,6 +541,13 @@ declare module '@tanstack/react-router' {
       path: '/api/user-selected-cart'
       fullPath: '/api/user-selected-cart'
       preLoaderRoute: typeof ApiUserSelectedCartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe-webhook': {
+      id: '/api/stripe-webhook'
+      path: '/api/stripe-webhook'
+      fullPath: '/api/stripe-webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/products': {
@@ -654,6 +674,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiOrdersRoute: ApiOrdersRoute,
   ApiPricingTiersRoute: ApiPricingTiersRoute,
   ApiProductsRoute: ApiProductsRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   ApiUserSelectedCartRoute: ApiUserSelectedCartRoute,
   ApiUserSettingsRoute: ApiUserSettingsRoute,
   ApiUsersRoute: ApiUsersRoute,

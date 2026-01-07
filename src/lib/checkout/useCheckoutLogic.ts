@@ -4,7 +4,6 @@ import { useCart } from "@/contexts/useCartContext";
 import { CONFIG, FLOW_ORDER, WIZARD_STEPS } from "@/lib/checkout/config";
 import type { FlowStepId, ShippingMethod } from "@/lib/checkout/types";
 import type { Stripe, StripeElements } from "@stripe/stripe-js";
-import { trpc } from "@/lib/trpc-client.ts";
 import {
   calculateOrderTotals,
   type CalculationResult
@@ -60,8 +59,6 @@ export function useCheckoutLogic({
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  const finalizeOrderMutation = trpc.orders.finalizeCheckout;
-
   // --- Handle Stripe Return Logic ---
   useEffect(() => {
     // If there are no stripe params, do nothing
@@ -75,24 +72,8 @@ export function useCheckoutLogic({
     }
 
     if (redirect_status === "succeeded") {
-      finalizeOrderMutation
-        .mutate({ paymentIntentId: payment_intent })
-        .then((data) => {
-          setIsProcessing(true);
-          void navigate({
-            search: { step: "success", orderId: data.orderId },
-            replace: true
-          });
-        })
-        .catch((err) => {
-          console.error("Order creation failed:", err);
-          setPaymentError(
-            "Payment succeeded, but order creation failed. Please contact support."
-          );
-        })
-        .finally(() => {
-          setIsProcessing(false);
-        });
+      // The order completion is now handled by the Stripe Webhook.
+      setIsProcessing(false);
     } else if (redirect_status === "failed" || error) {
       setPaymentError(
         error ?? "Payment failed or was cancelled. Please try again."
@@ -106,7 +87,7 @@ export function useCheckoutLogic({
         replace: true
       });
     }
-  }, [stripeParams, navigate, step, finalizeOrderMutation]);
+  }, [stripeParams, navigate, step]);
 
   type Totals = CalculationResult["formatted"];
 

@@ -559,7 +559,8 @@ export const paymentStatusEnum = pgEnum("payment_status", [
   "paid",
   "refunded",
   "partially_refunded",
-  "failed"
+  "failed",
+  "requires_manual_review"
 ]);
 
 export const ordersTable = pgTable(
@@ -592,6 +593,7 @@ export const ordersTable = pgTable(
     payment_status: paymentStatusEnum("payment_status")
       .notNull()
       .default("unpaid"),
+    payment_failed_reason: varchar({ length: 255 }),
     payment_method: varchar({ length: 50 }),
     transaction_id: varchar({ length: 100 }).notNull().unique(), // Stripe intent id
     stripe_client_secret: varchar({ length: 255 }),

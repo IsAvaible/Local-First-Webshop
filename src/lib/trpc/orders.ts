@@ -254,11 +254,14 @@ export const ordersRouter = router({
           // SCENARIO 2: CREATE NEW
           // ---------------------------------------------------------
           else {
+            const orderNumber = `ORD-${Date.now()}`;
+            const tempTransactionId = `tmp_${orderNumber}_${crypto.randomUUID()}`;
+
             // Insert Order using Helper Results
             const [newOrder] = await tx
               .insert(ordersTable)
               .values({
-                order_number: `ORD-${Date.now()}`,
+                order_number: orderNumber,
                 user_id: ctx.session.user.id,
                 status: "pending",
                 payment_status: "unpaid",
@@ -271,7 +274,7 @@ export const ordersRouter = router({
                 shipping_address_snapshot: address ?? {},
                 billing_address_snapshot: billingAddress ?? {},
                 shipping_carrier: input.shippingMethod,
-                transaction_id: "pending",
+                transaction_id: tempTransactionId,
                 cart_id: activeCartId
               })
               .returning();
@@ -329,70 +332,5 @@ export const ordersRouter = router({
         });
       });
       return result;
-    }),
-
-  finalizeCheckout: authedProcedure
-    .input(
-      z.object({
-        paymentIntentId: z.string()
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      // TODO: This should be triggered by a Stripe Webhook for better reliability
-      // If e.g. the user closes the browser before returning
-
-      // Verify with Stripe (Source of Truth)
-      const paymentIntent = await stripe.paymentIntents.retrieve(
-        input.paymentIntentId
-      );
-
-      if (paymentIntent.status !== "succeeded") {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "Payment not successful"
-        });
-      }
-
-      // Find the Pending Order
-      const [order] = await ctx.db
-        .select()
-        .from(ordersTable)
-        .where(eq(ordersTable.transaction_id, input.paymentIntentId));
-
-      if (!order) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Order not found" });
-      }
-
-      // Verification: Did the user pay what the order expected?
-      const orderTotalCents = Math.round(
-        new Big(order.grand_total).times(100).toNumber()
-      );
-      if (paymentIntent.amount !== orderTotalCents) {
-        // This is a "Critical Alert" scenario - requires manual review
-        console.error(
-          `MISMATCH: Order ${order.id} expected ${orderTotalCents} but got ${paymentIntent.amount}`
-        );
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "Payment amount mismatch"
-        });
-      }
-
-      const validStatuses = ["pending", "awaiting_payment"];
-
-      // 4. Update Status to Paid
-      if (validStatuses.includes(order.status)) {
-        await ctx.db
-          .update(ordersTable)
-          .set({
-            status: "processing",
-            payment_status: "paid",
-            paid_at: new Date(),
-            updated_at: new Date()
-          })
-          .where(eq(ordersTable.id, order.id));
-      }
-
-      return { orderId: order.id, status: "confirmed" };
     })
 });
