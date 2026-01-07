@@ -68,7 +68,7 @@ export default function ProductCard({
           <AssetImage
             asset={asset}
             alt={product.name}
-            containerClassName="aspect-square w-full rounded-t-lg"
+            containerClassName="aspect-square w-full rounded-t-xl"
             loading={lazy ? "lazy" : "eager"}
           />
         </CardHeader>
@@ -156,9 +156,8 @@ function QuantityActionButton({
         "bg-primary-foreground/10 hover:bg-primary-foreground/20 active:bg-primary-foreground/10",
         "flex h-full w-0 flex-col items-center justify-center",
         "opacity-0 transition-all duration-300",
-        // Expand and fade in when parent group is focused or hovered
-        "group-focus-within:w-8 group-focus-within:opacity-100",
-        "group-hover:w-8 group-hover:opacity-100",
+        "group-focus-within/quantity:w-8 group-focus-within/quantity:opacity-100",
+        "group-hover/quantity:w-8 group-hover/quantity:opacity-100",
         disabled && "cursor-not-allowed"
       )}
       aria-label={label}
@@ -229,8 +228,7 @@ function CartQuantitySelector({
   return (
     <div
       className={cn(
-        // The 'group' class controls the hover expansion of children.
-        !disabled && isHoverEnabled && "group",
+        !disabled && isHoverEnabled && "group/quantity",
         "bg-primary text-primary-foreground relative flex h-9 min-w-9 items-center overflow-hidden rounded-md shadow-sm transition-all duration-300 ease-in-out",
         !disabled &&
           "hover:ring-primary/20 focus-within:ring-primary/20 focus-within:ring-2 hover:ring-2",
@@ -247,7 +245,12 @@ function CartQuantitySelector({
       {/* Center Display (Icon/Badge vs Input) */}
       <div className="relative flex h-full items-center justify-center">
         {/* IDLE State: Icon + Badge */}
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center transition-opacity duration-300 group-focus-within:opacity-0 group-hover:opacity-0">
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-0 flex items-center justify-center transition-opacity duration-300",
+            "group-focus-within/quantity:opacity-0 group-hover/quantity:opacity-0"
+          )}
+        >
           <ShoppingCartIcon className="h-4 w-4" />
           <Badge className="absolute -top-0.5 -right-0 flex size-4 items-center justify-center bg-transparent p-0">
             {quantity}
@@ -255,7 +258,12 @@ function CartQuantitySelector({
         </div>
 
         {/* ACTIVE State: Input Field */}
-        <div className="flex h-full items-center justify-center opacity-0 transition-opacity duration-300 group-focus-within:opacity-100 group-hover:opacity-100">
+        <div
+          className={cn(
+            "flex h-full items-center justify-center opacity-0 transition-opacity duration-300",
+            "group-focus-within/quantity:opacity-100 group-hover/quantity:opacity-100"
+          )}
+        >
           <Input
             type="number"
             min={1}

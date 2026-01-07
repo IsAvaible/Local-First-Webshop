@@ -94,7 +94,7 @@ export function Wishlist() {
           item.calculated_price ?? parseFloat(item.price_snapshot);
 
         return (
-          <div key={item.wishlistId} className="group relative">
+          <div key={item.wishlistId} className="group/wishlist relative">
             <ProductCard
               product={{
                 ...item.product,
@@ -105,7 +105,7 @@ export function Wishlist() {
             <Button
               variant={"outline"}
               size="icon"
-              className="absolute top-2 right-2 text-red-500 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-600"
+              className="absolute top-2 right-2 z-1 text-red-500 opacity-0 transition-opacity group-hover/wishlist:opacity-100 hover:text-red-600"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
