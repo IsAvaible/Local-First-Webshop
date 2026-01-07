@@ -15,6 +15,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils.ts";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { AssetImage } from "@/components/ui/assetImage.tsx";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export function CartItemComponent({
   item,
@@ -32,7 +33,8 @@ export function CartItemComponent({
     removeItem,
     updateItemQuantity,
     addTagToItem,
-    removeTagFromItem
+    removeTagFromItem,
+    toggleItemSelection
   } = useCart();
 
   const thisItemsTags = tags?.filter((t) => item.tag_ids.includes(t.id)) ?? [];
@@ -67,12 +69,18 @@ export function CartItemComponent({
           className
         )}
       >
+        <Checkbox
+          className="my-auto @max-sm:hidden"
+          checked={item.is_selected ?? true}
+          onCheckedChange={() => toggleItemSelection(item.id)}
+          disabled={disabled}
+        />
         <AssetImage
           asset={asset}
           containerClassName="my-auto aspect-3/4 w-20 rounded-md object-cover @max-[16rem]:hidden @sm:w-28"
         />
 
-        <div className="flex flex-1 justify-between">
+        <div className="flex flex-1 justify-between gap-3">
           <div className="flex flex-1 flex-col justify-between gap-y-2">
             <h3 className="flex items-center justify-between text-sm font-semibold">
               <span className="inline-block max-w-28 truncate @[16rem]:max-w-20 @sm:max-w-none!">

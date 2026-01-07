@@ -35,7 +35,10 @@ export function useCheckoutLogic({
   stripeParams
 }: UseCheckoutLogicProps) {
   const { enrichedFlatItems: rawCartItems, cartId } = useCart();
-  const cartItems = useMemo(() => rawCartItems ?? [], [rawCartItems]);
+  const cartItems = useMemo(
+    () => (rawCartItems ?? []).filter((item) => item.is_selected ?? true),
+    [rawCartItems]
+  );
 
   // Determine current position in the linear flow
   const currentFlowIndex = FLOW_ORDER.indexOf(step);

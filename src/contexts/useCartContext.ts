@@ -105,6 +105,8 @@ export interface CartContextType {
   addTagToItem: (itemId: string, tagId: string) => void;
   removeTagFromItem: (itemId: string, tagId: string) => void;
 
+  toggleItemSelection: (itemId: string) => void;
+
   // --- Internal Yjs Doc ---
   __yDoc: Y.Doc;
 }

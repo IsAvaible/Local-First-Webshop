@@ -464,6 +464,7 @@ function CartSession({
         itemMap.set("price_snapshot", price);
         itemMap.set("tag_ids", []);
         itemMap.set("notes", null);
+        itemMap.set("is_selected", true);
         itemMap.set("created_at", Date.now());
 
         nodesMap.set(id, itemMap);
@@ -688,6 +689,19 @@ function CartSession({
     [ydoc, tagsMap, nodesMap]
   );
 
+  const toggleItemSelection = useCallback(
+    (itemId: string) => {
+      ydoc.transact(() => {
+        const item = nodesMap.get(itemId);
+        if (item && isYItemMap(item)) {
+          const current = item.get("is_selected") ?? true;
+          item.set("is_selected", !current);
+        }
+      });
+    },
+    [ydoc, nodesMap]
+  );
+
   // --- Collaborator Management Actions ---
 
   const updateCollaboratorRole = async (
@@ -741,6 +755,7 @@ function CartSession({
     deleteTag,
     addTagToItem,
     removeTagFromItem,
+    toggleItemSelection,
     __yDoc: ydoc
   };
 

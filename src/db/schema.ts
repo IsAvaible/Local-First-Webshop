@@ -362,6 +362,7 @@ export type YCartItemShape = BaseNodeShape & {
   price_snapshot: string;
   tag_ids: string[];
   notes: string | null;
+  is_selected: boolean;
   created_at: number;
 };
 
