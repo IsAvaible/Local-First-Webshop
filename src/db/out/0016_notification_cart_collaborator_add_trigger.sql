@@ -25,7 +25,7 @@ BEGIN
                 'cart_collaborator_add',
                 'Shared Cart Invitation',
                 'You have been added to the cart "' || cart_name_val || '"',
-                '/cart/$cartId',
+                '/cart?id=$cartId',
                 jsonb_build_object('cartId', NEW.cart_id),
                 NOW());
     END IF;
