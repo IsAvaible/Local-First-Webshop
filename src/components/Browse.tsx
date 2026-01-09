@@ -85,7 +85,7 @@ export default function Browse({
       </div>
       <div className="w-full">
         <div className="relative grid w-full gap-8 px-8 md:grid-cols-[1fr_auto_minmax(0,1fr)] 2xl:gap-12">
-          <aside className="col-span-full hidden justify-end md:col-span-1 md:flex">
+          <aside className="sticky top-28 col-span-full hidden h-full max-h-[calc(100vh-10rem)] justify-end self-start overflow-y-auto md:col-span-1 md:flex">
             <Filter
               categories={categories}
               companies={companies}
@@ -163,7 +163,11 @@ export default function Browse({
               )}
             </div>
           </div>
-          <div id="shopping-cart" className="3xl:block hidden">
+
+          <div
+            id="shopping-cart"
+            className="3xl:block sticky top-24 hidden h-screen self-start"
+          >
             <Cart className={"w-80"} />
           </div>
         </div>
