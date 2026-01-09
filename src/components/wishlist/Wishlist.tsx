@@ -96,6 +96,7 @@ export function Wishlist() {
         return (
           <div key={item.wishlistId} className="group/wishlist relative">
             <ProductCard
+              className="transform-gpu"
               product={{
                 ...item.product,
                 min_price: finalPrice as number

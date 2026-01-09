@@ -35,8 +35,10 @@ export default function ProductCard({
   product,
   customFields,
   asset,
-  lazy = false
-}: ProductCardProps) {
+  lazy = false,
+  className = "",
+  ...props
+}: ProductCardProps & React.ComponentProps<typeof Card>) {
   const {
     addItem,
     canManageItems,
@@ -58,7 +60,13 @@ export default function ProductCard({
   const hasCustomFields = customFields && Object.keys(customFields).length > 0;
 
   return (
-    <Card className="flex h-full flex-col overflow-hidden pt-0 transition-shadow hover:shadow-md">
+    <Card
+      className={cn(
+        "flex h-full flex-col overflow-hidden pt-0 transition-shadow hover:shadow-md",
+        className
+      )}
+      {...props}
+    >
       <Link
         to="/products/$productId"
         params={{ productId: product.id }}
