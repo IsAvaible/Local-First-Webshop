@@ -108,10 +108,12 @@ export const SortableNode = React.memo(
   ({
     node,
     className,
-    disabled
+    disabled,
+    displayItemSelect
   }: {
     node: EnrichedCartNode;
     disabled?: boolean;
+    displayItemSelect?: boolean;
   } & React.ComponentProps<"div">) => {
     const {
       attributes,
@@ -148,7 +150,11 @@ export const SortableNode = React.memo(
       );
     return (
       <div {...commonProps}>
-        <CartItemComponent item={node} disabled={disabled} />
+        <CartItemComponent
+          item={node}
+          disabled={disabled}
+          displaySelect={displayItemSelect}
+        />
       </div>
     );
   },
@@ -156,7 +162,8 @@ export const SortableNode = React.memo(
     return (
       prevProps.node.id === nextProps.node.id &&
       prevProps.node === nextProps.node &&
-      prevProps.disabled === nextProps.disabled
+      prevProps.disabled === nextProps.disabled &&
+      prevProps.displayItemSelect === nextProps.displayItemSelect
     );
   }
 );
@@ -179,12 +186,6 @@ const dropAnimationConfig: DropAnimation = {
 // MAIN COMPONENT
 // ------------------------------------------------------------------
 
-interface CartProps {
-  displayHeader?: boolean;
-  displayFooter?: boolean;
-  displayCheckoutButton?: boolean;
-}
-
 // Type for our optimized lookup map
 type NodeMetadata = {
   node: EnrichedCartNode;
@@ -193,10 +194,18 @@ type NodeMetadata = {
   depth: number;
 };
 
+interface CartProps {
+  displayHeader?: boolean;
+  displayFooter?: boolean;
+  displayCheckoutButton?: boolean;
+  displayItemSelect?: boolean;
+}
+
 export function Cart({
   displayHeader,
   displayFooter,
   displayCheckoutButton,
+  displayItemSelect,
   className
 }: CartProps & React.ComponentProps<"div">) {
   const {
@@ -503,6 +512,7 @@ export function Cart({
                   key={node.id}
                   node={node}
                   disabled={!canManageItems}
+                  displayItemSelect={displayItemSelect}
                 />
               ))}
             </SortableContext>
@@ -544,7 +554,10 @@ export function Cart({
                 disabled={!canManageItems}
               />
             ) : (
-              <CartItemComponent item={activeNode} />
+              <CartItemComponent
+                item={activeNode}
+                displaySelect={displayItemSelect}
+              />
             )}
           </div>
         ) : null}

@@ -21,10 +21,12 @@ export function CartItemComponent({
   item,
   className,
   dragHandleProps,
+  displaySelect,
   disabled
 }: {
   item: EnrichedCartItem;
   dragHandleProps?: SyntheticListenerMap;
+  displaySelect?: boolean;
   disabled?: boolean;
 } & React.ComponentProps<"div">) {
   const {
@@ -69,12 +71,14 @@ export function CartItemComponent({
           className
         )}
       >
-        <Checkbox
-          className="my-auto @max-sm:hidden"
-          checked={item.is_selected ?? true}
-          onCheckedChange={() => toggleItemSelection(item.id)}
-          disabled={disabled}
-        />
+        {displaySelect && (
+          <Checkbox
+            className="my-auto"
+            checked={item.is_selected ?? true}
+            onCheckedChange={() => toggleItemSelection(item.id)}
+            disabled={disabled}
+          />
+        )}
         <AssetImage
           asset={asset}
           containerClassName="my-auto aspect-3/4 w-20 rounded-md object-cover @max-[16rem]:hidden @sm:w-28"

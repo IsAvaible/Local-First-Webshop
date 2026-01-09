@@ -21,7 +21,11 @@ function CartItemsList() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Cart displayHeader={false} displayCheckoutButton={false} />
+        <Cart
+          displayHeader={false}
+          displayCheckoutButton={false}
+          displayItemSelect={true}
+        />
       </CardContent>
     </Card>
   );
