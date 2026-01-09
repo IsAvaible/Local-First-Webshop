@@ -23,17 +23,16 @@ import {
   SWATCH_BG_STYLES,
   TAG_PILL_STYLES
 } from "@/lib/constants/tag-styles.ts";
+import { useCartDisplay } from "@/components/cart/CartDisplayContext.ts";
 
 export function CartItem({
   item,
   className,
   dragHandleProps,
-  displaySelect,
   disabled
 }: {
   item: EnrichedCartItem;
   dragHandleProps?: SyntheticListenerMap;
-  displaySelect?: boolean;
   disabled?: boolean;
 } & React.ComponentProps<"div">) {
   const {
@@ -45,6 +44,7 @@ export function CartItem({
     removeTagFromItem,
     toggleItemSelection
   } = useCart();
+  const { displayItemSelect } = useCartDisplay();
 
   const thisItemsTags = tags?.filter((t) => item.tag_ids.includes(t.id)) ?? [];
 
@@ -77,7 +77,7 @@ export function CartItem({
           className
         )}
       >
-        {displaySelect && (
+        {displayItemSelect && (
           <Checkbox
             className="my-auto"
             checked={item.is_selected ?? true}

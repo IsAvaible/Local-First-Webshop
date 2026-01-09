@@ -53,6 +53,7 @@ import { CartShareDialog } from "@/components/cart/CartShareDialog.tsx";
 import { CartFolderComponent } from "@/components/cart/CartFolderComponent.tsx";
 import { Link } from "@tanstack/react-router";
 import { CartHistoryDialog } from "@/components/cart/CartHistory.tsx";
+import { CartDisplayContext } from "@/components/cart/CartDisplayContext.ts";
 
 // ------------------------------------------------------------------
 // UTILITIES
@@ -108,12 +109,10 @@ export const SortableNode = React.memo(
   ({
     node,
     className,
-    disabled,
-    displayItemSelect
+    disabled
   }: {
     node: EnrichedCartNode;
     disabled?: boolean;
-    displayItemSelect?: boolean;
   } & React.ComponentProps<"div">) => {
     const {
       attributes,
@@ -150,11 +149,7 @@ export const SortableNode = React.memo(
       );
     return (
       <div {...commonProps}>
-        <CartItem
-          item={node}
-          disabled={disabled}
-          displaySelect={displayItemSelect}
-        />
+        <CartItem item={node} disabled={disabled} />
       </div>
     );
   },
@@ -162,8 +157,7 @@ export const SortableNode = React.memo(
     return (
       prevProps.node.id === nextProps.node.id &&
       prevProps.node === nextProps.node &&
-      prevProps.disabled === nextProps.disabled &&
-      prevProps.displayItemSelect === nextProps.displayItemSelect
+      prevProps.disabled === nextProps.disabled
     );
   }
 );
@@ -389,182 +383,187 @@ export function Cart({
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={customCollisionDetection}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-      measuring={{
-        droppable: {
-          strategy: MeasuringStrategy.WhileDragging
-        }
-      }}
-    >
-      <div className={cn("flex h-full flex-col", className)}>
-        {/* HEADER SECTION */}
-        {displayHeader !== false && (
-          <div className="flex flex-col gap-3 border-b p-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold tracking-tight">Cart</h2>
+    <CartDisplayContext value={{ displayItemSelect }}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={customCollisionDetection}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+        measuring={{
+          droppable: {
+            strategy: MeasuringStrategy.WhileDragging
+          }
+        }}
+      >
+        <div className={cn("flex h-full flex-col", className)}>
+          {/* HEADER SECTION */}
+          {displayHeader !== false && (
+            <div className="flex flex-col gap-3 border-b p-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold tracking-tight">Cart</h2>
 
-              <div className="flex items-center gap-3">
-                <CartHistoryDialog />
+                <div className="flex items-center gap-3">
+                  <CartHistoryDialog />
 
-                {collaborators.length > 1 && (
-                  <div className="flex -space-x-2 overflow-hidden">
-                    {collaborators.slice(0, 3).map((user) => (
-                      <div
-                        key={user.id}
-                        className="relative inline-block rounded-full border-2 border-white"
-                      >
-                        <UserAvatar name={user.name} src={user.avatarUrl} />
-                        {user.isOnline && (
-                          <span className="absolute right-0 bottom-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white" />
-                        )}
-                      </div>
+                  {collaborators.length > 1 && (
+                    <div className="flex -space-x-2 overflow-hidden">
+                      {collaborators.slice(0, 3).map((user) => (
+                        <div
+                          key={user.id}
+                          className="relative inline-block rounded-full border-2 border-white"
+                        >
+                          <UserAvatar name={user.name} src={user.avatarUrl} />
+                          {user.isOnline && (
+                            <span className="absolute right-0 bottom-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white" />
+                          )}
+                        </div>
+                      ))}
+                      {collaborators.length > 3 && (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gray-100 text-[10px] font-medium text-gray-600">
+                          +{collaborators.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <CartShareDialog
+                    open={isShareOpen}
+                    onOpenChange={setIsShareOpen}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Select
+                  value={activeCartId ?? undefined}
+                  onValueChange={setActiveCartId}
+                >
+                  <SelectTrigger className="flex-1 bg-gray-50">
+                    <SelectValue placeholder="Select Cart" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {carts.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
                     ))}
-                    {collaborators.length > 3 && (
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gray-100 text-[10px] font-medium text-gray-600">
-                        +{collaborators.length - 3}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <CartShareDialog
-                  open={isShareOpen}
-                  onOpenChange={setIsShareOpen}
-                />
+                  </SelectContent>
+                </Select>
+                <Dialog
+                  open={isCreateCartOpen}
+                  onOpenChange={setIsCreateCartOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="bg-gray-50"
+                    >
+                      <PlusIcon className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create New Cart</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <Label htmlFor="name">Cart Name</Label>
+                      <Input
+                        id="name"
+                        value={newCartName}
+                        onChange={(e) => setNewCartName(e.target.value)}
+                        className="mt-2"
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        onClick={() => {
+                          if (newCartName.trim()) {
+                            createCart(newCartName);
+                            setNewCartName("");
+                            setIsCreateCartOpen(false);
+                          }
+                        }}
+                      >
+                        Create
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
-
-            <div className="flex gap-2">
-              <Select
-                value={activeCartId ?? undefined}
-                onValueChange={setActiveCartId}
-              >
-                <SelectTrigger className="flex-1 bg-gray-50">
-                  <SelectValue placeholder="Select Cart" />
-                </SelectTrigger>
-                <SelectContent>
-                  {carts.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Dialog
-                open={isCreateCartOpen}
-                onOpenChange={setIsCreateCartOpen}
-              >
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="icon" className="bg-gray-50">
-                    <PlusIcon className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Create New Cart</DialogTitle>
-                  </DialogHeader>
-                  <div className="py-4">
-                    <Label htmlFor="name">Cart Name</Label>
-                    <Input
-                      id="name"
-                      value={newCartName}
-                      onChange={(e) => setNewCartName(e.target.value)}
-                      className="mt-2"
-                    />
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      onClick={() => {
-                        if (newCartName.trim()) {
-                          createCart(newCartName);
-                          setNewCartName("");
-                          setIsCreateCartOpen(false);
-                        }
-                      }}
-                    >
-                      Create
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-        )}
-
-        {/* CART BODY */}
-        <RootDroppable className="flex max-h-[65dvh] flex-1 flex-col gap-y-4 overflow-x-clip overflow-y-auto px-0.5 py-4">
-          {!rootNodes || rootNodes.length === 0 ? (
-            <p className="text-muted-foreground p-4 text-center">
-              Your cart is empty.
-            </p>
-          ) : (
-            <SortableContext
-              items={rootIds}
-              strategy={verticalListSortingStrategy}
-            >
-              {rootNodes.map((node) => (
-                <SortableNode
-                  key={node.id}
-                  node={node}
-                  disabled={!canManageItems}
-                  displayItemSelect={displayItemSelect}
-                />
-              ))}
-            </SortableContext>
           )}
-        </RootDroppable>
 
-        {/* FOOTER */}
-        {displayFooter !== false && (
-          <div className="border-t bg-transparent p-4">
-            <div className="flex gap-2">
-              <Button
-                onClick={() => createFolder("New Folder")}
-                variant="outline"
-                className="flex-1"
-                disabled={!canManageItems}
-              >
-                <PlusIcon className="mr-2 h-4 w-4" /> Add Folder
-              </Button>
-              <TagManager disabled={!canManageItems} />
-            </div>
-
-            {displayCheckoutButton !== false && (
-              <Link
-                disabled={!canManageItems || !rootNodes?.length}
-                to={"/checkout"}
-              >
-                <Button
-                  className="mt-4 w-full"
-                  disabled={!canManageItems || !rootNodes?.length}
-                >
-                  Checkout
-                </Button>
-              </Link>
-            )}
-          </div>
-        )}
-      </div>
-
-      <DragOverlay dropAnimation={dropAnimationConfig}>
-        {activeNode ? (
-          <div className="cursor-grabbing opacity-90">
-            {activeNode.type === "folder" ? (
-              <CartFolderComponent
-                folder={activeNode}
-                disabled={!canManageItems}
-              />
+          {/* CART BODY */}
+          <RootDroppable className="flex max-h-[65dvh] flex-1 flex-col gap-y-4 overflow-x-clip overflow-y-auto px-0.5 py-4">
+            {!rootNodes || rootNodes.length === 0 ? (
+              <p className="text-muted-foreground p-4 text-center">
+                Your cart is empty.
+              </p>
             ) : (
-              <CartItem item={activeNode} displaySelect={displayItemSelect} />
+              <SortableContext
+                items={rootIds}
+                strategy={verticalListSortingStrategy}
+              >
+                {rootNodes.map((node) => (
+                  <SortableNode
+                    key={node.id}
+                    node={node}
+                    disabled={!canManageItems}
+                  />
+                ))}
+              </SortableContext>
             )}
-          </div>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+          </RootDroppable>
+
+          {/* FOOTER */}
+          {displayFooter !== false && (
+            <div className="border-t bg-transparent p-4">
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => createFolder("New Folder")}
+                  variant="outline"
+                  className="flex-1"
+                  disabled={!canManageItems}
+                >
+                  <PlusIcon className="mr-2 h-4 w-4" /> Add Folder
+                </Button>
+                <TagManager disabled={!canManageItems} />
+              </div>
+
+              {displayCheckoutButton !== false && (
+                <Link
+                  disabled={!canManageItems || !rootNodes?.length}
+                  to={"/checkout"}
+                >
+                  <Button
+                    className="mt-4 w-full"
+                    disabled={!canManageItems || !rootNodes?.length}
+                  >
+                    Checkout
+                  </Button>
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+
+        <DragOverlay dropAnimation={dropAnimationConfig}>
+          {activeNode ? (
+            <div className="cursor-grabbing opacity-90">
+              {activeNode.type === "folder" ? (
+                <CartFolderComponent
+                  folder={activeNode}
+                  disabled={!canManageItems}
+                />
+              ) : (
+                <CartItem item={activeNode} />
+              )}
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+    </CartDisplayContext>
   );
 }
