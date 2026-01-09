@@ -26,11 +26,29 @@ export interface EnrichedCartFolder
 export type EnrichedFlatCartNode = EnrichedFlatCartItem | YCartFolderShape;
 export type EnrichedCartNode = EnrichedCartItem | EnrichedCartFolder;
 
+export const TAG_COLORS = [
+  "blue",
+  "red",
+  "orange",
+  "amber",
+  "green",
+  "emerald",
+  "teal",
+  "cyan",
+  "indigo",
+  "violet",
+  "purple",
+  "fuchsia",
+  "pink",
+  "rose"
+] as const;
+export type TagColor = (typeof TAG_COLORS)[number];
+
 // The Tag Shape
 export type Tag = {
   id: string;
   name: string;
-  color: string | null;
+  color?: TagColor;
 };
 
 export type AwarenessUser = {
@@ -58,7 +76,7 @@ export interface CartContextType {
 
   snapshots: YCartSnapshotShape[];
 
-  tags: { id: string; name: string; color: string | null }[] | undefined;
+  tags: Tag[] | undefined;
 
   isLoading: boolean;
   isSynced: boolean;
@@ -99,8 +117,8 @@ export interface CartContextType {
   updateFolder: (folderId: string, name: string) => void;
 
   // Tag Ops
-  createTag: (name: string) => void;
-  updateTag: (tagId: string, name: string) => void;
+  createTag: (name: string, color: TagColor) => void;
+  updateTag: (tagId: string, name?: string, color?: TagColor) => void;
   deleteTag: (tagId: string) => void;
   addTagToItem: (itemId: string, tagId: string) => void;
   removeTagFromItem: (itemId: string, tagId: string) => void;

@@ -1,4 +1,8 @@
-import { type EnrichedCartItem, useCart } from "@/contexts/useCartContext.ts";
+import {
+  type EnrichedCartItem,
+  useCart,
+  TAG_COLORS
+} from "@/contexts/useCartContext.ts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GripVerticalIcon, Trash2Icon, XIcon } from "lucide-react";
@@ -10,14 +14,17 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import { Badge } from "@/components/ui/badge";
+import { AssetImage } from "@/components/ui/assetImage.tsx";
+import { Checkbox } from "@/components/ui/checkbox";
 import * as React from "react";
 import { cn } from "@/lib/utils.ts";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
-import { AssetImage } from "@/components/ui/assetImage.tsx";
-import { Checkbox } from "@/components/ui/checkbox";
+import {
+  SWATCH_BG_STYLES,
+  TAG_PILL_STYLES
+} from "@/lib/constants/tag-styles.ts";
 
-export function CartItemComponent({
+export function CartItem({
   item,
   className,
   dragHandleProps,
@@ -59,7 +66,6 @@ export function CartItemComponent({
   // --- Product name and image (joined in provider) ---
   const product = item.product;
   const asset = item.asset;
-
   const productName = product?.name ?? `Product ${item.product_id}`;
 
   return (
@@ -104,26 +110,32 @@ export function CartItemComponent({
               onChange={(e) => updateItemNotes(item.id, e.target.value)}
             />
 
-            {/* --- Display current tags with remove button --- */}
-            <div className="flex flex-wrap gap-1">
-              {thisItemsTags.map((tag) => (
-                <Badge
-                  key={tag.id}
-                  variant="secondary"
-                  className="flex items-center"
-                >
-                  {tag.name}
-                  {!disabled && (
-                    <button
-                      onClick={() => handleRemoveTag(tag.id)}
-                      className="ml-1 rounded-full p-0.5 hover:bg-gray-300"
-                      aria-label={`Remove tag ${tag.name}`}
-                    >
-                      <XIcon className="h-3 w-3" />
-                    </button>
-                  )}
-                </Badge>
-              ))}
+            {/* --- Display current tags with colored styles --- */}
+            <div className="flex max-w-34 flex-wrap gap-1 @[18rem]:max-w-none">
+              {thisItemsTags.map((tag) => {
+                const color = tag.color ?? TAG_COLORS[0];
+
+                return (
+                  <span
+                    key={tag.id}
+                    className={cn(
+                      "flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors",
+                      TAG_PILL_STYLES[color]
+                    )}
+                  >
+                    {tag.name}
+                    {!disabled && (
+                      <button
+                        onClick={() => handleRemoveTag(tag.id)}
+                        className="-mr-0.5 ml-1 rounded-full p-0.5 opacity-60 hover:bg-black/10 hover:opacity-100"
+                        aria-label={`Remove tag ${tag.name}`}
+                      >
+                        <XIcon className="h-3 w-3" />
+                      </button>
+                    )}
+                  </span>
+                );
+              })}
             </div>
 
             <div className="flex items-center gap-2 text-xs">
@@ -136,8 +148,8 @@ export function CartItemComponent({
                 onChange={handleQuantityChange}
                 aria-label="Quantity"
               />
-              {/* --- Updated Tag Select --- */}
-              <Select onValueChange={handleAddTag} disabled={disabled}>
+              {/* --- Tag Select --- */}
+              <Select value="" onValueChange={handleAddTag} disabled={disabled}>
                 <SelectTrigger className="h-8!">
                   <SelectValue placeholder="+ Tag" />
                 </SelectTrigger>
@@ -148,7 +160,15 @@ export function CartItemComponent({
                       value={tag.id}
                       disabled={item.tag_ids.includes(tag.id)}
                     >
-                      {tag.name}
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={cn(
+                            "h-2 w-2 rounded-full",
+                            SWATCH_BG_STYLES[tag.color ?? TAG_COLORS[0]]
+                          )}
+                        />
+                        {tag.name}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -28,7 +28,7 @@ import { PlusIcon } from "lucide-react";
 
 import { type EnrichedCartNode, useCart } from "@/contexts/useCartContext.ts";
 import { TagManager } from "./TagManager";
-import { CartItemComponent } from "./CartItem";
+import { CartItem } from "./CartItem";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils.ts";
 import {
@@ -150,7 +150,7 @@ export const SortableNode = React.memo(
       );
     return (
       <div {...commonProps}>
-        <CartItemComponent
+        <CartItem
           item={node}
           disabled={disabled}
           displaySelect={displayItemSelect}
@@ -560,10 +560,7 @@ export function Cart({
                 disabled={!canManageItems}
               />
             ) : (
-              <CartItemComponent
-                item={activeNode}
-                displaySelect={displayItemSelect}
-              />
+              <CartItem item={activeNode} displaySelect={displayItemSelect} />
             )}
           </div>
         ) : null}

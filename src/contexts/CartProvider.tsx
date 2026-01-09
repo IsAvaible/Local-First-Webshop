@@ -10,7 +10,8 @@ import {
   type AwarenessUser,
   type CartCollaboratorWithUser,
   CartContext,
-  type Tag
+  type Tag,
+  type TagColor
 } from "./useCartContext";
 import { authClient } from "@/lib/auth-client";
 import { eq, inArray, useLiveQuery } from "@tanstack/react-db";
@@ -608,13 +609,13 @@ function CartSession({
   );
 
   const createTag = useCallback(
-    (name: string) => {
+    (name: string, color: TagColor) => {
       ydoc.transact(() => {
         const id = uuidv4();
         const tagMap = new Y.Map() as YTagMap;
         tagMap.set("id", id);
         tagMap.set("name", name);
-        tagMap.set("color", null);
+        tagMap.set("color", color);
         tagsMap.set(id, tagMap);
       });
     },
@@ -653,11 +654,12 @@ function CartSession({
   );
 
   const updateTag = useCallback(
-    (tagId: string, name: string) => {
+    (tagId: string, name?: string, color?: TagColor) => {
       ydoc.transact(() => {
         const tagMap = tagsMap.get(tagId);
         if (tagMap) {
-          tagMap.set("name", name);
+          if (name) tagMap.set("name", name);
+          if (color) tagMap.set("color", color);
         }
       });
     },
