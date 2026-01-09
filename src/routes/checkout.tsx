@@ -21,6 +21,7 @@ import { trpc } from "@/lib/trpc-client";
 import { Loader2 } from "lucide-react";
 import { deepEqual } from "fast-equals";
 import type { UserAddress } from "@/db/schema.ts";
+import { toast } from "sonner";
 
 if (!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) {
   throw Error("Stripe Secret missing or not configured");
@@ -83,6 +84,16 @@ function CheckoutPage() {
       error
     }
   });
+
+  useEffect(() => {
+    // If we are in a wizard step (address, shipping, payment) but have no items, redirect to overview.
+    if (state.isWizard && state.cartItems.length === 0) {
+      void navigate({
+        search: (prev) => ({ ...prev, step: "overview" }),
+        replace: true
+      }).then(() => toast("Please select some items, before checking out."));
+    }
+  }, [state.isWizard, state.cartItems.length, navigate]);
 
   const { data: activeOrder } = useLiveQuery((q) =>
     q

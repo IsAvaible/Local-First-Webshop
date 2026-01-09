@@ -20,6 +20,7 @@ function CartOverviewView({
   isSuggestionsLoading: boolean;
 }) {
   const { cartItems, totals, paymentError, formData } = state;
+  const isCartEmpty = cartItems.length === 0;
 
   return (
     <div className="min-h-screen bg-gray-50/50 py-8 dark:bg-slate-950">
@@ -54,6 +55,7 @@ function CartOverviewView({
               className="h-12 w-full text-lg"
               size="lg"
               onClick={actions.goToNext}
+              disabled={isCartEmpty}
             >
               Proceed to Payment <ArrowRightIcon className="ml-2 h-5 w-5" />
             </Button>

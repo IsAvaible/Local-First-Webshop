@@ -31,6 +31,27 @@ export const calculateOrderTotals = (
   shippingMethod: keyof typeof CONFIG.SHIPPING_RATES,
   couponCode: string | null
 ): CalculationResult => {
+  // Return zeros if no items exist
+  if (items.length === 0) {
+    const zero = new Big(0);
+    return {
+      subtotal: zero,
+      warrantyCost: zero,
+      shippingCost: zero,
+      tax: zero,
+      discount: zero,
+      total: zero,
+      formatted: {
+        subtotal: "0.00",
+        warrantyCost: "0.00",
+        shippingCost: "0.00",
+        tax: "0.00",
+        discount: "0.00",
+        total: "0.00"
+      }
+    };
+  }
+
   // 1. Calculate Subtotal & Warranty in one pass
   const { subtotal, warrantyCost } = items.reduce(
     (acc, item) => {

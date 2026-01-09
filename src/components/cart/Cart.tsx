@@ -535,8 +535,14 @@ export function Cart({
             </div>
 
             {displayCheckoutButton !== false && (
-              <Link disabled={!canManageItems} to={"/checkout"}>
-                <Button className="mt-4 w-full" disabled={!canManageItems}>
+              <Link
+                disabled={!canManageItems || !rootNodes?.length}
+                to={"/checkout"}
+              >
+                <Button
+                  className="mt-4 w-full"
+                  disabled={!canManageItems || !rootNodes?.length}
+                >
                   Checkout
                 </Button>
               </Link>
