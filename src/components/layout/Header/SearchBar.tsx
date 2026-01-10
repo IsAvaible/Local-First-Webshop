@@ -18,7 +18,7 @@ import {
   UserIcon
 } from "lucide-react";
 import * as React from "react";
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useSearch } from "@tanstack/react-router";
 import { useLiveQuery, Query, or, ilike, min, eq } from "@tanstack/react-db";
 import {
   productsCollection,
@@ -29,33 +29,42 @@ import {
 } from "@/lib/collections.ts";
 import type { Asset } from "@/db/schema.ts";
 import { AssetImage } from "@/components/ui/assetImage.tsx";
+import { Route } from "@/routes/search.tsx";
 
 // Static Navigation Items
 const NAV_ITEMS = [
   { label: "Profile", icon: UserIcon, to: "/profile", shortcut: "⌘P" },
-  { label: "Cart", icon: ShoppingCartIcon, to: "/cart", shortcut: "⌘B" },
-  { label: "Settings", icon: SettingsIcon, to: undefined, shortcut: "⌘S" }
+  { label: "Cart", icon: ShoppingCartIcon, to: "/cart", shortcut: "⌘C" },
+  {
+    label: "Settings",
+    icon: SettingsIcon,
+    to: "/profile?tab=settings",
+    shortcut: "⌘S"
+  }
 ];
 
 export function SearchBar() {
-  const navigate = useNavigate();
+  const navigate = Route.useNavigate();
   const location = useLocation();
 
+  const searchParams = useSearch({ strict: false });
+  const searchTerm = searchParams.q;
+
+  // Helper to determine if we should inherit params or start fresh
+  const isSearchPage = location.pathname === "/search";
+
+  const activeSearchTerm = isSearchPage ? (searchTerm ?? "") : "";
+
   // --- State and Refs ---
-  const [search, setSearch] = useState<string>(() => {
-    if (location.pathname === "/search") {
-      return new URLSearchParams(window.location.search).get("q") ?? "";
-    }
-    return "";
-  });
+  const [search, setSearch] = useState<string>(activeSearchTerm);
   const [open, setOpen] = useState<boolean>(false);
 
   // Clear search when navigating away from /search
   useEffect(() => {
-    if (location.pathname !== "/search") {
+    if (!isSearchPage) {
       setSearch("");
     }
-  }, [location.pathname]);
+  }, [location.pathname, isSearchPage]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const commandRef = useRef<HTMLDivElement>(null);
@@ -213,7 +222,7 @@ export function SearchBar() {
         void navigate({
           to: "/search",
           search: (prev) => ({
-            ...prev,
+            ...(isSearchPage ? prev : {}),
             q: undefined, // Clear text query when selecting specific filters
             categories: categoryIds,
             companies: []
@@ -228,7 +237,7 @@ export function SearchBar() {
         void navigate({
           to: "/search",
           search: (prev) => ({
-            ...prev,
+            ...(isSearchPage ? prev : {}),
             q: undefined,
             companies: companyIds,
             categories: []
@@ -260,7 +269,7 @@ export function SearchBar() {
     void navigate({
       to: "/search",
       search: (prev) => ({
-        ...prev,
+        ...(isSearchPage ? prev : {}),
         q: search,
         categories: [],
         companies: []
@@ -329,7 +338,7 @@ export function SearchBar() {
         placeholder="Search"
         autoComplete="off"
         pattern=".{0,12}"
-        value={search}
+        value={open ? search : activeSearchTerm}
         onValueChange={(value) => setSearch(value)}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
@@ -412,7 +421,7 @@ export function SearchBar() {
                         void navigate({
                           to: "/search",
                           search: (prev) => ({
-                            ...prev,
+                            ...(isSearchPage ? prev : {}),
                             q: undefined,
                             categories: [c.id],
                             companies: []
@@ -441,7 +450,7 @@ export function SearchBar() {
                         void navigate({
                           to: "/search",
                           search: (prev) => ({
-                            ...prev,
+                            ...(isSearchPage ? prev : {}),
                             q: undefined,
                             companies: [co.id],
                             categories: []
