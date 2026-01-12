@@ -2,9 +2,7 @@ import { router, generateTxId, authedProcedure } from "@/lib/trpc";
 import { z } from "zod";
 import { userSelectedCartTable } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
-import { PgTransaction } from "drizzle-orm/pg-core";
-import type { NodePgQueryResultHKT } from "drizzle-orm/node-postgres";
-import type { ExtractTablesWithRelations } from "drizzle-orm";
+import { db } from "@/db/connection.ts";
 
 // --- REUSABLE SERVICE FUNCTION ---
 /**
@@ -12,8 +10,7 @@ import type { ExtractTablesWithRelations } from "drizzle-orm";
  * To be called within an existing transaction (tx)
  */
 export const upsertUserSelectedCart = async (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  tx: PgTransaction<NodePgQueryResultHKT, any, ExtractTablesWithRelations<any>>,
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   inputs: {
     userId: string;
     cartId: string;
