@@ -34,7 +34,10 @@ export const auth = betterAuth({
           cartCollaboratorsTable,
           userSelectedCartTable,
           userAddressesTable,
-          userSettingsTable
+          userSettingsTable,
+          ordersTable,
+          wishlistTable,
+          notificationsTable
         } = schema;
 
         await db.transaction(async (tx) => {
@@ -164,25 +167,69 @@ export const auth = betterAuth({
               .update(userAddressesTable)
               .set(updates)
               .where(eq(userAddressesTable.id, address.id));
+          }
 
-            // 5. Settings Migration
-            // If the anonymous user changed settings (e.g. language/currency), copy them over.
-            const [anonSettings] = await tx
+          // 5. Settings Migration
+          const [anonSettings] = await tx
+            .select()
+            .from(userSettingsTable)
+            .where(eq(userSettingsTable.user_id, anonymousUser.user.id));
+
+          if (anonSettings) {
+            await tx
+              .update(userSettingsTable)
+              .set({
+                ...anonSettings,
+                updated_at: new Date()
+              })
+              .where(eq(userSettingsTable.user_id, newUser.user.id));
+          }
+
+          // 6. Orders Migration
+          await tx
+            .update(ordersTable)
+            .set({ user_id: newUser.user.id })
+            .where(eq(ordersTable.user_id, anonymousUser.user.id));
+
+          // 7. Wishlist Migration
+          const anonWishlist = await tx
+            .select()
+            .from(wishlistTable)
+            .where(eq(wishlistTable.user_id, anonymousUser.user.id));
+
+          for (const item of anonWishlist) {
+            // Check if the target user already has this product in their wishlist
+            const [existing] = await tx
               .select()
-              .from(userSettingsTable)
-              .where(eq(userSettingsTable.user_id, anonymousUser.user.id));
+              .from(wishlistTable)
+              .where(
+                and(
+                  eq(wishlistTable.user_id, newUser.user.id),
+                  eq(wishlistTable.product_id, item.product_id)
+                )
+              );
 
-            if (anonSettings) {
-              // Update the NEW user's settings with the anonymous preferences
+            if (existing) {
+              // Duplicate found: User already likes this product.
+              // Delete the anonymous record to clean up.
               await tx
-                .update(userSettingsTable)
-                .set({
-                  ...anonSettings,
-                  updated_at: new Date()
-                })
-                .where(eq(userSettingsTable.user_id, newUser.user.id));
+                .delete(wishlistTable)
+                .where(eq(wishlistTable.id, item.id));
+            } else {
+              // No conflict: Move the item to the new user account
+              await tx
+                .update(wishlistTable)
+                .set({ user_id: newUser.user.id })
+                .where(eq(wishlistTable.id, item.id));
             }
           }
+
+          // 8. Notifications Migration
+          // Simply reassign all notifications belonging to the anonymous user
+          await tx
+            .update(notificationsTable)
+            .set({ user_id: newUser.user.id })
+            .where(eq(notificationsTable.user_id, anonymousUser.user.id));
         });
       }
     })
