@@ -80,6 +80,7 @@ export interface CartContextType {
 
   isLoading: boolean;
   isSynced: boolean;
+  isConnected: boolean;
 
   // --- Cart Management ---
   carts: Cart[];

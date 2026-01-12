@@ -24,7 +24,7 @@ import {
   verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, Wifi, WifiOff } from "lucide-react";
 
 import { type EnrichedCartNode, useCart } from "@/contexts/useCartContext.ts";
 import { TagManager } from "./TagManager";
@@ -46,6 +46,12 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -212,7 +218,8 @@ export function Cart({
     setActiveCartId,
     createCart,
     canManageItems,
-    collaborators
+    collaborators,
+    isConnected
   } = useCart();
 
   const [activeId, setActiveId] = React.useState<string | null>(null);
@@ -401,7 +408,36 @@ export function Cart({
           {displayHeader !== false && (
             <div className="flex flex-col gap-3 border-b p-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold tracking-tight">Cart</h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-semibold tracking-tight">Cart</h2>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={cn(
+                            "flex items-center justify-center rounded-full p-1 transition-colors",
+                            isConnected
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                          )}
+                        >
+                          {isConnected ? (
+                            <Wifi className="h-4 w-4" />
+                          ) : (
+                            <WifiOff className="h-4 w-4" />
+                          )}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {isConnected
+                            ? "Connected to sync server"
+                            : "Offline. Changes will sync when reconnected."}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
 
                 <div className="flex items-center gap-3">
                   <CartHistoryDialog />

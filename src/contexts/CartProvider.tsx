@@ -112,6 +112,7 @@ function CartSession({
   const [ydoc] = useState(() => new Y.Doc({ gc: false }));
   const [awareness] = useState(() => new Awareness(ydoc));
   const [isSynced, setIsSynced] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
 
   const [onlineUsers, setOnlineUsers] = useState<AwarenessUser[]>([]);
 
@@ -279,6 +280,10 @@ function CartSession({
         ),
         getUpdateFromRow: (row) => row.update
       }
+    });
+
+    electricProvider.on("status", (event) => {
+      setIsConnected(event.status === "connected");
     });
 
     return () => {
@@ -736,6 +741,7 @@ function CartSession({
     canManageItems,
     isLoading: isLoadingData,
     isSynced,
+    isConnected,
     carts,
     activeCart,
     activeCartId,
