@@ -286,7 +286,18 @@ function CartSession({
       setIsConnected(event.status === "connected");
     });
 
+    const handleOnline = () => {
+      // Force the provider to reconnect immediately when the OS detects internet
+      if (!electricProvider.connected) {
+        electricProvider.connect();
+      }
+    };
+
+    window.addEventListener("online", handleOnline);
+
     return () => {
+      window.removeEventListener("online", handleOnline);
+
       void persistence.destroy();
       electricProvider.destroy();
       setIsSynced(false);
