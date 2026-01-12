@@ -25,7 +25,11 @@ import {
 import * as Y from "yjs";
 import type { TypedMap } from "yjs-types";
 import { IndexeddbPersistence } from "y-indexeddb";
-import { ElectricProvider, parseToDecoder } from "@electric-sql/y-electric";
+import {
+  type ConnectivityStatus,
+  ElectricProvider,
+  parseToDecoder
+} from "@electric-sql/y-electric";
 import { Awareness } from "y-protocols/awareness";
 import { v4 as uuidv4 } from "uuid";
 import { generateKeyBetween } from "fractional-indexing";
@@ -112,7 +116,8 @@ function CartSession({
   const [ydoc] = useState(() => new Y.Doc({ gc: false }));
   const [awareness] = useState(() => new Awareness(ydoc));
   const [isSynced, setIsSynced] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
+  const [connectivityStatus, setConnectivityStatus] =
+    useState<ConnectivityStatus>("connecting");
 
   const [onlineUsers, setOnlineUsers] = useState<AwarenessUser[]>([]);
 
@@ -283,7 +288,7 @@ function CartSession({
     });
 
     electricProvider.on("status", (event) => {
-      setIsConnected(event.status === "connected");
+      setConnectivityStatus(event.status);
     });
 
     const handleOnline = () => {
@@ -752,7 +757,7 @@ function CartSession({
     canManageItems,
     isLoading: isLoadingData,
     isSynced,
-    isConnected,
+    connectivityStatus,
     carts,
     activeCart,
     activeCartId,

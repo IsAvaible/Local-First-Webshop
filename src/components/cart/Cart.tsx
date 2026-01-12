@@ -24,7 +24,7 @@ import {
   verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { PlusIcon, Wifi, WifiOff } from "lucide-react";
+import { Loader2, PlusIcon, Wifi, WifiOff } from "lucide-react";
 
 import { type EnrichedCartNode, useCart } from "@/contexts/useCartContext.ts";
 import { TagManager } from "./TagManager";
@@ -219,7 +219,7 @@ export function Cart({
     createCart,
     canManageItems,
     collaborators,
-    isConnected
+    connectivityStatus
   } = useCart();
 
   const [activeId, setActiveId] = React.useState<string | null>(null);
@@ -416,23 +416,29 @@ export function Cart({
                         <div
                           className={cn(
                             "flex items-center justify-center rounded-full p-1 transition-colors",
-                            isConnected
+                            connectivityStatus != "disconnected"
                               ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                               : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                           )}
                         >
-                          {isConnected ? (
+                          {connectivityStatus === "connected" && (
                             <Wifi className="h-4 w-4" />
-                          ) : (
+                          )}
+                          {connectivityStatus === "connecting" && (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          )}
+                          {connectivityStatus === "disconnected" && (
                             <WifiOff className="h-4 w-4" />
                           )}
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>
-                          {isConnected
+                          {connectivityStatus === "connected"
                             ? "Connected to sync server"
-                            : "Offline. Changes will sync when reconnected."}
+                            : connectivityStatus === "connecting"
+                              ? "Connecting..."
+                              : "Offline. Changes will sync when reconnected."}
                         </p>
                       </TooltipContent>
                     </Tooltip>

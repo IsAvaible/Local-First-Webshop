@@ -8,6 +8,7 @@ import type {
   YCartSnapshotShape
 } from "@/db/schema";
 import * as Y from "yjs";
+import type { ConnectivityStatus } from "@electric-sql/y-electric";
 
 // Enriched types for UI
 export interface EnrichedFlatCartItem extends YCartItemShape {
@@ -80,7 +81,7 @@ export interface CartContextType {
 
   isLoading: boolean;
   isSynced: boolean;
-  isConnected: boolean;
+  connectivityStatus: ConnectivityStatus;
 
   // --- Cart Management ---
   carts: Cart[];
