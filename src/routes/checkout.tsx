@@ -303,7 +303,11 @@ function CheckoutPage() {
         }}
         key={activeOrder.stripe_client_secret}
       >
-        <CheckoutWizardView state={state} actions={actions} />
+        <CheckoutWizardView
+          state={state}
+          actions={actions}
+          isPaymentIntentPending={paymentIntentPending}
+        />
       </Elements>
     );
   }

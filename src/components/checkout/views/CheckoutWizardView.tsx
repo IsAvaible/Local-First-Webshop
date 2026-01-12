@@ -21,10 +21,12 @@ import { type ReactNode, useState, useMemo } from "react";
 
 function CheckoutWizardView({
   state,
-  actions
+  actions,
+  isPaymentIntentPending
 }: {
   state: UseCheckoutLogicReturn["state"];
   actions: UseCheckoutLogicReturn["actions"];
+  isPaymentIntentPending?: boolean;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -151,7 +153,11 @@ function CheckoutWizardView({
               <Button
                 onClick={handleNextClick}
                 size="lg"
-                disabled={state.isProcessing || !isCurrentStepValid}
+                disabled={
+                  state.isProcessing ||
+                  !isCurrentStepValid ||
+                  (currentStepId === "review" && isPaymentIntentPending)
+                }
               >
                 {state.isProcessing ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
