@@ -34,7 +34,7 @@ export function useCheckoutLogic({
   navigate,
   stripeParams
 }: UseCheckoutLogicProps) {
-  const { enrichedFlatItems: rawCartItems, cartId } = useCart();
+  const { enrichedFlatItems: rawCartItems, cartId, removeItem } = useCart();
   const cartItems = useMemo(
     () => (rawCartItems ?? []).filter((item) => item.is_selected ?? true),
     [rawCartItems]
@@ -77,6 +77,11 @@ export function useCheckoutLogic({
     if (redirect_status === "succeeded") {
       // The order completion is now handled by the Stripe Webhook.
       setIsProcessing(false);
+
+      // Clear the selected items from the cart
+      cartItems.forEach((item) => {
+        removeItem(item.id);
+      });
     } else if (redirect_status === "failed" || error) {
       setPaymentError(
         error ?? "Payment failed or was cancelled. Please try again."
@@ -90,7 +95,7 @@ export function useCheckoutLogic({
         replace: true
       });
     }
-  }, [stripeParams, navigate, step]);
+  }, [stripeParams, navigate, step, cartItems, removeItem]);
 
   type Totals = CalculationResult["formatted"];
 
