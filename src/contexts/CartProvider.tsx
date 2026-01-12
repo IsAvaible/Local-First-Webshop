@@ -117,7 +117,7 @@ function CartSession({
   const [awareness] = useState(() => new Awareness(ydoc));
   const [isSynced, setIsSynced] = useState(false);
   const [connectivityStatus, setConnectivityStatus] =
-    useState<ConnectivityStatus>("connecting");
+    useState<ConnectivityStatus>("connected");
 
   const [onlineUsers, setOnlineUsers] = useState<AwarenessUser[]>([]);
 
@@ -287,8 +287,24 @@ function CartSession({
       }
     });
 
+    let statusTimeout: NodeJS.Timeout | undefined;
+
     electricProvider.on("status", (event) => {
-      setConnectivityStatus(event.status);
+      const newStatus = event.status;
+
+      clearTimeout(statusTimeout);
+      statusTimeout = undefined;
+
+      if (newStatus === "connected") {
+        // Immediate update for success
+        setConnectivityStatus("connected");
+      } else {
+        // Delay update for errors/connecting
+        statusTimeout = setTimeout(() => {
+          setConnectivityStatus(newStatus);
+          statusTimeout = undefined;
+        }, 500);
+      }
     });
 
     const handleOnline = () => {
@@ -302,6 +318,7 @@ function CartSession({
 
     return () => {
       window.removeEventListener("online", handleOnline);
+      clearTimeout(statusTimeout);
 
       void persistence.destroy();
       electricProvider.destroy();
