@@ -255,7 +255,8 @@ function CartSession({
 
   // --- Persistence & Sync ---
   useEffect(() => {
-    const persistence = new IndexeddbPersistence(roomName, ydoc);
+    const persistenceName = `yjs-cart-${roomName}`;
+    const persistence = new IndexeddbPersistence(persistenceName, ydoc);
     persistence.on("synced", () => setIsSynced(true));
 
     const electricProvider = new ElectricProvider<

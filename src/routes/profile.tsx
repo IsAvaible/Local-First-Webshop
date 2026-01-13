@@ -31,6 +31,7 @@ import { ProfileWishlist } from "@/components/profile/ProfileWishlist";
 import { ProfilePaymentMethods } from "@/components/profile/ProfilePaymentMethods";
 import { ProfileSettings } from "@/components/profile/ProfileSettings";
 import { authClient } from "@/lib/auth-client.ts";
+import { clearYjsStorage } from "@/lib/yjs-cleanup.ts";
 
 // --- Search Params Schema ---
 const profileUrlSchema = z.object({
@@ -87,6 +88,24 @@ export function EcommerceProfile() {
     await navigate({
       search: (prev) => ({ ...prev, tab: newTab as Tab }),
       replace: true
+    });
+  };
+
+  const handleSignOut = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: async () => {
+          await clearYjsStorage();
+
+          // Force a hard reload to tear down the stale Electric sync stream
+          window.location.href = "/";
+
+          // Theoretically we should also clear the Electric client state here,
+          // however this will also cause all public cached state to be lost.
+          // Hence, we do not do this for now and instead hope that electric
+          // cleans itself up. (shape invalidation?)
+        }
+      }
     });
   };
 
@@ -183,6 +202,7 @@ export function EcommerceProfile() {
               <Button
                 variant="ghost"
                 className="w-full justify-start gap-3 px-3 text-red-600 hover:bg-red-50 hover:text-red-700"
+                onClick={handleSignOut}
               >
                 <LogOut className="h-4 w-4" />
                 Sign Out
