@@ -54,7 +54,7 @@ export const Route = createFileRoute("/profile")({
   search: {
     middlewares: [stripSearchParams(urlDefaultValues)]
   },
-  // 3. Add the Authentication Guard
+  // Add the Authentication Guard
   beforeLoad: async ({ location }) => {
     // Fetch the session using the Better Auth client
     const { data: session } = await authClient.getSession();

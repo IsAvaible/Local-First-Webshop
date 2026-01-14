@@ -57,7 +57,7 @@ async function main() {
   await db.transaction(async (tx) => {
     console.log("Cleared old data.");
 
-    // 1. Insert Companies
+    // Insert Companies
     console.log(`Inserting ${COMPANIES_TO_CREATE} companies...`);
     const companyData = Array.from({ length: COMPANIES_TO_CREATE }, () => ({
       name: faker.company.name()
@@ -67,7 +67,7 @@ async function main() {
       .values(companyData)
       .returning();
 
-    // 2. Insert Categories
+    // Insert Categories
     console.log(`Inserting ${CATEGORIES_TO_CREATE} categories...`);
     const categoryData = Array.from({ length: CATEGORIES_TO_CREATE }, () => ({
       name: faker.commerce.department(),
@@ -78,7 +78,7 @@ async function main() {
       .values(categoryData)
       .returning();
 
-    // 3. Insert Custom Field Definitions
+    // Insert Custom Field Definitions
     console.log("Inserting custom field definitions...");
     const fieldDefData = [];
     const fieldTypes: ("text" | "number" | "boolean" | "date" | "select")[] = [
@@ -124,7 +124,7 @@ async function main() {
       {} as Record<string, FieldDef[]>
     );
 
-    // 4. Prepare Data Arrays
+    // Prepare Data Arrays
     const insertedProducts = [];
     const customValueData = [];
     const pricingTierData = [];
@@ -156,7 +156,7 @@ async function main() {
       }
     };
 
-    // 5. Build Product & Asset Stubs
+    // Build Product & Asset Stubs
     console.log("Generating product data...");
 
     for (const category of insertedCategories) {
@@ -226,7 +226,7 @@ async function main() {
       }
     }
 
-    // 6. Process Assets (Download & Hash in Batches)
+    // Process Assets (Download & Hash in Batches)
     console.log(
       `Processing ${pendingAssets.length} assets (calculating BlurHashes)...`
     );
@@ -254,7 +254,7 @@ async function main() {
     }
     console.log("\nAsset processing complete.");
 
-    // 7. Bulk Insert
+    // Bulk Insert
     if (pricingTierData.length > 0) {
       await tx.insert(schema.pricingTiersTable).values(pricingTierData);
     }

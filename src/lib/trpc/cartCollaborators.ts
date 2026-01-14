@@ -59,7 +59,7 @@ export const cartCollaboratorsRouter = router({
         });
       }
 
-      // 3. Insert collaborator
+      // Insert collaborator
       const result = await ctx.db.transaction(async (tx) => {
         const txid = await generateTxId(tx);
         const [newItem] = await tx

@@ -11,7 +11,7 @@ export const CONFIG = {
   } as const
 };
 
-// 1. Define the exact linear flow of the application
+// Define the exact linear flow of the application
 export const WIZARD_STEPS = [
   "address",
   "shipping",

@@ -61,7 +61,6 @@ export const cartsRouter = router({
   create: authedProcedure
     .input(createCartSchema)
     .mutation(async ({ ctx, input }) => {
-      // 2. The API endpoint simply calls the service
       return createCartService(ctx, input);
     }),
 
@@ -116,7 +115,7 @@ export const cartsRouter = router({
   ensureSelected: authedProcedure.mutation(async ({ ctx }) => {
     const userId = ctx.session.user.id;
 
-    // 1. Try to find existing default cart
+    // Try to find existing default cart
     const [existing] = await ctx.db
       .select()
       .from(userSelectedCartTable)
@@ -125,7 +124,7 @@ export const cartsRouter = router({
 
     if (existing) return;
 
-    // 2. If none, create one using the SERVICE function
+    // If none, create one using the SERVICE function
     await createCartService(ctx, {
       id: uuidv4(),
       name: "My Cart",

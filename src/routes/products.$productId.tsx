@@ -14,7 +14,6 @@ import Product from "@/components/Product.tsx";
 import { authClient } from "@/lib/auth-client";
 import { v4 as uuidv4 } from "uuid";
 
-// 1. Preload all necessary collections in the route loader
 export const Route = createFileRoute("/products/$productId")({
   ssr: false,
   params: {
@@ -27,7 +26,6 @@ function ProductPageComponent() {
   const { productId } = Route.useParams();
   const { data: session } = authClient.useSession();
 
-  // 2. Query the data with useLiveQuery
   const { data: productData, isLoading: isProductLoading } = useLiveQuery(
     (q) => {
       return q

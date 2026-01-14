@@ -43,7 +43,7 @@ export const Route = createFileRoute("/yjs")({
 });
 
 function ElectricEditor() {
-  // 1. Initialize YJS constructs only once per component lifecycle
+  // Initialize YJS constructs only once per component lifecycle
   const { ydoc, awareness, user } = useMemo(() => {
     const doc = new Y.Doc();
     const aware = new Awareness(doc);
@@ -69,7 +69,7 @@ function ElectricEditor() {
   >(`disconnected`);
   const [isSynced, setIsSynced] = useState<boolean>(false);
 
-  // 2. Handle Persistence (IndexedDB)
+  // Handle Persistence (IndexedDB)
   useEffect(() => {
     const persistence = new IndexeddbPersistence(room, ydoc);
 
@@ -82,7 +82,7 @@ function ElectricEditor() {
     };
   }, [ydoc]);
 
-  // 3. Handle Electric Provider & CodeMirror
+  // Handle Electric Provider & CodeMirror
   useEffect(() => {
     // Wait for IndexedDB to sync first so we don't overwrite local changes
     if (!isSynced || !editorContainerRef.current) return;
