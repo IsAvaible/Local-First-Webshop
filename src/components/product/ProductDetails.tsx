@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, Heart, Minus, Plus } from "lucide-react";
+import { ShoppingCart, Heart, Minus, Plus, Check } from "lucide-react";
 import ProductConfigurator from "@/components/product/ProductConfigurator";
 import type {
   CustomFieldDefinition,
@@ -41,8 +41,30 @@ export default function ProductDetails({
   );
   const quantity = cartItem?.quantity ?? 0;
 
+  // Calculate Active Tier (Logic from previous step)
+  const activeTier = useMemo(() => {
+    const quantityToCheck = Math.max(1, quantity);
+    const sortedTiers = [...pricingTiers].sort(
+      (a, b) => b.min_quantity - a.min_quantity
+    );
+    return (
+      sortedTiers.find((tier) => quantityToCheck >= tier.min_quantity) ??
+      sortedTiers[sortedTiers.length - 1]
+    );
+  }, [pricingTiers, quantity]);
+
+  // Prepare Display Tiers (Sorted Ascending for visual list 1 -> 100)
+  const displayTiers = useMemo(() => {
+    return [...pricingTiers].sort((a, b) => a.min_quantity - b.min_quantity);
+  }, [pricingTiers]);
+
+  // Get Base Price for Discount Calculation
+  const basePrice = displayTiers[0]?.price_per_unit
+    ? Number(displayTiers[0].price_per_unit)
+    : 0;
+
   const handleAddToCart = () => {
-    const price = pricingTiers[0]?.price_per_unit.toString() ?? "0";
+    const price = activeTier?.price_per_unit.toString() ?? "0";
     addItem(product.id, price);
   };
 
@@ -54,11 +76,20 @@ export default function ProductDetails({
 
   const handleDecrement = () => {
     if (cartItem) {
-      if (quantity > 1) {
-        updateItemQuantity(cartItem.id, quantity - 1);
-      } else {
-        // Optional: Remove if decreasing from 1, or keep at 1 depending on UX preference
-        removeItem(cartItem.id);
+      if (quantity > 1) updateItemQuantity(cartItem.id, quantity - 1);
+      else removeItem(cartItem.id);
+    }
+  };
+
+  const handleTierClick = (minQty: number, tierPrice: string) => {
+    if (cartItem) {
+      updateItemQuantity(cartItem.id, minQty);
+    } else {
+      const id = addItem(product.id, tierPrice);
+
+      // Use the returned item ID to update quantity
+      if (id) {
+        updateItemQuantity(id, minQty);
       }
     }
   };
@@ -108,14 +139,92 @@ export default function ProductDetails({
         )}
 
         <div className="mt-6">
-          <p
-            className="text-3xl text-gray-900 dark:text-slate-100"
-            aria-label={`Price: ${pricingTiers[0].price_per_unit.toLocaleString()} Euros`}
-          >
-            {pricingTiers[0].price_per_unit.toLocaleString()}€
+          <p className="text-3xl font-bold text-gray-900 dark:text-slate-100">
+            {Number(activeTier.price_per_unit).toLocaleString()}€
+            <span className="ml-2 text-sm font-normal text-gray-500">
+              / unit
+            </span>
           </p>
         </div>
-        <ProductConfigurator />
+
+        <div className="mt-6 grid gap-3">
+          <p className="text-sm font-medium text-gray-900 dark:text-slate-200">
+            Volume Discounts
+          </p>
+          <div className="grid gap-2">
+            {displayTiers.map((tier) => {
+              const isCurrent = activeTier.id === tier.id;
+              const price = Number(tier.price_per_unit);
+
+              // Calculate discount percentage relative to base price
+              const discountPercent =
+                basePrice > 0
+                  ? Math.round(((basePrice - price) / basePrice) * 100)
+                  : 0;
+
+              return (
+                <div
+                  key={tier.id}
+                  onClick={() =>
+                    handleTierClick(
+                      tier.min_quantity,
+                      tier.price_per_unit.toString()
+                    )
+                  }
+                  className={`relative flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-all ${
+                    isCurrent
+                      ? "border-gray-600 bg-gray-50 dark:border-gray-400 dark:bg-gray-950/30"
+                      : "border-gray-200 bg-white hover:border-gray-300 dark:border-slate-700 dark:bg-slate-900"
+                  } `}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                        isCurrent
+                          ? "border-gray-600 bg-gray-600 text-white"
+                          : "border-gray-300"
+                      }`}
+                    >
+                      {isCurrent && <Check className="h-3 w-3" />}
+                    </div>
+                    <div className="flex flex-col">
+                      <span
+                        className={`text-sm font-medium ${
+                          isCurrent
+                            ? "text-gray-900 dark:text-gray-100"
+                            : "text-gray-900 dark:text-slate-200"
+                        }`}
+                      >
+                        Buy {tier.min_quantity}+
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {discountPercent > 0 && (
+                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
+                        Save {discountPercent}%
+                      </span>
+                    )}
+                    <span
+                      className={`font-semibold ${
+                        isCurrent
+                          ? "text-gray-700 dark:text-gray-300"
+                          : "text-gray-700 dark:text-slate-300"
+                      }`}
+                    >
+                      {price.toLocaleString()}€
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <ProductConfigurator />
+        </div>
       </div>
 
       <Separator className="my-8" role="separator" />

@@ -484,31 +484,37 @@ function CartSession({
 
   const addItem = useCallback(
     (productId: number, price: string) => {
-      ydoc.transact(() => {
-        const lastRootNode = flatNodes
-          .filter((n) => n.parent_id === null)
-          .sort((a, b) => (a.order < b.order ? -1 : 1))
-          .pop();
+      return ydoc
+        .transact(() => {
+          const lastRootNode = flatNodes
+            .filter((n) => n.parent_id === null)
+            .sort((a, b) => (a.order < b.order ? -1 : 1))
+            .pop();
 
-        const newOrder = generateKeyBetween(lastRootNode?.order ?? null, null);
+          const newOrder = generateKeyBetween(
+            lastRootNode?.order ?? null,
+            null
+          );
 
-        const id = uuidv4();
-        const itemMap = new Y.Map() as TypedMap<YCartItemShape>;
+          const id = uuidv4();
+          const itemMap = new Y.Map() as TypedMap<YCartItemShape>;
 
-        itemMap.set("id", id);
-        itemMap.set("type", "item");
-        itemMap.set("parent_id", null);
-        itemMap.set("order", newOrder);
-        itemMap.set("product_id", productId);
-        itemMap.set("quantity", 1);
-        itemMap.set("price_snapshot", price);
-        itemMap.set("tag_ids", []);
-        itemMap.set("notes", null);
-        itemMap.set("is_selected", true);
-        itemMap.set("created_at", Date.now());
+          itemMap.set("id", id);
+          itemMap.set("type", "item");
+          itemMap.set("parent_id", null);
+          itemMap.set("order", newOrder);
+          itemMap.set("product_id", productId);
+          itemMap.set("quantity", 1);
+          itemMap.set("price_snapshot", price);
+          itemMap.set("tag_ids", []);
+          itemMap.set("notes", null);
+          itemMap.set("is_selected", true);
+          itemMap.set("created_at", Date.now());
 
-        nodesMap.set(id, itemMap);
-      });
+          nodesMap.set(id, itemMap);
+          return itemMap;
+        })
+        .get("id");
     },
     [ydoc, nodesMap, flatNodes]
   );

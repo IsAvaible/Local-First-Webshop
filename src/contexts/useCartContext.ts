@@ -104,7 +104,7 @@ export interface CartContextType {
   removeCollaborator: (collaboratorRowId: string) => Promise<void>;
 
   // --- Operations ---
-  addItem: (productId: number, price: string) => void;
+  addItem: (productId: number, price: string) => string | undefined;
   removeItem: (itemId: string, parentFolderId?: string | null) => void;
   updateItemQuantity: (itemId: string, newQuantity: number) => void;
   updateItemNotes: (itemId: string, notes: string) => void;
