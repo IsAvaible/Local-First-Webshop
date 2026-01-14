@@ -4,9 +4,7 @@ import type { UseCheckoutLogicReturn } from "@/lib/checkout/useCheckoutLogic";
 import type { ProductSuggestion } from "@/lib/checkout/types";
 import CartItemsList from "../shared/CartItemsList";
 import OrderSummary from "../shared/OrderSummary";
-import ShippingSelector from "../shared/ShippingSelector";
 import ProductCard from "@/components/browse/ProductCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function CartOverviewView({
   state,
@@ -19,7 +17,7 @@ function CartOverviewView({
   suggestions?: ProductSuggestion[];
   isSuggestionsLoading: boolean;
 }) {
-  const { cartItems, totals, paymentError, formData } = state;
+  const { cartItems, totals, paymentError } = state;
   const isCartEmpty = cartItems.length === 0;
 
   return (
@@ -30,19 +28,6 @@ function CartOverviewView({
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="space-y-8 lg:col-span-2">
             <CartItemsList />
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Estimated Delivery</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ShippingSelector
-                  value={formData.shippingMethod}
-                  onChange={actions.setShippingMethod}
-                  variant="simple"
-                />
-              </CardContent>
-            </Card>
           </div>
 
           <div className="space-y-8 lg:col-span-1">
