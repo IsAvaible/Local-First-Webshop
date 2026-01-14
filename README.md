@@ -1,4 +1,8 @@
-# Local-First App with TanStack DB, ElectricSQL, tRPC, and BetterAuth
+# Local-First Offline-Capable Webshop
+
+A robust, local-first e-commerce application built with **TanStack DB**, **ElectricSQL**, **tRPC**, and **BetterAuth**.
+This application focuses on offline capabilities, real-time collaboration (shared carts), and a high-performance user
+experience.
 
 ## Quick Start
 
@@ -13,8 +17,6 @@ Follow these steps in order for a smooth first-time setup:
    ```sh
    cp .env.example .env
    ```
-
-   You can customize the variables in `.env` if needed, but the defaults should work for local development.
 
 3. **Install dependencies:**
 
@@ -36,40 +38,87 @@ Follow these steps in order for a smooth first-time setup:
    pnpm run migrate
    ```
 
-6. **Visit the application:**
+6. **Seed the database with initial data:**
+
+   ```sh
+   pnpm db:seed
+   ```
+
+7. **Visit the application:**
    The app's url will be printed in the terminal, typically `https://<project-name>.localhost`.
 
-If you run into issues, see the [pre-reqs](#pre-requisites) and [troubleshooting](#common-pitfalls) sections below.
+---
 
-## Application concept - Offline-Capable Webshop
+## Application Features
 
-- Users can use the webshop like a normal webshop whilst online
-- Users can “shop together” through the use of CRDTs and local-first principles
-  - Access shared Shopping Cart, Suggest items, Add Comments to items
-  - (optional) “shop together” with a LLM assistant (sync engine is already available)
-  - (optional) Features that go beyond a shared shopping cart, e.g. current navigation of each user
-- Shopping Carts go beyond simple lists, users can organize products into folders, tag them and add descriptions.
-- Visited storefronts / categories are automatically cached on the user's device or can be actively downloaded
-  - (optional) a “storage manager” tool where users can quickly manage their cache
-- When the user is offline, the webshop continues working (except the final payment).
-  - The connection status is communicated within the app
-- Users can use this to add items while they are in an isolated space, like a workshop.
-- (optional) Item availability is predicted based on historical data (e.g. sales per minute)
-- Users can book their order, which will be fulfilled once connection is restored. Conflicts are resolved based on first-to-server.
-  - The user is notified about the state of their order via granular notifications
-  - Price changes are also communicated
-  - (optional) Alternative item suggestion by LLM assistant
-- Users can manage their settings, configuring default units
+### Smart Product Catalog
 
-Technical Solution
+- **Advanced Browsing:** Filter by categories, attributes, and sort in real-time.
+- **Product Variants:** Support for base products with specific variants.
+- **Tiered Pricing:** Automatic price adjustments based on quantity (`pricing_tiers`).
+- **Custom Fields:** Products can have dynamic custom attributes (text, number, boolean, date, select) defined.
+- **Rich Assets:** Support for multiple images per product.
 
-- Frontend / Application Code written in React + Vite + TanStack Router
-- “Shop together” (shared shopping cart) is realized with YJS
-- Data distribution and Caching are done with ElectricSQL
-- Product Variants can inherit properties from a base product variant
-- Company information & branding is stored in a table
-- Products can associate with different types of assets (e.g. images, specifications, 3D models)
-- Products can have different additional fields, these are inherited by the category they are in
+### Collaborative "Shop Together"
+
+- **Shared Carts:** Users can invite others to their cart with specific roles (`admin`, `contributor`, `viewer`).
+- **Real-time Sync:** Powered by **YJS**, cart updates (add items, change quantity) happen instantly across
+  all devices.
+- **Smart Organization:** Organize cart items into folders and tag them for better management.
+
+### Local-First & Offline
+
+- **Offline Capable:** The entire shop (browsing, cart management) works without an internet connection.
+- **Background Sync:** Changes made offline are automatically synced when the connection is restored **ElectricSQL**.
+- **Optimistic UI:** Instant interactions with zero network latency.
+
+### User & Account
+
+- **Profile Management:** Manage personal details, default currency, and language.
+- **Address Book:** Save multiple shipping and billing addresses.
+- **Wishlists:** Save items for later; receive notifications on price drops.
+- **Order History:** View past orders and current status.
+
+### Notification System
+
+- Granular notifications for Order updates, Shipping events, Price drops, and Collaboration invites.
+
+---
+
+## Technical Architecture
+
+### Stack
+
+- **Frontend:** [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+- **Routing:** [TanStack Router](https://tanstack.com/router) (File-based routing)
+- **State/Sync:** [ElectricSQL](https://electric-sql.com/) + [TanStack DB](https://tanstack.com/db) + [YJS](https://yjs.dev/)
+- **Database:** [PostgreSQL](https://www.postgresql.org/) (with [Drizzle ORM](https://orm.drizzle.team/))
+- **API:** [tRPC](https://trpc.io/)
+- **Auth:** [BetterAuth](https://www.better-auth.com/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/) + [Shadcn UI](https://ui.shadcn.com/)
+
+### Key Directories
+
+- `src/db`: Drizzle schema definitions, migrations, and seed scripts.
+- `src/lib`: Core logic including Electric proxy setup, tRPC configuration, and business logic hooks.
+- `src/components`: UI components organized by feature domain (Browse, Cart, Checkout, etc.).
+- `src/routes`: TanStack Router file-based route definitions.
+- `src/contexts`: Global state providers (specifically complex `CartProvider`).
+
+---
+
+## Database Schema Overview
+
+The database is designed for scale and flexibility. Here are the core domains defined in `src/db/schema.ts`:
+
+1. **Catalog:** `products`, `categories`, `companies`, `assets`, `pricing_tiers`.
+2. **Cart (CRDT backed):** `carts`, `cart_collaborators`, `user_selected_cart`.
+   - _Sync:_ Uses `ydoc_updates` and `ydoc_awareness` to store YJS binary updates in Postgres.
+3. **Sales:** `orders`, `order_items`.
+4. **User:** `users`, `user_settings`, `user_addresses`, `wishlist`.
+5. **System:** `notifications`.
+
+---
 
 ## Adding a New Table
 
@@ -239,73 +288,7 @@ const { data: categories } = useLiveQuery((q) =>
 
 That's it! (lol) Your new table is now fully integrated with Electric sync, tRPC mutations, and TanStack DB queries.
 
-## Pre-requisites
-
-This project uses [Docker](https://www.docker.com), [Node](https://nodejs.org/en) with [pnpm](https://pnpm.io) and [Caddy](https://caddyserver.com/).
-
-### Docker
-
-Make sure you have Docker running. Docker is used to run the Postgres and Electric services defined in `docker-compose.yaml`.
-
-### Caddy
-
-#### Why Caddy?
-
-Electric SQL's shape delivery benefits significantly from **HTTP/2 multiplexing**. Without HTTP/2, each shape subscription creates a new HTTP/1.1 connection, which browsers limit to 6 concurrent connections per domain. This creates a bottleneck that makes shapes appear slow.
-
-Caddy provides HTTP/2 support with automatic HTTPS, giving you:
-
-- **Faster shape loading** - Multiple shapes load concurrently over a single connection
-- **Better development experience** - No connection limits or artificial delays
-- **Production-like performance** - Your local dev mirrors production HTTP/2 behavior
-
-The Vite development server runs on HTTP/1.1 only, so Caddy acts as a reverse proxy to upgrade the connection.
-
-#### Setup
-
-Once you've [installed Caddy](https://caddyserver.com/docs/install), install its root certificate using:
-
-```sh
-caddy trust
-```
-
-This is necessary for HTTP/2 to work [without SSL warnings/errors in the browser](https://caddyserver.com/docs/command-line#caddy-trust).
-
-#### How It Works
-
-- Caddy auto-starts via a Vite plugin when you run `pnpm dev`
-- The `Caddyfile` is automatically generated with your project name
-- Your app is available at `https://<project-name>.localhost`
-- Direct access to `http://localhost:5173` still works but will be slower for Electric shapes
-
-#### Troubleshooting Caddy
-
-If Caddy fails to start:
-
-1. **Test Caddy manually:**
-
-   ```sh
-   caddy start
-   ```
-
-2. **Check certificate trust:**
-
-   ```sh
-   caddy trust
-   # To remove later: caddy untrust
-   ```
-
-3. **Verify Caddyfile was generated:**
-   Look for a `Caddyfile` in your project root after running `pnpm dev`
-
-4. **Stop conflicting Caddy instances:**
-
-   ```sh
-   caddy stop
-   ```
-
-5. **Check for port conflicts:**
-   Caddy needs ports 80 and 443 available
+---
 
 ## Troubleshooting
 
@@ -655,3 +638,4 @@ Follow these patterns to get the most out of this app:
 - [An Interactive Guide to TanStack DB](https://frontendatscale.com/blog/tanstack-db)
 - [Stop Re-Rendering — TanStack DB, the Embedded Client Database for TanStack Query](https://tanstack.com/blog/tanstack-db-0.1-the-embedded-client-database-for-tanstack-query)
 - [Local-first sync with TanStack DB and Electric](https://electric-sql.com/blog/2025/07/29/local-first-sync-with-tanstack-db)
+- [YJS (Shared Editing)](https://yjs.dev/)
