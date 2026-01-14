@@ -91,7 +91,8 @@ function AddressStep({
   onSelectBillingAddress
 }: AddressStepProps) {
   const [activeTab, setActiveTab] = useState("saved");
-  const [sameAsShipping, setSameAsShipping] = useState(!billingAddressId);
+  // Default to true, but let the Hydration Effect below correct it immediately
+  const [sameAsShipping, setSameAsShipping] = useState(true);
 
   const { data: session } = authClient.useSession();
   const userId = session?.user.id;
@@ -101,12 +102,13 @@ function AddressStep({
     q.from({ address: userAddressesCollection })
   );
 
-  // Clear billing when "sameAsShipping" is toggled
   useEffect(() => {
-    if (sameAsShipping) {
-      onSelectBillingAddress(null);
+    if (billingAddressId && billingAddressId !== selectedAddressId) {
+      setSameAsShipping(false);
+    } else if (billingAddressId === null && selectedAddressId) {
+      setSameAsShipping(true);
     }
-  }, [sameAsShipping, selectedAddressId, onSelectBillingAddress]);
+  }, [billingAddressId, selectedAddressId]);
 
   // 2. Setup React Hook Form
   const form = useForm<UserAddressFormValues>({
@@ -235,9 +237,12 @@ function AddressStep({
                   <Checkbox
                     id="billing-same"
                     checked={sameAsShipping}
-                    onCheckedChange={(checked) =>
-                      setSameAsShipping(checked === true)
-                    }
+                    onCheckedChange={(checked) => {
+                      setSameAsShipping(checked === true);
+                      if (checked) {
+                        onSelectBillingAddress(null);
+                      }
+                    }}
                   />
                   <Label
                     htmlFor="billing-same"

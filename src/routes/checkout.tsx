@@ -103,15 +103,40 @@ function CheckoutPage() {
       )
       .findOne()
   );
-  const shippingAddressSnapshotId = activeOrder
-    ? (activeOrder.shipping_address_snapshot as UserAddress).id
-    : null;
-  if (
-    shippingAddressSnapshotId &&
-    shippingAddressSnapshotId != state.formData.selectedAddressId
-  ) {
-    actions.setSelectedAddressId(shippingAddressSnapshotId);
-  }
+
+  // --- Sync db data with form ---
+  // In production the form data and order state would need to be more closely coupled
+  const hasHydratedRef = useRef(false);
+
+  useEffect(() => {
+    // If DB isn't ready, or we have ALREADY hydrated the form, do nothing.
+    if (!activeOrder || hasHydratedRef.current) return;
+
+    let hasChanges = false;
+
+    // Sync Shipping
+    const shipId = (activeOrder.shipping_address_snapshot as UserAddress)?.id;
+    if (shipId && shipId !== state.formData.selectedAddressId) {
+      actions.setSelectedAddressId(shipId);
+      hasChanges = true;
+    }
+
+    // Sync Billing
+    const billId = (activeOrder.billing_address_snapshot as UserAddress)?.id;
+    if (billId && billId !== state.formData.billingAddressId) {
+      actions.setBillingAddressId(billId);
+      hasChanges = true;
+    }
+
+    if (hasChanges) {
+      hasHydratedRef.current = true;
+    }
+  }, [
+    activeOrder,
+    actions,
+    state.formData.selectedAddressId,
+    state.formData.billingAddressId
+  ]);
 
   const [intentError, setIntentError] = useState<string | null>(null);
 
@@ -140,6 +165,7 @@ function CheckoutPage() {
       state.cartItems,
       state.formData.appliedCoupon,
       state.formData.selectedAddressId,
+      state.formData.billingAddressId,
       state.formData.shippingMethod,
       state.formData.warranties
     ]
@@ -178,7 +204,7 @@ function CheckoutPage() {
 
       setPaymentIntentPending(true);
 
-      // 3. Define the recursive backoff function
+      // Define a recursive backoff function
       const MAX_RETRIES = 3;
 
       const attemptUpsert = (attemptCount: number) => {

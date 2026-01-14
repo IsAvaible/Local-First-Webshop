@@ -136,6 +136,7 @@ export const ordersRouter = router({
           // Fetch Addresses for Snapshotting
           const address = addressId
             ? await tx.query.userAddressesTable.findFirst({
+                orderBy: (t, { asc }) => asc(t.is_default_delivery),
                 where: and(
                   or(
                     eq(userAddressesTable.id, addressId),
