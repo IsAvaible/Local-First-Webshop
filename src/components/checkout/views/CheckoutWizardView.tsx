@@ -60,6 +60,8 @@ function CheckoutWizardView({
       <AddressStep
         selectedAddressId={state.formData.selectedAddressId}
         onSelectAddress={actions.setSelectedAddressId}
+        billingAddressId={state.formData.billingAddressId}
+        onSelectBillingAddress={actions.setBillingAddressId}
       />
     ),
     shipping: (

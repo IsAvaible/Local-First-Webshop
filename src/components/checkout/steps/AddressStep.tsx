@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import { userAddressesCollection } from "@/lib/collections";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
@@ -23,11 +23,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { MapPinIcon, CheckIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client.ts";
 import { v4 as uuidv4 } from "uuid";
 import { CountryDropdown } from "@/components/ui/country-dropdown.tsx";
+import type { UserAddress } from "@/db/schema.ts";
 
 const createUserAddressSchema = z.object({
   recipient_name: z
@@ -77,10 +80,19 @@ type UserAddressFormValues = z.infer<typeof createUserAddressSchema>;
 interface AddressStepProps {
   selectedAddressId: string | null;
   onSelectAddress: (id: string) => void;
+  billingAddressId: string | null;
+  onSelectBillingAddress: (id: string | null) => void;
 }
 
-function AddressStep({ selectedAddressId, onSelectAddress }: AddressStepProps) {
+function AddressStep({
+  selectedAddressId,
+  onSelectAddress,
+  billingAddressId,
+  onSelectBillingAddress
+}: AddressStepProps) {
   const [activeTab, setActiveTab] = useState("saved");
+  const [sameAsShipping, setSameAsShipping] = useState(!billingAddressId);
+
   const { data: session } = authClient.useSession();
   const userId = session?.user.id;
 
@@ -88,6 +100,13 @@ function AddressStep({ selectedAddressId, onSelectAddress }: AddressStepProps) {
   const { data: addresses, isLoading } = useLiveQuery((q) =>
     q.from({ address: userAddressesCollection })
   );
+
+  // Clear billing when "sameAsShipping" is toggled
+  useEffect(() => {
+    if (sameAsShipping) {
+      onSelectBillingAddress(null);
+    }
+  }, [sameAsShipping, selectedAddressId, onSelectBillingAddress]);
 
   // 2. Setup React Hook Form
   const form = useForm<UserAddressFormValues>({
@@ -147,7 +166,9 @@ function AddressStep({ selectedAddressId, onSelectAddress }: AddressStepProps) {
       });
 
       await tx.isPersisted.promise;
+
       onSelectAddress(newId);
+
       reset();
       setActiveTab("saved");
     } catch (error) {
@@ -189,48 +210,66 @@ function AddressStep({ selectedAddressId, onSelectAddress }: AddressStepProps) {
                 </Button>
               </div>
             ) : (
-              <div className="grid gap-4">
-                {addresses.map((addr) => (
-                  <div
-                    key={addr.id}
-                    onClick={() => onSelectAddress(addr.id)}
-                    className={cn(
-                      "relative cursor-pointer rounded-lg border p-4 transition-colors",
-                      selectedAddressId === addr.id
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
-                    )}
+              <div className="space-y-6">
+                {/* SHIPPING ADDRESS LIST */}
+                <div className="space-y-3">
+                  <h3 className="text-muted-foreground text-sm font-medium">
+                    Shipping Address
+                  </h3>
+                  <div className="grid gap-4">
+                    {addresses.map((addr) => (
+                      <AddressCard
+                        key={`shipping-${addr.id}`}
+                        addr={addr}
+                        isSelected={selectedAddressId === addr.id}
+                        onClick={() => {
+                          onSelectAddress(addr.id);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* BILLING TOGGLE */}
+                <div className="flex items-center space-x-2 border-t pt-4">
+                  <Checkbox
+                    id="billing-same"
+                    checked={sameAsShipping}
+                    onCheckedChange={(checked) =>
+                      setSameAsShipping(checked === true)
+                    }
+                  />
+                  <Label
+                    htmlFor="billing-same"
+                    className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="font-medium">{addr.recipient_name}</div>
-                        {addr.company_name && (
-                          <div className="text-muted-foreground text-sm">
-                            {addr.company_name}
-                          </div>
-                        )}
-                        <div className="text-muted-foreground mt-1 text-sm">
-                          {addr.line1}
-                          <br />
-                          {addr.line2 && (
-                            <>
-                              {addr.line2}
-                              <br />
-                            </>
-                          )}
-                          {addr.zip_code} {addr.city},{" "}
-                          {addr.state ? `${addr.state}, ` : ""}
-                          {addr.country_code}
-                        </div>
-                      </div>
-                      {selectedAddressId === addr.id && (
-                        <div className="text-primary flex items-center text-sm font-medium">
-                          <CheckIcon className="mr-1 h-4 w-4" /> Selected
-                        </div>
-                      )}
+                    Use shipping address as billing address
+                  </Label>
+                </div>
+
+                {/* BILLING ADDRESS LIST */}
+                {!sameAsShipping && (
+                  <div className="animate-in fade-in slide-in-from-top-2 space-y-3 pt-2">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-muted-foreground text-sm font-medium">
+                        Billing Address
+                      </h3>
+                    </div>
+
+                    <div className="grid gap-4">
+                      {addresses.map((addr) => (
+                        <AddressCard
+                          key={`billing-${addr.id}`}
+                          addr={addr}
+                          isSelected={billingAddressId === addr.id}
+                          onClick={() => {
+                            onSelectBillingAddress(addr.id);
+                          }}
+                        />
+                      ))}
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             )}
           </TabsContent>
@@ -409,5 +448,66 @@ function AddressStep({ selectedAddressId, onSelectAddress }: AddressStepProps) {
     </Card>
   );
 }
+
+interface AddressCardProps {
+  addr: UserAddress;
+  isSelected: boolean;
+  onClick: () => void;
+}
+
+const AddressCard = ({ addr, isSelected, onClick }: AddressCardProps) => {
+  if (!addr.id) console.warn("Address missing ID:", addr);
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className={cn(
+        "relative cursor-pointer rounded-lg border p-4 transition-colors",
+        isSelected
+          ? "border-primary bg-primary/5"
+          : "border-border hover:border-primary/50"
+      )}
+    >
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="font-medium">{addr.recipient_name}</div>
+          {addr.company_name && (
+            <div className="text-muted-foreground text-sm">
+              {addr.company_name}
+            </div>
+          )}
+          <div className="text-muted-foreground mt-1 text-sm">
+            {addr.line1}
+            <br />
+            {addr.line2 && (
+              <>
+                {addr.line2}
+                <br />
+              </>
+            )}
+            {addr.zip_code} {addr.city}, {addr.state ? `${addr.state}, ` : ""}
+            {addr.country_code}
+          </div>
+        </div>
+        {isSelected && (
+          <div className="text-primary flex items-center text-sm font-medium">
+            <CheckIcon className="mr-1 h-4 w-4" /> Selected
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default AddressStep;

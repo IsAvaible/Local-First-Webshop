@@ -54,6 +54,7 @@ export function useCheckoutLogic({
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null
   );
+  const [billingAddressId, setBillingAddressId] = useState<string | null>(null);
   const [paymentMethodType, setPaymentMethodType] = useState<string | null>(
     null
   );
@@ -181,6 +182,7 @@ export function useCheckoutLogic({
     setShippingMethod,
     setCouponInput,
     setSelectedAddressId,
+    setBillingAddressId,
     setPaymentMethodType,
     toggleWarranty: useCallback((itemId: string) => {
       setWarranties((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
@@ -220,6 +222,7 @@ export function useCheckoutLogic({
         couponInput,
         appliedCoupon,
         selectedAddressId,
+        billingAddressId,
         paymentMethodType
       }
     },

@@ -148,6 +148,7 @@ export const ordersRouter = router({
 
           const billingAddress = billingAddressId
             ? await tx.query.userAddressesTable.findFirst({
+                orderBy: (t, { asc }) => asc(t.is_default_billing),
                 where: and(
                   or(
                     eq(userAddressesTable.id, billingAddressId),

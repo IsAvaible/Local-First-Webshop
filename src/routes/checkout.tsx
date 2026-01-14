@@ -130,7 +130,7 @@ function CheckoutPage() {
       warranties: state.formData.warranties,
       appliedCoupon: state.formData.appliedCoupon,
       addressId: state.formData.selectedAddressId,
-      billingAddressId: null,
+      billingAddressId: state.formData.billingAddressId,
       existingOrderId: activeOrder?.id,
       cartId: state.cartId
     }),
