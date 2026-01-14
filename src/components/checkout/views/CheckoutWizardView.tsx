@@ -41,6 +41,8 @@ function CheckoutWizardView({
   };
 
   const currentStepId = state.step as WizardStepId;
+  // 1. Determine the index of the active step to know what is "past" vs "future"
+  const currentStepIndex = WIZARD_STEPS.indexOf(currentStepId);
 
   const isCurrentStepValid = useMemo(() => {
     switch (currentStepId) {
@@ -99,18 +101,38 @@ function CheckoutWizardView({
 
           <div className="space-y-2">
             <div className="text-muted-foreground flex justify-between text-sm font-medium">
-              {WIZARD_STEPS.map((stepId, idx) => (
-                <Link
-                  key={stepId}
-                  to={"/checkout"}
-                  search={{ step: stepId }}
-                  className={
-                    currentStepId === stepId ? "text-primary font-bold" : ""
-                  }
-                >
-                  {idx + 1}. {stepId.charAt(0).toUpperCase() + stepId.slice(1)}
-                </Link>
-              ))}
+              {WIZARD_STEPS.map((stepId, idx) => {
+                const label = `${idx + 1}. ${stepId.charAt(0).toUpperCase() + stepId.slice(1)}`;
+                const isActive = currentStepId === stepId;
+
+                // Only navigate to steps you have already passed or are currently on.
+                const isNavigable = idx <= currentStepIndex;
+
+                if (!isNavigable) {
+                  return (
+                    <span
+                      key={stepId}
+                      className="cursor-not-allowed opacity-50 select-none"
+                      aria-disabled="true"
+                    >
+                      {label}
+                    </span>
+                  );
+                }
+
+                return (
+                  <Link
+                    key={stepId}
+                    to={"/checkout"}
+                    search={{ step: stepId }}
+                    className={
+                      isActive ? "text-primary font-bold" : "hover:underline"
+                    }
+                  >
+                    {label}
+                  </Link>
+                );
+              })}
             </div>
             <Progress value={state.wizardProgress} className="h-2" />
           </div>
