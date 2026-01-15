@@ -115,6 +115,10 @@ function CartSession({
   // Initialize YDoc ONCE per session.
   const [ydoc] = useState(() => new Y.Doc({ gc: false }));
   const [awareness] = useState(() => new Awareness(ydoc));
+
+  // Track dirty state to avoid expensive snapshot calculations
+  const isDirtyRef = useRef(false);
+
   const [isSynced, setIsSynced] = useState(false);
   const [connectivityStatus, setConnectivityStatus] =
     useState<ConnectivityStatus>("connected");
@@ -133,6 +137,8 @@ function CartSession({
 
   useEffect(() => {
     const updateState = () => {
+      isDirtyRef.current = true;
+
       // Convert Y.Maps to JS Objects
       const nodes: YCartNodeShape[] = [];
       nodesMap.forEach((nodeMap) => {
@@ -169,6 +175,7 @@ function CartSession({
     };
   }, [nodesMap, tagsMap, snapshotsArray]);
 
+  // Depending functions on a ref instead of flatNodes will prevent function recreation
   const currentNodesRef = useRef(flatNodes);
 
   // Update the ref whenever the incoming prop changes
@@ -180,6 +187,8 @@ function CartSession({
     if (!isSynced) return;
 
     const timer = setInterval(() => {
+      if (!isDirtyRef.current) return;
+
       const currentNodes = currentNodesRef.current;
 
       // Don't snapshot an empty cart
@@ -202,8 +211,9 @@ function CartSession({
 
               // Extract the 'nodes' map
               const tempMap = tempDoc.getMap("nodes");
-              const tempMapJson = tempMap.toJSON();
-              lastSavedNodes = Object.values(tempMapJson) as YCartNodeShape[];
+              lastSavedNodes = Object.values(
+                tempMap.toJSON()
+              ) as YCartNodeShape[];
             }
           } catch (e) {
             console.error(
@@ -221,6 +231,7 @@ function CartSession({
           delta.removedCount === 0 &&
           delta.modifiedCount === 0
         ) {
+          isDirtyRef.current = false;
           return; // Exact match found in history. Skipping save.
         }
 
@@ -247,6 +258,7 @@ function CartSession({
         };
 
         snapshotsArray.push([snapshot]);
+        isDirtyRef.current = false;
       }, "snapshot-origin");
     }, 60000);
 
@@ -323,6 +335,7 @@ function CartSession({
 
       void persistence.destroy();
       electricProvider.destroy();
+      ydoc.destroy();
       setIsSynced(false);
     };
   }, [roomName, ydoc, awareness, userId]);
@@ -362,13 +375,12 @@ function CartSession({
     if (!usersData || !currentCart) return [];
 
     return usersData.flatMap((user) => {
-      const isOwner = user.id === currentCart.created_by_id;
       const link = collaboratorLinks?.find((l) => l.user_id === user.id);
 
       // Return empty array to "filter" this item out
       if (!link) return [];
 
-      const role: CartRole = isOwner ? "admin" : (link?.role ?? "viewer");
+      const role: CartRole = link?.role ?? "viewer";
 
       const isOnline =
         user.id === userId ||
@@ -406,7 +418,7 @@ function CartSession({
       if (isYItem(n)) ids.add(n.product_id);
     });
     return Array.from(ids);
-  }, [flatNodes]); // Note: using flatNodes directly is safer than stringifying if flatNodes ref is stable
+  }, [flatNodes]);
 
   // 2. Use Shared Hook
   const { lookupMaps, isLoading: isLoadingLookup } =
@@ -486,7 +498,7 @@ function CartSession({
     (productId: number, price: string) => {
       return ydoc
         .transact(() => {
-          const lastRootNode = flatNodes
+          const lastRootNode = currentNodesRef.current
             .filter((n) => n.parent_id === null)
             .sort((a, b) => (a.order < b.order ? -1 : 1))
             .pop();
@@ -516,7 +528,7 @@ function CartSession({
         })
         .get("id");
     },
-    [ydoc, nodesMap, flatNodes]
+    [ydoc, nodesMap]
   );
 
   const createFolder = useCallback(
@@ -572,7 +584,7 @@ function CartSession({
         }
 
         // 2. Find Siblings
-        const siblings = flatNodes
+        const siblings = currentNodesRef.current
           .filter((n) => n.parent_id === targetFolderId && n.id !== activeId)
           .sort((a, b) => (a.order < b.order ? -1 : 1));
 
@@ -588,7 +600,7 @@ function CartSession({
         nodeToMove.set("order", newOrder);
       });
     },
-    [ydoc, nodesMap, flatNodes]
+    [ydoc, nodesMap, currentNodesRef]
   );
 
   const removeItem = useCallback(
@@ -598,7 +610,7 @@ function CartSession({
 
         // Cascading delete helper
         const scanChildren = (parentId: string) => {
-          flatNodes.forEach((n) => {
+          currentNodesRef.current.forEach((n) => {
             if (n.parent_id === parentId) {
               idsToDelete.push(n.id);
               if (isYFolder(n)) scanChildren(n.id);
@@ -614,7 +626,7 @@ function CartSession({
         idsToDelete.forEach((id) => nodesMap.delete(id));
       });
     },
-    [ydoc, nodesMap, flatNodes]
+    [ydoc, nodesMap]
   );
 
   const updateItemQuantity = useCallback(
