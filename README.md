@@ -1,8 +1,13 @@
 # Partslist - The Local-First Webshop
 
-A robust, local-first e-commerce application built with **TanStack DB**, **ElectricSQL**, **tRPC**, and **BetterAuth**.
-This application focuses on offline capabilities, real-time collaboration (shared carts), and a high-performance user
-experience.
+Partslist is a high-performance webshop designed for collaborative shopping and zero-latency browsing.
+Unlike traditional webshops, it functions completely offline, allows real-time "multiplayer" cart editing, and
+syncs automatically when connections are restored.
+
+Built with cutting-edge technologies such as: **TanStack DB**, **ElectricSQL**, **Yjs**, **tRPC**, and **BetterAuth**.
+
+> This project is part of my bachelor thesis on Local-First Web Software, supervised by [Prof. Dr. A. Hannig](https://www.fh-aachen.de/menschen/ahannig)
+> at the [FH Aachen](https://www.fh-aachen.de/fh-aachen).
 
 ![Screenshot of the Search Route](docs/assets/screenshots/Search.png)
 See [showcase.md](docs/showcase.md) for a non-technical feature focused overview of the project.
@@ -48,7 +53,7 @@ Follow these steps in order for a smooth first-time setup:
    ```
 
 7. **Visit the application:**
-   The app's url will be printed in the terminal, typically `https://<project-name>.localhost`.
+   The app's url will be printed in the terminal, typically `https://local-first-webshop.localhost`.
 
 ---
 
