@@ -1,8 +1,10 @@
-# Local-First Offline-Capable Webshop
+# Partslist - The Local-First Webshop
 
 A robust, local-first e-commerce application built with **TanStack DB**, **ElectricSQL**, **tRPC**, and **BetterAuth**.
 This application focuses on offline capabilities, real-time collaboration (shared carts), and a high-performance user
 experience.
+
+![Screenshot of the Search Route](docs/assets/screenshots/Search.png)
 
 ## Quick Start
 
@@ -639,3 +641,5 @@ Follow these patterns to get the most out of this app:
 - [Stop Re-Rendering — TanStack DB, the Embedded Client Database for TanStack Query](https://tanstack.com/blog/tanstack-db-0.1-the-embedded-client-database-for-tanstack-query)
 - [Local-first sync with TanStack DB and Electric](https://electric-sql.com/blog/2025/07/29/local-first-sync-with-tanstack-db)
 - [YJS (Shared Editing)](https://yjs.dev/)
+
+A project by [Simon Felix Conrad](mailto:simon.felix.conrad@proton.me)
