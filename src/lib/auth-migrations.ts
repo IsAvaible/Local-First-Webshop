@@ -2,6 +2,7 @@ import { db } from "@/db/connection";
 import * as schema from "@/db/schema";
 import { ydocUpdatesTable } from "@/db/schema";
 import { eq, and, exists, sql } from "drizzle-orm";
+import { ROLE_HIERARCHY } from "@/lib/carts-permissions.ts";
 
 // ----------------------------------------------------------------------------
 // 1. MIGRATION MANIFEST TYPES
@@ -89,13 +90,25 @@ const migrationHandlers: MigrationManifest = {
         );
 
       if (!existing) {
-        // Move collaboration
+        // No conflict, move row
         await tx
           .update(schema.cartCollaboratorsTable)
           .set({ user_id: newId })
           .where(eq(schema.cartCollaboratorsTable.id, collab.id));
       } else {
-        // Redundant, delete
+        // Conflict: Compare access rights
+        const anonLevel = ROLE_HIERARCHY.indexOf(collab.role);
+        const existingLevel = ROLE_HIERARCHY.indexOf(existing.role);
+
+        // Upgrade the existing user, if applicable
+        if (anonLevel > existingLevel) {
+          await tx
+            .update(schema.cartCollaboratorsTable)
+            .set({ role: collab.role })
+            .where(eq(schema.cartCollaboratorsTable.id, existing.id));
+        }
+
+        // Delete the redundant anonymous row
         await tx
           .delete(schema.cartCollaboratorsTable)
           .where(eq(schema.cartCollaboratorsTable.id, collab.id));

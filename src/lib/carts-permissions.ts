@@ -7,6 +7,8 @@ import {
   type CartRole
 } from "@/db/schema";
 
+export const ROLE_HIERARCHY = ["viewer", "contributor", "admin"];
+
 export type UserSession = { user: { id: string } } | null;
 
 export type EffectiveRole = CartRole | "owner" | "none";
