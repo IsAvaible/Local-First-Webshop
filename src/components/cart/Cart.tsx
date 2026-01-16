@@ -24,7 +24,15 @@ import {
   verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Loader2, PlusIcon, Wifi, WifiOff, Pencil } from "lucide-react";
+import {
+  Loader2,
+  PlusIcon,
+  Wifi,
+  WifiOff,
+  Settings,
+  Trash2,
+  AlertTriangle
+} from "lucide-react";
 
 import { type EnrichedCartNode, useCart } from "@/contexts/useCartContext.ts";
 import { TagManager } from "./TagManager";
@@ -41,6 +49,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -60,6 +69,7 @@ import { CartFolderComponent } from "@/components/cart/CartFolderComponent.tsx";
 import { Link } from "@tanstack/react-router";
 import { CartHistoryDialog } from "@/components/cart/CartHistory.tsx";
 import { CartDisplayContext } from "@/components/cart/CartDisplayContext.ts";
+import { toast } from "sonner";
 
 // ------------------------------------------------------------------
 // UTILITIES
@@ -219,7 +229,9 @@ export function Cart({
     activeCart,
     createCart,
     updateCartName,
+    deleteCart,
     canManageItems,
+    cartRole,
     collaborators,
     connectivityStatus
   } = useCart();
@@ -230,9 +242,9 @@ export function Cart({
   const [newCartName, setNewCartName] = React.useState("");
   const [isCreateCartOpen, setIsCreateCartOpen] = React.useState(false);
 
-  // Edit Cart State
+  // Edit/Settings Cart State
   const [editingCartName, setEditingCartName] = React.useState("");
-  const [isEditCartOpen, setIsEditCartOpen] = React.useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
   // Share State
   const [isShareOpen, setIsShareOpen] = React.useState(false);
@@ -266,6 +278,14 @@ export function Cart({
     () => rootNodes?.map((node) => node.id) ?? [],
     [rootNodes]
   );
+
+  const cartAdmins = React.useMemo(() => {
+    return collaborators.filter((c) => c.role === "admin");
+  }, [collaborators]);
+
+  // Can delete cart if user is the only admin
+  const isAdmin = cartRole === "admin";
+  const canDeleteCart = isAdmin && cartAdmins.length === 1;
 
   // Custom Collision to prioritize containers correctly
   const customCollisionDetection: CollisionDetection = React.useCallback(
@@ -394,8 +414,20 @@ export function Cart({
   // Handler for renaming cart
   const handleRenameCart = async () => {
     if (editingCartName.trim() && activeCartId) {
+      setIsSettingsOpen(false);
       await updateCartName(activeCartId, editingCartName);
-      setIsEditCartOpen(false);
+    }
+  };
+
+  const handleDeleteCart = async () => {
+    if (activeCartId && canDeleteCart) {
+      setIsSettingsOpen(false);
+      try {
+        await deleteCart(activeCartId);
+      } catch (error) {
+        toast("Failed to delete cart :(");
+        console.error(error);
+      }
     }
   };
 
@@ -511,12 +543,11 @@ export function Cart({
                   </SelectContent>
                 </Select>
 
-                {/* --- RENAME CART BUTTON --- */}
+                {/* --- CART SETTINGS (RENAME & DELETE) --- */}
                 <Dialog
-                  open={isEditCartOpen}
+                  open={isSettingsOpen}
                   onOpenChange={(open) => {
-                    setIsEditCartOpen(open);
-                    // Pre-fill name when opening
+                    setIsSettingsOpen(open);
                     if (open && activeCart) {
                       setEditingCartName(activeCart.name);
                     }
@@ -528,38 +559,85 @@ export function Cart({
                       size="icon"
                       className="bg-gray-50"
                       disabled={!activeCartId || !canManageItems}
-                      title="Rename Cart"
+                      title="Cart Settings"
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Settings className="h-4 w-4" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                      <DialogTitle>Rename Cart</DialogTitle>
+                      <DialogTitle>Cart Settings</DialogTitle>
+                      <DialogDescription>
+                        Rename or delete your cart
+                      </DialogDescription>
                     </DialogHeader>
-                    <div className="py-4">
-                      <Label htmlFor="edit-name">Cart Name</Label>
-                      <Input
-                        id="edit-name"
-                        value={editingCartName}
-                        onChange={(e) => setEditingCartName(e.target.value)}
-                        className="mt-2"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            void handleRenameCart();
-                          }
-                        }}
-                      />
+
+                    <div className="flex flex-col gap-6 py-4">
+                      {/* Section 1: General Info */}
+                      <div className="space-y-3">
+                        <Label
+                          htmlFor="edit-name"
+                          className="text-sm font-semibold"
+                        >
+                          Cart Name
+                        </Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id="edit-name"
+                            value={editingCartName}
+                            onChange={(e) => setEditingCartName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                void handleRenameCart();
+                                setIsSettingsOpen(false);
+                              }
+                            }}
+                          />
+                          <Button onClick={handleRenameCart} variant="outline">
+                            Save
+                          </Button>
+                        </div>
+                      </div>
+
+                      {isAdmin && (
+                        <>
+                          <div className="bg-border h-px w-full" />
+
+                          <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/20">
+                            <div className="mb-4 flex items-center gap-2 text-red-700 dark:text-red-400">
+                              <AlertTriangle className="h-5 w-5" />
+                              <h4 className="font-semibold">Danger Zone</h4>
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                              {!canDeleteCart ? (
+                                <p className="text-sm font-medium text-red-700 dark:text-red-400">
+                                  You cannot delete this cart because there are
+                                  other administrators. You must be the only
+                                  admin to perform this action.
+                                </p>
+                              ) : (
+                                <p className="text-sm text-red-700 dark:text-red-400">
+                                  Deleting this cart will permanently remove it
+                                  for all collaborators. This action cannot be
+                                  undone.
+                                </p>
+                              )}
+
+                              <Button
+                                variant="destructive"
+                                onClick={handleDeleteCart}
+                                disabled={!canDeleteCart}
+                                className="mt-2 w-full sm:w-auto"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete Cart
+                              </Button>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
-                    <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsEditCartOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button onClick={handleRenameCart}>Save Changes</Button>
-                    </DialogFooter>
                   </DialogContent>
                 </Dialog>
 

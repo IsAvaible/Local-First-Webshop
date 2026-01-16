@@ -94,6 +94,7 @@ type CartSessionProps = {
   setActiveCartId: (id: string) => Promise<void>;
   createCart: (name: string) => void;
   updateCartName: (cartId: string, name: string) => Promise<void>;
+  deleteCart: (cartId: string) => Promise<void>;
   addCollaborator: (email: string, role: CartRole) => Promise<void>;
   isLoadingGlobal: boolean;
   children: ReactNode;
@@ -108,6 +109,7 @@ function CartSession({
   setActiveCartId,
   createCart,
   updateCartName,
+  deleteCart,
   addCollaborator,
   isLoadingGlobal,
   children
@@ -802,6 +804,7 @@ function CartSession({
     setActiveCartId,
     createCart,
     updateCartName,
+    deleteCart,
     onlineUsers,
     addCollaborator,
     updateCollaboratorRole,
@@ -915,6 +918,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }).isPersisted.promise;
   }, []);
 
+  const deleteCart = useCallback(
+    async (cartId: string) => {
+      // Switch to another one first if possible
+      if (activeCartId === cartId && carts && carts.length > 1) {
+        const otherCart = carts.find((c) => c.id !== cartId);
+        if (otherCart) {
+          await setActiveCartId(otherCart.id);
+        }
+      }
+
+      await cartsCollection.delete(cartId).isPersisted.promise;
+    },
+    [activeCartId, carts, setActiveCartId]
+  );
+
   const addCollaborator = useCallback(
     async (email: string, role: CartRole) => {
       if (!activeCartId) return;
@@ -949,6 +967,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setActiveCartId={setActiveCartId}
       createCart={createCart}
       updateCartName={updateCartName}
+      deleteCart={deleteCart}
       addCollaborator={addCollaborator}
       isLoadingGlobal={isCartsLoading}
     >
