@@ -40,20 +40,27 @@ Follow these steps in order for a smooth first-time setup:
 
    This starts the dev server, Docker Compose (Postgres + Electric), and Caddy automatically.
 
-5. **Run database migrations** (in a new terminal):
+5. **Start Stripe Webhook Mocking** (Optional):
+   If you need to test checkout flows, run this in a parallel terminal:
+
+   ```sh
+   pnpm run stripe:listen
+   ```
+
+6. **Run database migrations** (in a new terminal):
 
    ```sh
    pnpm run migrate
    ```
 
-6. **Seed the database with initial data:**
+7. **Seed the database with initial data:**
 
    ```sh
    pnpm db:seed
    ```
 
-7. **Visit the application:**
-   The app's url will be printed in the terminal, typically `https://local-first-webshop.localhost`.
+8. **Visit the application:**
+   The app's URL will be printed in the terminal, typically `https://local-first-webshop.localhost`.
 
 ---
 
@@ -85,7 +92,7 @@ Follow these steps in order for a smooth first-time setup:
 - **Profile Management:** Manage personal details, default currency, and language.
 - **Address Book:** Save multiple shipping and billing addresses.
 - **Wishlists:** Save items for later; receive notifications on price drops.
-- **Order History:** View past orders and current status.
+- **Order History:** View past orders and their current status.
 
 ### Notification System
 
@@ -442,23 +449,23 @@ There are multiple ways to fetch data in your application. You can use TanStack 
 For example:
 
 ```tsx
-const peopleRoute = createRoute({
+const ratesRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/people",
+  path: "/rates",
   loader: async () => {
-    const response = await fetch("https://swapi.dev/api/people");
+    const response = await fetch("https://api.exchangerate.host/latest");
     return response.json() as Promise<{
-      results: {
-        name: string;
-      }[];
+      rates: Record<string, number>;
     }>;
   },
   component: () => {
-    const data = peopleRoute.useLoaderData();
+    const data = ratesRoute.useLoaderData();
     return (
       <ul>
-        {data.results.map((person) => (
-          <li key={person.name}>{person.name}</li>
+        {Object.entries(data.rates).map(([currency, rate]) => (
+          <li key={currency}>
+            {currency}: {rate}
+          </li>
         ))}
       </ul>
     );
@@ -497,23 +504,24 @@ This starter proxies ElectricSQL shapes through server routes for auth-aware fil
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 
-export const todoCollection = createCollection(
-  electricCollectionOptions<Todo>({
-    id: "todos",
-    schema: todoSchema,
+export const categoriesCollection = createCollection(
+  electricCollectionOptions<Category>({
+    id: "categories",
+    schema: selectCategorySchema,
     // Electric syncs data using "shapes" - filtered views on database tables
     shapeOptions: {
-      url: "/api/todos",
+      url: "/api/categories",
       parser: {
         timestamptz: (s: string) => new Date(s)
       }
     },
     getKey: (item) => item.id,
     onInsert: async ({ transaction }) => {
-      const { modified: newTodo } = transaction.mutations[0];
-      const result = await trpc.todos.create.mutate({
-        text: newTodo.text,
-        completed: newTodo.completed
+      const { modified: newCategory } = transaction.mutations[0];
+      // Use tRPC for the actual database mutation
+      const result = await trpc.categories.create.mutate({
+        name: newCategory.name,
+        color: newCategory.color
         // ... other fields
       });
       return { txid: result.txid };
@@ -526,14 +534,14 @@ export const todoCollection = createCollection(
 Apply mutations with local optimistic state that automatically syncs:
 
 ```tsx
-const AddTodo = () => {
+const AddCategory = () => {
   return (
     <Button
       onClick={() =>
-        todoCollection.insert({
+        categoriesCollection.insert({
           id: crypto.randomUUID(),
-          text: "🔥 Make app faster",
-          completed: false
+          name: "New Category",
+          color: "#ff0000"
         })
       }
     />
@@ -543,33 +551,32 @@ const AddTodo = () => {
 
 #### Live Queries with Cross-Collection Joins
 
-Use live queries to read data reactively across collections:
+Use live queries to read data reactively across collections. For example, joining **Products** with **Categories**:
 
 ```tsx
 import { useLiveQuery, eq } from "@tanstack/react-db";
 
-const Todos = () => {
+const ProductList = () => {
   // Read data using live queries with cross-collection joins
-  const { data: todos } = useLiveQuery((q) =>
+  const { data: products } = useLiveQuery((q) =>
     q
-      .from({ todo: todoCollection })
-      .join({ list: listCollection }, ({ list, todo }) =>
-        eq(list.id, todo.list_id)
+      .from({ product: productsCollection })
+      .join({ category: categoriesCollection }, ({ category, product }) =>
+        eq(category.id, product.category_id)
       )
-      .where(({ list }) => eq(list.active, true))
-      .select(({ list, todo }) => ({
-        id: todo.id,
-        status: todo.status,
-        text: todo.text,
-        list_name: list.name
+      .select(({ category, product }) => ({
+        id: product.id,
+        name: product.name,
+        categoryName: category.name,
+        color: category.color
       }))
   );
 
   return (
     <ul>
-      {todos.map((todo) => (
-        <li key={todo.id}>
-          {todo.text} - {todo.name}
+      {products.map((item) => (
+        <li key={item.id} style={{ color: item.color }}>
+          {item.name} ({item.categoryName})
         </li>
       ))}
     </ul>
@@ -607,12 +614,12 @@ The collection hooks use tRPC for all mutations, providing full end-to-end type 
 ```tsx
 // In your collection configuration
 onUpdate: async ({ transaction }) => {
-  const { modified: updatedTodo } = transaction.mutations[0];
-  const result = await trpc.todos.update.mutate({
-    id: updatedTodo.id,
+  const { modified: updatedCategory } = transaction.mutations[0];
+  const result = await trpc.categories.update.mutate({
+    id: updatedCategory.id,
     data: {
-      text: updatedTodo.text,
-      completed: updatedTodo.completed
+      name: updatedCategory.name,
+      color: updatedCategory.color
     }
   });
   return { txid: result.txid };
