@@ -256,7 +256,7 @@ export function TagManager({ disabled }: TagManagerProps) {
                 <div
                   key={tag.id}
                   className={cn(
-                    "group flex flex-col gap-2 rounded-lg border p-2 transition-all",
+                    "group/tag flex flex-col gap-2 rounded-lg border p-2 transition-all",
                     isEditing
                       ? "border-primary bg-primary/5 ring-primary ring-1"
                       : "bg-card hover:bg-accent/50",
@@ -354,7 +354,7 @@ export function TagManager({ disabled }: TagManagerProps) {
                           </Button>
                         </>
                       ) : (
-                        <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                        <div className="flex gap-1 opacity-0 transition-opacity group-focus-within/tag:opacity-100 group-hover/tag:opacity-100">
                           <Button
                             variant="ghost"
                             size="icon"
