@@ -14,6 +14,7 @@ import { FLOW_ORDER } from "@/lib/checkout/config";
 import SuccessView from "@/components/checkout/views/SuccessView";
 import CheckoutWizardView from "@/components/checkout/views/CheckoutWizardView";
 import CartOverviewView from "@/components/checkout/views/CartOverviewView";
+import ConnectionErrorView from "@/components/checkout/views/ConnectionErrorView";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
@@ -189,6 +190,9 @@ function CheckoutPage() {
       return;
     }
 
+    // Do not auto-retry. Wait for the user to click "Retry" in the UI.
+    if (intentError) return;
+
     // If the payload has changed (Stale)
     if (!deepEqual(currentPayload, activePayload)) {
       // Clear any existing retry timers from previous payload attempts
@@ -248,7 +252,8 @@ function CheckoutPage() {
     activePayload,
     upsertOrder,
     paymentIntentPending,
-    redirect_status
+    redirect_status,
+    intentError
   ]);
 
   // Data Loading for Recommendations
@@ -294,15 +299,12 @@ function CheckoutPage() {
   // Handle Error State in UI
   if (intentError) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center p-10 text-center">
-        <p className="mb-4 text-red-500">{intentError}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-        >
-          Retry
-        </button>
-      </div>
+      <ConnectionErrorView
+        onRetry={() => {
+          setIntentError(null);
+          setActivePayload(null);
+        }}
+      />
     );
   }
 
@@ -312,7 +314,7 @@ function CheckoutPage() {
 
   if (state.isWizard) {
     // Show loader if secret is missing OR we are currently fetching a new one
-    if (!activeOrder?.stripe_client_secret) {
+    if (!activeOrder?.stripe_client_secret || !activePayload) {
       return (
         <div className="flex min-h-screen items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
