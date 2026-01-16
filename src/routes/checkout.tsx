@@ -15,11 +15,11 @@ import SuccessView from "@/components/checkout/views/SuccessView";
 import CheckoutWizardView from "@/components/checkout/views/CheckoutWizardView";
 import CartOverviewView from "@/components/checkout/views/CartOverviewView";
 import ConnectionErrorView from "@/components/checkout/views/ConnectionErrorView";
+import CheckoutLoadingView from "@/components/checkout/views/CheckoutLoadingView";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { trpc } from "@/lib/trpc-client";
-import { Loader2 } from "lucide-react";
 import { deepEqual } from "fast-equals";
 import type { UserAddress } from "@/db/schema.ts";
 import { toast } from "sonner";
@@ -315,11 +315,7 @@ function CheckoutPage() {
   if (state.isWizard) {
     // Show loader if secret is missing OR we are currently fetching a new one
     if (!activeOrder?.stripe_client_secret || !activePayload) {
-      return (
-        <div className="flex min-h-screen items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-        </div>
-      );
+      return <CheckoutLoadingView state={state} actions={actions} />;
     }
 
     return (

@@ -1,23 +1,17 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { WIZARD_STEPS } from "@/lib/checkout/config";
+
 import type { UseCheckoutLogicReturn } from "@/lib/checkout/useCheckoutLogic";
 import type { WizardStepId } from "@/lib/checkout/types";
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  Loader2,
-  TruckIcon
-} from "lucide-react";
+import { ChevronRightIcon, Loader2 } from "lucide-react";
 import AddressStep from "../steps/AddressStep";
 import PaymentStep from "../steps/PaymentStep";
 import ReviewStep from "../steps/ReviewStep";
 import ShippingSelector from "../shared/ShippingSelector";
-import OrderSummary from "../shared/OrderSummary";
-import { Link } from "@tanstack/react-router";
 import { useStripe, useElements } from "@stripe/react-stripe-js";
 import { type ReactNode, useState, useMemo } from "react";
+import { CheckoutLayout } from "./CheckoutLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TruckIcon } from "lucide-react";
 
 function CheckoutWizardView({
   state,
@@ -41,8 +35,6 @@ function CheckoutWizardView({
   };
 
   const currentStepId = state.step as WizardStepId;
-  // 1. Determine the index of the active step to know what is "past" vs "future"
-  const currentStepIndex = WIZARD_STEPS.indexOf(currentStepId);
 
   const isCurrentStepValid = useMemo(() => {
     switch (currentStepId) {
@@ -85,131 +77,70 @@ function CheckoutWizardView({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 py-8 dark:bg-slate-950">
-      <div className="container mx-auto max-w-7xl px-4">
-        {/* Wizard Header */}
-        <div className="mb-8 space-y-4">
-          <Button
-            variant="ghost"
-            onClick={actions.goToBack}
-            className="pl-0 hover:bg-transparent"
-          >
-            <ChevronLeftIcon className="mr-2 h-4 w-4" /> Back
-          </Button>
+    <CheckoutLayout
+      currentStepId={currentStepId}
+      wizardProgress={state.wizardProgress}
+      onBack={actions.goToBack}
+      totals={state.totals}
+      itemCount={state.cartItems.length}
+      paymentError={state.paymentError}
+    >
+      {STEP_CONTENT_EARLY_STAGES[currentStepId]}
 
-          <h1 className="text-3xl font-bold">Checkout</h1>
-
-          <div className="space-y-2">
-            <div className="text-muted-foreground flex justify-between text-sm font-medium">
-              {WIZARD_STEPS.map((stepId, idx) => {
-                const label = `${idx + 1}. ${stepId.charAt(0).toUpperCase() + stepId.slice(1)}`;
-                const isActive = currentStepId === stepId;
-
-                // Only navigate to steps you have already passed or are currently on.
-                const isNavigable = idx <= currentStepIndex;
-
-                if (!isNavigable) {
-                  return (
-                    <span
-                      key={stepId}
-                      className="cursor-not-allowed opacity-50 select-none"
-                      aria-disabled="true"
-                    >
-                      {label}
-                    </span>
-                  );
-                }
-
-                return (
-                  <Link
-                    key={stepId}
-                    to={"/checkout"}
-                    search={{ step: stepId }}
-                    className={
-                      isActive ? "text-primary font-bold" : "hover:underline"
-                    }
-                  >
-                    {label}
-                  </Link>
-                );
-              })}
-            </div>
-            <Progress value={state.wizardProgress} className="h-2" />
-          </div>
+      {(currentStepId === "payment" || currentStepId === "review") && (
+        <div className={currentStepId === "review" ? "hidden" : "block"}>
+          <PaymentStep
+            coupon={state.formData.couponInput}
+            setCoupon={actions.setCouponInput}
+            onApplyCoupon={actions.applyCoupon}
+            isCouponApplied={!!state.formData.appliedCoupon}
+            onPaymentMethodChange={actions.setPaymentMethodType}
+            onPaymentComplete={setIsPaymentComplete}
+          />
         </div>
+      )}
 
-        {/* Wizard Body */}
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <div className="space-y-6 lg:col-span-2">
-            {STEP_CONTENT_EARLY_STAGES[currentStepId]}
+      {currentStepId === "review" && (
+        <ReviewStep
+          cartItems={state.cartItems}
+          shippingMethod={state.formData.shippingMethod}
+          warranties={state.formData.warranties}
+          selectedAddressId={state.formData.selectedAddressId}
+          paymentMethodType={state.formData.paymentMethodType}
+        />
+      )}
 
-            {(currentStepId === "payment" || currentStepId === "review") && (
-              <div className={currentStepId === "review" ? "hidden" : "block"}>
-                <PaymentStep
-                  coupon={state.formData.couponInput}
-                  setCoupon={actions.setCouponInput}
-                  onApplyCoupon={actions.applyCoupon}
-                  isCouponApplied={!!state.formData.appliedCoupon}
-                  onPaymentMethodChange={actions.setPaymentMethodType}
-                  onPaymentComplete={setIsPaymentComplete}
-                />
-              </div>
-            )}
-
-            {currentStepId === "review" && (
-              <ReviewStep
-                cartItems={state.cartItems}
-                shippingMethod={state.formData.shippingMethod}
-                warranties={state.formData.warranties}
-                selectedAddressId={state.formData.selectedAddressId}
-                paymentMethodType={state.formData.paymentMethodType}
-              />
-            )}
-
-            <div className="flex justify-between pt-4">
-              <Button
-                variant="ghost"
-                onClick={actions.goToBack}
-                disabled={state.isProcessing}
-              >
-                Back
-              </Button>
-              <Button
-                onClick={handleNextClick}
-                size="lg"
-                disabled={
-                  state.isProcessing ||
-                  !isCurrentStepValid ||
-                  (currentStepId === "review" && isPaymentIntentPending)
-                }
-              >
-                {state.isProcessing ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                {currentStepId === "review"
-                  ? state.isProcessing
-                    ? "Processing..."
-                    : "Pay & Confirm"
-                  : "Next Step"}
-                {currentStepId !== "review" && !state.isProcessing && (
-                  <ChevronRightIcon className="ml-2 h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-
-          <div className="lg:col-span-1">
-            <div className="sticky top-8 h-full pb-20">
-              <OrderSummary
-                totals={state.totals}
-                itemCount={state.cartItems.length}
-                paymentError={state.paymentError}
-              />
-            </div>
-          </div>
-        </div>
+      <div className="flex justify-between pt-4">
+        <Button
+          variant="ghost"
+          onClick={actions.goToBack}
+          disabled={state.isProcessing}
+        >
+          Back
+        </Button>
+        <Button
+          onClick={handleNextClick}
+          size="lg"
+          disabled={
+            state.isProcessing ||
+            !isCurrentStepValid ||
+            (currentStepId === "review" && isPaymentIntentPending)
+          }
+        >
+          {state.isProcessing ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : null}
+          {currentStepId === "review"
+            ? state.isProcessing
+              ? "Processing..."
+              : "Pay & Confirm"
+            : "Next Step"}
+          {currentStepId !== "review" && !state.isProcessing && (
+            <ChevronRightIcon className="ml-2 h-4 w-4" />
+          )}
+        </Button>
       </div>
-    </div>
+    </CheckoutLayout>
   );
 }
 
