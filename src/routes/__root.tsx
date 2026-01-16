@@ -29,9 +29,11 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1"
       },
       ...seo({
-        title:
-          "TanStack Start | Type-Safe, Client-First, Full-Stack React Framework",
-        description: `TanStack Start is a type-safe, client-first, full-stack React framework. `
+        title: "Partslist - The Local-First Webshop",
+        description: `Partslist is a next-generation e-commerce platform built on a local-first architecture. 
+        Experience zero-latency browsing, full offline capabilities, and instant search. 
+        With real-time shared carts and tiered pricing, Partslist delivers a seamless shopping experience that 
+        works everywhere you do - even without an internet connection.`
       })
     ],
     links: [
