@@ -92,10 +92,11 @@ export function CartShareDialog({ open, onOpenChange }: CartShareDialogProps) {
   const handleInvite = async () => {
     if (inviteEmail.trim()) {
       try {
-        await addCollaborator(inviteEmail, inviteRole);
+        await addCollaborator(inviteEmail.trim(), inviteRole);
         setInviteEmail("");
       } catch (e) {
         console.error("Failed to invite", e);
+        toast("Failed to invite collaborator");
       }
     }
   };

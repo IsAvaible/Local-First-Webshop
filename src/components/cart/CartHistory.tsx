@@ -109,7 +109,7 @@ function SnapshotCartView({
       isSynced: true, // Snapshots are static, so they are "synced"
       // Disable all mutations with no-ops
       /* eslint-disable @typescript-eslint/no-empty-function */
-      addItem: () => {},
+      addItem: () => undefined,
       removeItem: () => {},
       updateItemQuantity: () => {},
       updateItemNotes: () => {},

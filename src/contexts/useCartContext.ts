@@ -89,6 +89,7 @@ export interface CartContextType {
   activeCartId: string | null;
   setActiveCartId: (id: string) => Promise<void>;
   createCart: (name: string) => void;
+  updateCartName: (cartId: string, name: string) => Promise<void>;
 
   cartRole: CartRole;
   canManageUsers: boolean;

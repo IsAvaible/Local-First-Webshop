@@ -24,7 +24,7 @@ import {
   verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Loader2, PlusIcon, Wifi, WifiOff } from "lucide-react";
+import { Loader2, PlusIcon, Wifi, WifiOff, Pencil } from "lucide-react";
 
 import { type EnrichedCartNode, useCart } from "@/contexts/useCartContext.ts";
 import { TagManager } from "./TagManager";
@@ -216,15 +216,25 @@ export function Cart({
     carts,
     activeCartId,
     setActiveCartId,
+    activeCart,
     createCart,
+    updateCartName,
     canManageItems,
     collaborators,
     connectivityStatus
   } = useCart();
 
   const [activeId, setActiveId] = React.useState<string | null>(null);
+
+  // Create Cart State
   const [newCartName, setNewCartName] = React.useState("");
   const [isCreateCartOpen, setIsCreateCartOpen] = React.useState(false);
+
+  // Edit Cart State
+  const [editingCartName, setEditingCartName] = React.useState("");
+  const [isEditCartOpen, setIsEditCartOpen] = React.useState(false);
+
+  // Share State
   const [isShareOpen, setIsShareOpen] = React.useState(false);
 
   const sensors = useSensors(
@@ -381,6 +391,14 @@ export function Cart({
     }
   };
 
+  // Handler for renaming cart
+  const handleRenameCart = async () => {
+    if (editingCartName.trim() && activeCartId) {
+      await updateCartName(activeCartId, editingCartName);
+      setIsEditCartOpen(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className={cn("flex h-full flex-col p-4", className)}>
@@ -492,6 +510,60 @@ export function Cart({
                     ))}
                   </SelectContent>
                 </Select>
+
+                {/* --- RENAME CART BUTTON --- */}
+                <Dialog
+                  open={isEditCartOpen}
+                  onOpenChange={(open) => {
+                    setIsEditCartOpen(open);
+                    // Pre-fill name when opening
+                    if (open && activeCart) {
+                      setEditingCartName(activeCart.name);
+                    }
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="bg-gray-50"
+                      disabled={!activeCartId || !canManageItems}
+                      title="Rename Cart"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Rename Cart</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <Label htmlFor="edit-name">Cart Name</Label>
+                      <Input
+                        id="edit-name"
+                        value={editingCartName}
+                        onChange={(e) => setEditingCartName(e.target.value)}
+                        className="mt-2"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            void handleRenameCart();
+                          }
+                        }}
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsEditCartOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button onClick={handleRenameCart}>Save Changes</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
+                {/* --- CREATE NEW CART BUTTON --- */}
                 <Dialog
                   open={isCreateCartOpen}
                   onOpenChange={setIsCreateCartOpen}
@@ -516,6 +588,15 @@ export function Cart({
                         value={newCartName}
                         onChange={(e) => setNewCartName(e.target.value)}
                         className="mt-2"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            if (newCartName.trim()) {
+                              createCart(newCartName);
+                              setNewCartName("");
+                              setIsCreateCartOpen(false);
+                            }
+                          }
+                        }}
                       />
                     </div>
                     <DialogFooter>

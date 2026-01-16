@@ -93,6 +93,7 @@ type CartSessionProps = {
   activeCartId: string;
   setActiveCartId: (id: string) => Promise<void>;
   createCart: (name: string) => void;
+  updateCartName: (cartId: string, name: string) => Promise<void>;
   addCollaborator: (email: string, role: CartRole) => Promise<void>;
   isLoadingGlobal: boolean;
   children: ReactNode;
@@ -106,6 +107,7 @@ function CartSession({
   activeCartId,
   setActiveCartId,
   createCart,
+  updateCartName,
   addCollaborator,
   isLoadingGlobal,
   children
@@ -799,6 +801,7 @@ function CartSession({
     activeCartId,
     setActiveCartId,
     createCart,
+    updateCartName,
     onlineUsers,
     addCollaborator,
     updateCollaboratorRole,
@@ -905,6 +908,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [userId]
   );
 
+  const updateCartName = useCallback(async (cartId: string, name: string) => {
+    await cartsCollection.update(cartId, (draft) => {
+      draft.name = name;
+      draft.updated_at = new Date();
+    }).isPersisted.promise;
+  }, []);
+
   const addCollaborator = useCallback(
     async (email: string, role: CartRole) => {
       if (!activeCartId) return;
@@ -938,6 +948,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       activeCartId={activeCartId}
       setActiveCartId={setActiveCartId}
       createCart={createCart}
+      updateCartName={updateCartName}
       addCollaborator={addCollaborator}
       isLoadingGlobal={isCartsLoading}
     >
