@@ -46,13 +46,13 @@ export function Wishlist() {
           eq(p.id, fa_id.product_id)
         )
         // Join actual asset data using the ID found above
-        .leftJoin({ a: assetsCollection }, ({ fa_id, a }) =>
-          eq(a.id, fa_id?.first_asset_id)
+        .leftJoin({ as: assetsCollection }, ({ fa_id, as }) =>
+          eq(as.id, fa_id?.first_asset_id)
         )
-        .select(({ w, p, a, price }) => ({
+        .select(({ w, p, as, price }) => ({
           wishlistId: w.id,
           product: p,
-          asset: a,
+          asset: as,
           calculated_price: price!.max_price,
           price_snapshot: w.price_snapshot
         }))
