@@ -22,6 +22,7 @@ import { CheckIcon, GlobeIcon, LinkIcon } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { UserAvatar } from "@/components/cart/Cart.tsx";
+import { toast } from "sonner";
 
 interface CartShareDialogProps {
   open: boolean;
@@ -100,7 +101,7 @@ export function CartShareDialog({ open, onOpenChange }: CartShareDialogProps) {
   };
 
   const handleCopyLink = () => {
-    void navigator.clipboard.writeText(window.location.href);
+    toast("This feature is not implemented yet. \t\\(°Ω°)/");
     setCopyLinkText("Copied!");
     setTimeout(() => setCopyLinkText("Copy link"), 2000);
   };
