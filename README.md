@@ -5,6 +5,7 @@ This application focuses on offline capabilities, real-time collaboration (share
 experience.
 
 ![Screenshot of the Search Route](docs/assets/screenshots/Search.png)
+See [showcase.md](docs/showcase.md) for a non-technical feature focused overview of the project.
 
 ## Quick Start
 
