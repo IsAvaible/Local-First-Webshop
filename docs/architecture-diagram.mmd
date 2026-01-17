@@ -1,0 +1,65 @@
+sequenceDiagram
+    autonumber
+
+    box "Client Side"
+        participant UI as React UI
+        participant YJS as Yjs (y-electric)
+        participant Local as Local DB (TanStack)
+        participant E_Client as Electric Client
+        participant T_Client as tRPC Client
+    end
+
+    box "Backend Services"
+        participant API as tRPC API
+        participant E_Svc as Electric Service
+    end
+
+    box "Persistence Layer"
+        participant DB as PostgreSQL
+    end
+
+%% --- PHASE 1: USER INTERACTION & OPTIMISTIC UPDATES ---
+    note over UI, Local: PHASE 1: USER ACTION (Optimistic Updates)
+
+    par Standard Data
+        note right of UI: e.g. User edits a form
+        UI->>Local: 1. Optimistic Mutation
+        Local->>UI: 2.1. Update View (Immediate)
+        Local->>T_Client: 2.2. Trigger Server Action
+    and Cart Data
+        note right of UI: e.g. User edits the cart
+        UI->>YJS: 1. Update Y.Doc
+        YJS->>T_Client: 2. Trigger Server Action (with update binary)
+    end
+
+%% --- PHASE 2: UPSTREAM SYNC (WRITE TO SERVER) ---
+    note over Local, DB: PHASE 2: UPSTREAM SYNC
+
+    T_Client->>API: HTTPS POST (Mutation)
+    activate API
+    API->>API: Auth / Validation
+    API->>DB: INSERT / UPDATE / DELETE
+    activate DB
+    DB-->>API: Confirm
+    deactivate DB
+    API-->>T_Client: 200 OK
+    deactivate API
+
+
+%% --- PHASE 3: DOWNSTREAM SYNC (CDC) ---
+    note over UI, DB: PHASE 3: DOWNSTREAM SYNC (Read / Reconcile)
+
+    DB->>E_Svc: CDC (WAL Event)
+    activate E_Svc
+    E_Svc->>E_Client: HTTP Push (Global Updates)
+    deactivate E_Svc
+    activate E_Client
+
+    par Apply Standard Data
+        E_Client->>Local: Hydrate / Merge Rows
+        Local->>UI: Update View (TanStack Query)
+    and Apply Cart Data
+        E_Client->>YJS: Get Yjs updates
+        YJS->>UI: Update Cursors / Text
+    end
+    deactivate E_Client

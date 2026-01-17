@@ -120,7 +120,9 @@ Follow these steps in order for a smooth first-time setup:
 - `src/routes`: TanStack Router file-based route definitions.
 - `src/contexts`: Global state providers (specifically complex `CartProvider`).
 
----
+### Diagram
+
+## ![Render of the architecture diagram](docs/assets/export/architecture-diagram.svg)
 
 ## Database Schema Overview
 
