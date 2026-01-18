@@ -1,12 +1,12 @@
 import { createFileRoute, stripSearchParams } from "@tanstack/react-router";
-import { useLiveQuery, eq, min, Query, and } from "@tanstack/react-db";
+import { useLiveQuery, eq, and } from "@tanstack/react-db";
 import {
   productsCollection,
   pricingTiersCollection,
   assetsCollection,
   ordersCollection
 } from "@/lib/collections";
-import type { ProductSuggestion, FlowStepId } from "@/lib/checkout/types";
+import type { FlowStepId } from "@/lib/checkout/types";
 import { z } from "zod";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { useCheckoutLogic } from "@/lib/checkout/useCheckoutLogic";
@@ -256,46 +256,6 @@ function CheckoutPage() {
     intentError
   ]);
 
-  // Data Loading for Recommendations
-  const { data: suggestions, isLoading: isSuggestionsLoading } = useLiveQuery(
-    () => {
-      const minPriceSubquery = new Query()
-        .from({ pt: pricingTiersCollection })
-        .groupBy(({ pt }) => pt.product_id)
-        .select(({ pt }) => ({
-          product_id: pt.product_id,
-          min_price: min(pt.price_per_unit)
-        }));
-
-      const firstAssetIdSubquery = new Query()
-        .from({ a: assetsCollection })
-        .groupBy(({ a }) => a.product_id)
-        .select(({ a }) => ({
-          product_id: a.product_id,
-          first_asset_id: min(a.id)
-        }));
-
-      return new Query()
-        .from({ p: productsCollection })
-        .leftJoin({ price: minPriceSubquery }, ({ p, price }) =>
-          eq(p.id, price.product_id)
-        )
-        .leftJoin({ fa_id: firstAssetIdSubquery }, ({ p, fa_id }) =>
-          eq(p.id, fa_id.product_id)
-        )
-        .leftJoin({ asset: assetsCollection }, ({ asset, fa_id }) =>
-          eq(asset.id, fa_id?.first_asset_id)
-        )
-        .limit(4)
-        .orderBy(({ p }) => p.id)
-        .select(({ p, price, asset }) => ({
-          ...p,
-          min_price: price?.min_price,
-          asset: asset
-        }));
-    }
-  );
-
   // Handle Error State in UI
   if (intentError) {
     return (
@@ -336,12 +296,5 @@ function CheckoutPage() {
     );
   }
 
-  return (
-    <CartOverviewView
-      state={state}
-      actions={actions}
-      suggestions={suggestions as ProductSuggestion[]}
-      isSuggestionsLoading={isSuggestionsLoading}
-    />
-  );
+  return <CartOverviewView state={state} actions={actions} />;
 }

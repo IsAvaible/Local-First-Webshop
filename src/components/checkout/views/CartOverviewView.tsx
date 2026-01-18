@@ -1,21 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRightIcon } from "lucide-react";
 import type { UseCheckoutLogicReturn } from "@/lib/checkout/useCheckoutLogic";
-import type { ProductSuggestion } from "@/lib/checkout/types";
 import CartItemsList from "../shared/CartItemsList";
 import OrderSummary from "../shared/OrderSummary";
-import ProductCard from "@/components/browse/ProductCard";
+import RelatedProducts from "@/components/product/RelatedProducts.tsx";
 
 function CartOverviewView({
   state,
-  actions,
-  suggestions,
-  isSuggestionsLoading: _isSuggestionsLoading
+  actions
 }: {
   state: UseCheckoutLogicReturn["state"];
   actions: UseCheckoutLogicReturn["actions"];
-  suggestions?: ProductSuggestion[];
-  isSuggestionsLoading: boolean;
 }) {
   const { cartItems, totals, paymentError } = state;
   const isCartEmpty = cartItems.length === 0;
@@ -48,16 +43,7 @@ function CartOverviewView({
         </div>
 
         <div className="mt-16">
-          <h2 className="mb-6 text-2xl font-bold">You might also like</h2>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
-            {suggestions?.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                asset={product.asset}
-              />
-            ))}
-          </div>
+          <RelatedProducts />
         </div>
       </div>
     </div>
