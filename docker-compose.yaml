@@ -35,6 +35,9 @@ services:
       ELECTRIC_FEATURE_FLAGS: "allow_subqueries"
     ports:
       - "3000:3000"
+    # This fixes a corrupt shape cache on host shutdown. This should not be employed in production as it will lose data on container restart.
+    tmpfs:
+      - /app/persistent
     depends_on:
       postgres:
         condition: service_healthy
