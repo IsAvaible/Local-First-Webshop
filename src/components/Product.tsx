@@ -2,7 +2,6 @@ import ProductImageCarousel from "@/components/product/ProductImageCarousel.tsx"
 import ProductDetails from "@/components/product/ProductDetails.tsx";
 import RelatedProducts from "@/components/product/RelatedProducts.tsx";
 import ShippingInfo from "@/components/product/ShippingInfo.tsx";
-import { Loader2Icon } from "lucide-react";
 import {
   type Asset,
   type Category,
@@ -12,6 +11,8 @@ import {
   type PricingTier,
   type Product
 } from "@/db/schema";
+import { useEffect, useState } from "react";
+import { Loader2Icon } from "lucide-react";
 
 export default function Product({
   loading,
@@ -34,21 +35,38 @@ export default function Product({
   isInWishlist?: boolean;
   onToggleWishlist?: () => void;
 }) {
-  if (loading) {
-    return (
-      <div role="status" className="flex h-full items-center justify-center">
-        <Loader2Icon className="h-12 w-12 animate-spin text-gray-800 dark:text-gray-600" />
-        <span className="sr-only">Loading...</span>
-      </div>
-    );
-  }
+  const [showSyncing, setShowSyncing] = useState(false);
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+
+    if (loading) {
+      // Wait 500ms before showing the badge
+      timeout = setTimeout(() => {
+        setShowSyncing(true);
+      }, 500);
+    } else {
+      setShowSyncing(false);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [loading, showSyncing]);
 
   if (!product || !category || !company || !assets || !pricingTiers) {
-    return (
-      <div className="col-span-full flex aspect-[2/1] items-center justify-center">
-        <div className="alert alert-error">Product not found.</div>
-      </div>
-    );
+    if (loading) {
+      return (
+        <div role="status" className="flex h-full items-center justify-center">
+          <Loader2Icon className="h-12 w-12 animate-spin text-gray-800 dark:text-gray-600" />
+          <span className="sr-only">Loading...</span>
+        </div>
+      );
+    } else {
+      return (
+        <div className="col-span-full flex aspect-[2/1] items-center justify-center">
+          <div className="alert alert-error">Product not found.</div>
+        </div>
+      );
+    }
   }
 
   return (
@@ -68,6 +86,7 @@ export default function Product({
             customFields={customFields}
             isInWishlist={isInWishlist}
             onToggleWishlist={onToggleWishlist}
+            isSyncing={showSyncing}
           />
         </div>
       </div>

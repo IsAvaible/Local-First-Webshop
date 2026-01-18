@@ -8,7 +8,8 @@ import {
   pricingTiersCollection,
   customFieldDefinitionsCollection,
   customFieldValuesCollection,
-  wishlistCollection
+  wishlistCollection,
+  ordersCollection
 } from "@/lib/collections";
 import Product from "@/components/Product.tsx";
 import { authClient } from "@/lib/auth-client";
@@ -19,7 +20,19 @@ export const Route = createFileRoute("/products/$productId")({
   params: {
     parse: (params) => ({ productId: parseInt(params.productId, 10) })
   },
-  component: ProductPageComponent
+  component: ProductPageComponent,
+  loader: async () => {
+    await Promise.all([
+      productsCollection.preload(),
+      categoriesCollection.preload(),
+      companiesCollection.preload(),
+      pricingTiersCollection.preload(),
+      assetsCollection.preload(),
+      ordersCollection.preload(),
+      customFieldValuesCollection.preload(),
+      customFieldDefinitionsCollection.preload()
+    ]);
+  }
 });
 
 function ProductPageComponent() {

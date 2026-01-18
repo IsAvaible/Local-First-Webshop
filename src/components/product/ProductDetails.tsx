@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, Heart, Minus, Plus, Check } from "lucide-react";
+import { ShoppingCart, Heart, Minus, Plus, Check, Loader2 } from "lucide-react";
 import ProductConfigurator from "@/components/product/ProductConfigurator";
 import type {
   CustomFieldDefinition,
@@ -13,19 +13,22 @@ import { useCart } from "@/contexts/useCartContext.ts";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Input } from "@/components/ui/input";
 import { useMemo } from "react";
+import { Badge } from "@/components/ui/badge.tsx";
 
 export default function ProductDetails({
   product,
   pricingTiers,
   customFields,
   isInWishlist,
-  onToggleWishlist
+  onToggleWishlist,
+  isSyncing
 }: {
   product: Product;
   pricingTiers: PricingTier[];
   customFields?: (CustomFieldValue & CustomFieldDefinition)[];
   isInWishlist?: boolean;
   onToggleWishlist?: () => void;
+  isSyncing: boolean;
 }) {
   const {
     enrichedFlatItems: items,
@@ -41,7 +44,7 @@ export default function ProductDetails({
   );
   const quantity = cartItem?.quantity ?? 0;
 
-  // Calculate Active Tier (Logic from previous step)
+  // Calculate Active Tier
   const activeTier = useMemo(() => {
     const quantityToCheck = Math.max(1, quantity);
     const sortedTiers = [...pricingTiers].sort(
@@ -105,9 +108,18 @@ export default function ProductDetails({
   return (
     <div className="flex h-full flex-col">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-slate-100">
-          {product.name}
-        </h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-slate-100">
+            {product.name}
+          </h1>
+          {isSyncing && (
+            <Badge variant="secondary" className="-my-1 gap-1.5 px-2.5 py-1">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Syncing
+            </Badge>
+          )}
+        </div>
+
         <p className="mt-4 text-lg text-gray-600 dark:text-slate-300">
           {product.description}
         </p>
