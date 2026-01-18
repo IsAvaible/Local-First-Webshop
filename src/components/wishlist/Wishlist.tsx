@@ -8,7 +8,7 @@ import {
 } from "@/lib/collections";
 import ProductCard from "@/components/browse/ProductCard";
 import { Button } from "@/components/ui/button";
-import { Loader2Icon, HeartIcon, Search } from "lucide-react";
+import { HeartIcon, Search } from "lucide-react";
 
 export function Wishlist() {
   const { data: wishlistItems, isLoading } = useLiveQuery((q) => {
@@ -61,8 +61,10 @@ export function Wishlist() {
 
   if (isLoading) {
     return (
-      <div className="flex h-96 items-center justify-center">
-        <Loader2Icon className="h-8 w-8 animate-spin text-gray-500" />
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <ProductCard.Skeleton key={i} />
+        ))}
       </div>
     );
   }

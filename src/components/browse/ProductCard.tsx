@@ -5,6 +5,7 @@ import { ShoppingCartIcon, Plus, Minus, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
   CardContent,
@@ -13,11 +14,11 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+import { AssetImage } from "@/components/ui/assetImage";
 
 import { useCart } from "@/contexts/useCartContext";
 import { cn, humanizeCustomFieldValue, type JsonValue } from "@/lib/utils";
 import type { Asset, Product } from "@/db/schema";
-import { AssetImage } from "@/components/ui/assetImage.tsx";
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat("de-DE", {
   style: "currency",
@@ -31,7 +32,10 @@ interface ProductCardProps {
   lazy?: boolean;
 }
 
-export default function ProductCard({
+/**
+ * Main Component
+ */
+function ProductCardInternal({
   product,
   customFields,
   asset,
@@ -137,6 +141,44 @@ export default function ProductCard({
   );
 }
 
+/**
+ * Skeleton Component
+ */
+function ProductCardSkeleton({ className }: { className?: string }) {
+  return (
+    <Card
+      className={cn("flex h-full flex-col overflow-hidden pt-0", className)}
+    >
+      {/* Image Skeleton */}
+      <CardHeader className="p-0">
+        <Skeleton className="aspect-square w-full rounded-t-xl rounded-b-none" />
+      </CardHeader>
+
+      {/* Content Skeleton */}
+      <CardContent className="flex-grow p-4">
+        {/* Title */}
+        <Skeleton className="mb-2 h-6 w-3/4" />
+
+        {/* Description (2 lines) */}
+        <div className="mt-2 space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+        </div>
+      </CardContent>
+
+      {/* Footer Skeleton */}
+      <CardFooter className="mt-auto flex items-center justify-between px-4 pb-4">
+        {/* Price */}
+        <Skeleton className="h-6 w-20" />
+
+        {/* Button */}
+        <Skeleton className="size-9 rounded-md" />
+      </CardFooter>
+    </Card>
+  );
+}
+
+/// --- Helpers ---
 interface QuantityActionButtonProps {
   onClick: () => void;
   icon: LucideIcon;
@@ -298,3 +340,9 @@ function CartQuantitySelector({
     </div>
   );
 }
+
+const ProductCard = Object.assign(ProductCardInternal, {
+  Skeleton: ProductCardSkeleton
+});
+
+export default ProductCard;

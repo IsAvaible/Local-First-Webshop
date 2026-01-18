@@ -5,7 +5,6 @@ import {
   assetsCollection
 } from "@/lib/collections";
 import ProductCard from "@/components/browse/ProductCard";
-import { Loader2Icon } from "lucide-react";
 
 interface RelatedProductsProps {
   currentProductId?: number;
@@ -65,14 +64,6 @@ export default function RelatedProducts({
     [currentProductId] // Re-run if current product changes
   );
 
-  if (isLoading) {
-    return (
-      <div className="flex h-32 items-center justify-center">
-        <Loader2Icon className="h-6 w-6 animate-spin text-gray-400" />
-      </div>
-    );
-  }
-
   if (!products || products.length === 0) {
     return null;
   }
@@ -81,13 +72,17 @@ export default function RelatedProducts({
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">You might also like</h2>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
-        {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            asset={product.asset}
-          />
-        ))}
+        {!isLoading
+          ? products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                asset={product.asset}
+              />
+            ))
+          : Array.from({ length: 4 }).map((_, i) => (
+              <ProductCard.Skeleton key={i} />
+            ))}
       </div>
     </div>
   );
