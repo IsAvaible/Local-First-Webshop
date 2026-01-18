@@ -30,7 +30,8 @@ export const Route = createFileRoute("/products/$productId")({
       assetsCollection.preload(),
       ordersCollection.preload(),
       customFieldValuesCollection.preload(),
-      customFieldDefinitionsCollection.preload()
+      customFieldDefinitionsCollection.preload(),
+      wishlistCollection.preload()
     ]);
   }
 });

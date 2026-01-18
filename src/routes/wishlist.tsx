@@ -1,7 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Wishlist } from "@/components/wishlist/Wishlist.tsx";
 
+import {
+  wishlistCollection,
+  productsCollection,
+  assetsCollection,
+  pricingTiersCollection
+} from "@/lib/collections";
+
 export const Route = createFileRoute("/wishlist")({
+  loader: async () => {
+    await Promise.all([
+      wishlistCollection.preload(),
+      productsCollection.preload(),
+      assetsCollection.preload(),
+      pricingTiersCollection.preload()
+    ]);
+  },
   component: WishlistPage
 });
 

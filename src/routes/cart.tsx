@@ -5,6 +5,15 @@ import { useEffect } from "react";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { toast } from "sonner";
+import {
+  cartsCollection,
+  userSelectedCartCollection,
+  productsCollection,
+  pricingTiersCollection,
+  assetsCollection,
+  cartCollaboratorsCollection,
+  usersCollection
+} from "@/lib/collections";
 
 const cartSearchSchema = z.object({
   id: z.string().optional()
@@ -12,6 +21,17 @@ const cartSearchSchema = z.object({
 
 export const Route = createFileRoute("/cart")({
   validateSearch: zodValidator(cartSearchSchema),
+  loader: async () => {
+    await Promise.all([
+      cartsCollection.preload(),
+      userSelectedCartCollection.preload(),
+      productsCollection.preload(),
+      pricingTiersCollection.preload(),
+      assetsCollection.preload(),
+      cartCollaboratorsCollection.preload(),
+      usersCollection.preload()
+    ]);
+  },
   component: CartPage
 });
 

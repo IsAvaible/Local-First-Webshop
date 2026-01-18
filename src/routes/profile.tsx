@@ -16,7 +16,11 @@ import { eq, not, useLiveQuery } from "@tanstack/react-db";
 import {
   ordersCollection,
   userSettingsCollection,
-  usersCollection
+  usersCollection,
+  wishlistCollection,
+  productsCollection,
+  assetsCollection,
+  pricingTiersCollection
 } from "@/lib/collections";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -73,7 +77,12 @@ export const Route = createFileRoute("/profile")({
     await Promise.all([
       ordersCollection.preload(),
       userSettingsCollection.preload(),
-      usersCollection.preload()
+      usersCollection.preload(),
+      // Wishlist tab
+      wishlistCollection.preload(),
+      productsCollection.preload(),
+      assetsCollection.preload(),
+      pricingTiersCollection.preload()
     ]);
   },
   component: EcommerceProfile

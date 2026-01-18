@@ -95,7 +95,8 @@ export const Route = createFileRoute("/search")({
       customFieldValuesCollection.preload(),
       customFieldDefinitionsCollection.preload(),
       categoriesCollection.preload(),
-      companiesCollection.preload()
+      companiesCollection.preload(),
+      assetsCollection.preload()
     ]);
     return null;
   }
