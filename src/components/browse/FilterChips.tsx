@@ -1,16 +1,18 @@
 import { Route, useSetSearch } from "@/routes/search.tsx";
 import { Link } from "@tanstack/react-router";
 import type { Category, Company, CustomFieldDefinition } from "@/db/schema.ts";
-import { humanizeCustomFieldLabel } from "@/lib/utils.ts";
+import { cn, humanizeCustomFieldLabel } from "@/lib/utils.ts";
 
 export default function FilterChips({
   categories,
   companies,
-  customFieldDefinitions
+  customFieldDefinitions,
+  className
 }: {
   categories: (Category & { count: number })[] | undefined;
   companies: (Company & { count: number })[] | undefined;
   customFieldDefinitions?: CustomFieldDefinition[] | undefined;
+  className?: string | undefined;
 }) {
   const filters: { name: string; value: string; clear: () => void }[] = [];
   const search = Route.useSearch();
@@ -119,7 +121,10 @@ export default function FilterChips({
         <Link
           from={Route.fullPath}
           search={(prev) => ({ q: prev.q })}
-          className="rounded bg-gray-800 px-4 py-2 font-bold text-white"
+          className={cn(
+            "rounded bg-gray-800 px-4 py-2 font-bold text-white",
+            className
+          )}
         >
           Clear All
         </Link>
@@ -131,7 +136,10 @@ export default function FilterChips({
           key={filter.name}
           onClick={filter.clear}
           title={`Clear ${filter.name} Filter`}
-          className="group relative overflow-hidden rounded bg-gray-100 px-4 py-2 font-semibold hover:bg-gray-200"
+          className={cn(
+            "group relative overflow-hidden rounded bg-gray-100 px-4 py-2 font-semibold hover:bg-gray-200",
+            className
+          )}
         >
           <span>{filter.value}</span>
           <span className="absolute top-0 left-0 hidden h-full w-full items-center justify-center bg-inherit p-[inherit] group-hover:flex">

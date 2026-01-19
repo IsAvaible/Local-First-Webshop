@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useEffect, useState } from "react";
 import {
   Accordion,
@@ -11,15 +12,17 @@ import { Label } from "@/components/ui/label";
 import { Route, useSetSearch } from "@/routes/search.tsx";
 import type { Category, Company, CustomFieldDefinition } from "@/db/schema.ts";
 import { useNavigate } from "@tanstack/react-router";
-import type { JsonValue } from "@/lib/utils.ts";
+import { cn, type JsonValue } from "@/lib/utils.ts";
 import CustomFieldInput from "@/components/browse/CustomFieldInput.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
 export default function Filter({
   categories,
   companies,
-  customFieldDefinitions
-}: {
+  customFieldDefinitions,
+  className,
+  ...props
+}: React.ComponentProps<"div"> & {
   categories: (Category & { count: number })[] | undefined;
   companies: (Company & { count: number })[] | undefined;
   customFieldDefinitions?: CustomFieldDefinition[] | undefined;
@@ -92,7 +95,13 @@ export default function Filter({
   };
 
   return (
-    <div className="sticky h-fit w-80 space-y-6 rounded-lg bg-white p-4 shadow-md dark:bg-slate-800">
+    <div
+      className={cn(
+        "sticky h-fit w-80 space-y-6 rounded-lg bg-white p-4 shadow-md dark:bg-slate-800",
+        className
+      )}
+      {...props}
+    >
       <h3 className="text-xl font-semibold">Filters</h3>
       <Accordion
         type="multiple"

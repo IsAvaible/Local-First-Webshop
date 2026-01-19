@@ -38,7 +38,7 @@ export default function Header() {
         isScrolled ? "shadow-md" : ""
       }`}
     >
-      <nav className="mx-auto grid max-w-5xl grid-cols-3 items-center">
+      <nav className="mx-auto grid max-w-5xl grid-cols-[1fr_auto_1fr] items-center sm:grid-cols-3">
         <div>
           <Link
             to={"/"}

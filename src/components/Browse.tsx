@@ -42,11 +42,11 @@ export default function Browse({
   customFieldValues?: CustomFieldValue[] | undefined;
 }) {
   const [filterDialogVisible, setFilterDialogVisible] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 1536);
 
   useEffect(() => {
     const handleScreenSizeChange = () => {
-      const mobile = window.innerWidth <= 768;
+      const mobile = window.innerWidth <= 1536;
       setIsMobile(mobile);
       if (!mobile) {
         setFilterDialogVisible(false);
@@ -85,7 +85,7 @@ export default function Browse({
       </div>
       <div className="w-full">
         <div className="relative grid w-full gap-8 px-8 md:grid-cols-[1fr_auto_minmax(0,1fr)] 2xl:gap-12">
-          <aside className="sticky top-28 col-span-full hidden h-full max-h-[calc(100vh-10rem)] justify-end self-start overflow-y-auto md:col-span-1 md:flex">
+          <aside className="sticky top-28 col-span-full mt-8 hidden h-full max-h-[calc(100vh-10rem)] justify-end self-start overflow-y-auto 2xl:col-span-1 2xl:flex">
             <Filter
               categories={categories}
               companies={companies}
@@ -95,11 +95,6 @@ export default function Browse({
           <div className="col-span-full max-w-5xl md:col-span-1 md:col-start-2">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
               <div className="col-span-full flex flex-row items-start gap-2">
-                <FilterChips
-                  categories={categories}
-                  companies={companies}
-                  customFieldDefinitions={customFieldDefinitions}
-                />
                 {isMobile && (
                   <Dialog
                     open={filterDialogVisible}
@@ -108,9 +103,10 @@ export default function Browse({
                     <DialogTrigger asChild>
                       <Button
                         variant="outline"
-                        className="ml-auto aspect-square p-2"
+                        className="relative aspect-square p-2"
                       >
                         <FilterIcon className="h-5 w-5" />
+                        Filter
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
@@ -118,6 +114,7 @@ export default function Browse({
                         <DialogTitle>Configure Filters</DialogTitle>
                       </DialogHeader>
                       <Filter
+                        className="mx-auto"
                         categories={categories}
                         companies={companies}
                         customFieldDefinitions={customFieldDefinitions}
@@ -125,7 +122,13 @@ export default function Browse({
                     </DialogContent>
                   </Dialog>
                 )}
-                <div className="md:flex-grow"></div>
+                <FilterChips
+                  className="max-md:hidden"
+                  categories={categories}
+                  companies={companies}
+                  customFieldDefinitions={customFieldDefinitions}
+                />
+                <div className="flex-grow"></div>
                 <BrowseSortSelect
                   customFieldDefinitions={customFieldDefinitions}
                 />
