@@ -72,8 +72,10 @@ export const Route = createFileRoute("/profile")({
         }
       });
     }
+
+    return { user: session.user };
   },
-  loader: async () => {
+  loader: async ({ context }) => {
     await Promise.all([
       ordersCollection.preload(),
       userSettingsCollection.preload(),
@@ -84,6 +86,8 @@ export const Route = createFileRoute("/profile")({
       assetsCollection.preload(),
       pricingTiersCollection.preload()
     ]);
+
+    return { user: context.user };
   },
   component: EcommerceProfile
 });
@@ -91,6 +95,7 @@ export const Route = createFileRoute("/profile")({
 export function EcommerceProfile() {
   // --- URL State Management ---
   const { tab } = Route.useSearch();
+  const { user: authUser } = Route.useLoaderData();
   const navigate = Route.useNavigate();
 
   const handleTabChange = async (newTab: string) => {
@@ -120,14 +125,21 @@ export function EcommerceProfile() {
 
   // --- Data Fetching ---
 
-  // 1. Fetch User (Separate Call)
+  // 1. Fetch User
   const { data: user, isLoading: isLoadingUser } = useLiveQuery((q) =>
-    q.from({ usersCollection }).findOne()
+    q
+      .from({ u: usersCollection })
+      .where(({ u }) => eq(u.id, authUser.id))
+      .findOne()
   );
 
-  // 2. Fetch User Settings (Separate Call)
+  // 2. Fetch User Settings
   const { data: userSettings, isLoading: isLoadingSettings } = useLiveQuery(
-    (q) => q.from({ userSettingsCollection }).findOne()
+    (q) =>
+      q
+        .from({ u: userSettingsCollection })
+        .where(({ u }) => eq(u.user_id, authUser.id))
+        .findOne()
   );
 
   // 3. Fetch Orders
