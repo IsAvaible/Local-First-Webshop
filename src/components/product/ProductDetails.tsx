@@ -12,7 +12,7 @@ import { humanizeCustomFieldValue } from "@/lib/utils.ts";
 import { useCart } from "@/contexts/useCartContext.ts";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Input } from "@/components/ui/input";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge.tsx";
 
 export default function ProductDetails({
@@ -37,16 +37,21 @@ export default function ProductDetails({
     removeItem
   } = useCart();
 
+  // Local state for quantity when item is NOT in cart yet
+  const [localQuantity, setLocalQuantity] = useState(1);
+
   // Find if this specific product is already in the cart
   const cartItem = useMemo(
     () => items?.find((item) => item.product_id === product.id),
     [items, product.id]
   );
-  const quantity = cartItem?.quantity ?? 0;
 
-  // Calculate Active Tier
+  // Determine effective quantity (Cart quantity if exists, otherwise local selection)
+  const currentQuantity = cartItem ? cartItem.quantity : localQuantity;
+
+  // Calculate Active Tier based on the effective quantity
   const activeTier = useMemo(() => {
-    const quantityToCheck = Math.max(1, quantity);
+    const quantityToCheck = Math.max(1, currentQuantity);
     const sortedTiers = [...pricingTiers].sort(
       (a, b) => b.min_quantity - a.min_quantity
     );
@@ -54,9 +59,9 @@ export default function ProductDetails({
       sortedTiers.find((tier) => quantityToCheck >= tier.min_quantity) ??
       sortedTiers[sortedTiers.length - 1]
     );
-  }, [pricingTiers, quantity]);
+  }, [pricingTiers, currentQuantity]);
 
-  // Prepare Display Tiers (Sorted Ascending for visual list 1 -> 100)
+  // Prepare Display Tiers (Sorted Ascending for visual list)
   const displayTiers = useMemo(() => {
     return [...pricingTiers].sort((a, b) => a.min_quantity - b.min_quantity);
   }, [pricingTiers]);
@@ -68,40 +73,53 @@ export default function ProductDetails({
 
   const handleAddToCart = () => {
     const price = activeTier?.price_per_unit.toString() ?? "0";
-    addItem(product.id, price);
+
+    if (cartItem) {
+      // If already in cart, standard "Add" adds one more
+      addItem(product.id, price);
+    } else {
+      // If not in cart, add with the selected local quantity
+      const id = addItem(product.id, price);
+      if (id && localQuantity > 1) {
+        updateItemQuantity(id, localQuantity);
+      }
+    }
   };
 
   const handleIncrement = () => {
     if (cartItem) {
-      updateItemQuantity(cartItem.id, quantity + 1);
+      updateItemQuantity(cartItem.id, currentQuantity + 1);
+    } else {
+      setLocalQuantity((prev) => prev + 1);
     }
   };
 
   const handleDecrement = () => {
     if (cartItem) {
-      if (quantity > 1) updateItemQuantity(cartItem.id, quantity - 1);
+      if (currentQuantity > 1)
+        updateItemQuantity(cartItem.id, currentQuantity - 1);
       else removeItem(cartItem.id);
+    } else {
+      if (localQuantity > 1) setLocalQuantity((prev) => prev - 1);
     }
   };
 
-  const handleTierClick = (minQty: number, tierPrice: string) => {
+  const handleTierClick = (minQty: number) => {
     if (cartItem) {
       updateItemQuantity(cartItem.id, minQty);
     } else {
-      const id = addItem(product.id, tierPrice);
-
-      // Use the returned item ID to update quantity
-      if (id) {
-        updateItemQuantity(id, minQty);
-      }
+      setLocalQuantity(minQty);
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!cartItem) return;
     const val = parseInt(e.target.value, 10);
     if (!isNaN(val) && val > 0) {
-      updateItemQuantity(cartItem.id, val);
+      if (cartItem) {
+        updateItemQuantity(cartItem.id, val);
+      } else {
+        setLocalQuantity(val);
+      }
     }
   };
 
@@ -177,12 +195,7 @@ export default function ProductDetails({
               return (
                 <div
                   key={tier.id}
-                  onClick={() =>
-                    handleTierClick(
-                      tier.min_quantity,
-                      tier.price_per_unit.toString()
-                    )
-                  }
+                  onClick={() => handleTierClick(tier.min_quantity)}
                   className={`relative flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-all ${
                     isCurrent
                       ? "border-gray-600 bg-gray-50 dark:border-gray-400 dark:bg-gray-950/30"
@@ -249,43 +262,42 @@ export default function ProductDetails({
           className="flex-1"
           onClick={handleAddToCart}
           aria-label={`Add ${cartItem ? "another " : ""}${product.name} to cart`}
+          disabled={!!cartItem}
         >
           <ShoppingCart className="mr-2 h-5 w-5" aria-hidden="true" />
-          Add {cartItem && "another "}to cart
+          {cartItem ? "Already in " : "Add to "}cart
         </Button>
 
-        {cartItem && (
-          <div className="flex-1">
-            <ButtonGroup className="h-full w-full">
-              <Button
-                size="icon"
-                variant="outline"
-                className="h-full w-12 shrink-0"
-                onClick={handleDecrement}
-                aria-label="Decrease quantity"
-              >
-                <Minus className="h-4 w-4" aria-hidden="true" />
-              </Button>
-              <Input
-                type="number"
-                className="h-full rounded-none bg-white text-center focus-visible:ring-0"
-                value={quantity}
-                onChange={handleInputChange}
-                min={1}
-                aria-label="Quantity"
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-full w-12 shrink-0"
-                onClick={handleIncrement}
-                aria-label="Increase quantity"
-              >
-                <Plus className="h-4 w-4" aria-hidden="true" />
-              </Button>
-            </ButtonGroup>
-          </div>
-        )}
+        <div className="flex-1">
+          <ButtonGroup className="h-full w-full">
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-full w-12 shrink-0"
+              onClick={handleDecrement}
+              aria-label="Decrease quantity"
+            >
+              <Minus className="h-4 w-4" aria-hidden="true" />
+            </Button>
+            <Input
+              type="number"
+              className="h-full rounded-none bg-white text-center focus-visible:ring-0"
+              value={currentQuantity}
+              onChange={handleInputChange}
+              min={1}
+              aria-label="Quantity"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-full w-12 shrink-0"
+              onClick={handleIncrement}
+              aria-label="Increase quantity"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </ButtonGroup>
+        </div>
 
         <Button
           size="lg"
