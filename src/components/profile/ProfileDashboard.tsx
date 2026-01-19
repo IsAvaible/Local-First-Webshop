@@ -49,6 +49,10 @@ export function ProfileDashboard({ user, orders }: ProfileDashboardProps) {
     return ORDER_STATUS_MAP[status]?.step ?? 0;
   };
 
+  // @ts-expect-error Definition in auth-schema wrong, but needed by BetterAuth
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const userCreationDate: string | undefined = user.created_at;
+
   return (
     <div className="space-y-6">
       {/* Stats Grid */}
@@ -71,8 +75,8 @@ export function ProfileDashboard({ user, orders }: ProfileDashboardProps) {
           <CardHeader className="pb-2">
             <CardDescription>Account Age</CardDescription>
             <CardTitle className="text-2xl">
-              {user?.created_at
-                ? formatDistanceToNow(new Date(user.created_at))
+              {userCreationDate
+                ? formatDistanceToNow(new Date(userCreationDate))
                 : "unknown"}
             </CardTitle>
           </CardHeader>

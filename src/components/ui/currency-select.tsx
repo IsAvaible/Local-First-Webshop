@@ -47,7 +47,7 @@ const CurrencySelect = ({
   onCurrencySelect,
   name,
   placeholder = "Select currency",
-  currencies = "withdrawal",
+  currencies = "all",
   variant = "default",
   valid = true,
   ...props
