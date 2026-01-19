@@ -5,6 +5,7 @@ import { db } from "@/db/connection";
 import * as schema from "@/db/schema";
 import { networkInterfaces } from "os";
 import { moveAnonymousUserData } from "@/lib/auth-migrations.ts";
+import { eq } from "drizzle-orm";
 
 // Get network IP for trusted origins
 const nets = networkInterfaces();
@@ -28,7 +29,14 @@ export const auth = betterAuth({
       // When an anonymous user links to a new account, this function is called
       // to migrate data from the anonymous user to the new user.
       onLinkAccount: async ({ newUser, anonymousUser }) => {
-        await moveAnonymousUserData(anonymousUser.user.id, newUser.user.id);
+        const anonId = anonymousUser.user.id;
+        const newId = newUser.user.id;
+
+        const tx = await moveAnonymousUserData(anonId, newId);
+
+        if (anonId !== newId) {
+          await tx.delete(schema.users).where(eq(schema.users.id, anonId));
+        }
       }
     })
   ],

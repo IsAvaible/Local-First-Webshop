@@ -260,11 +260,13 @@ const migrationHandlers: MigrationManifest = {
 // 3. MAIN EXPORT
 // ----------------------------------------------------------------------------
 export async function moveAnonymousUserData(anonId: string, newId: string) {
-  await db.transaction(async (tx) => {
+  return await db.transaction(async (tx) => {
     for (const key of Object.keys(
       migrationHandlers
     ) as (keyof MigrationManifest)[]) {
       await migrationHandlers[key](tx, anonId, newId);
     }
+
+    return tx;
   });
 }
