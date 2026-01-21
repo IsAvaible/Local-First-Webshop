@@ -23,6 +23,7 @@ import { users } from "./auth-schema";
 import { sql } from "drizzle-orm";
 import type { TypedMap, TypedArray } from "yjs-types";
 import type { Tag } from "@/contexts/useCartContext.ts";
+import * as Y from "yjs";
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
   createSchemaFactory({ zodInstance: z });
@@ -361,7 +362,7 @@ export type YCartItemShape = BaseNodeShape & {
   quantity: number;
   price_snapshot: string;
   tag_ids: string[];
-  notes: string | null;
+  notes: Y.Text;
   is_selected: boolean;
   created_at: number;
 };

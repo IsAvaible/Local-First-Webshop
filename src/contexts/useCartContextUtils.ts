@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { inArray, useLiveQuery } from "@tanstack/react-db";
 import {
   assetsCollection,
@@ -19,6 +19,7 @@ import type {
 import * as Y from "yjs";
 import { v4 as uuidv4 } from "uuid";
 import { deepEqual } from "fast-equals";
+import diff from "fast-diff";
 
 // Given a list of product IDs, fetch the data and return Lookup Maps
 export function useProductLookups(productIds: number[]) {
@@ -327,4 +328,71 @@ export function getSnapshotDelta(
     modifiedCount: modified,
     summary: `+${added} / -${removed} / ~${modified}`
   };
+}
+
+// inspired by and extended from https://discuss.yjs.dev/t/plain-text-input-component-with-y-text/2358/2
+export function useYjsText(yText: Y.Text | undefined) {
+  const [value, setValue] = useState("");
+  // Block observer from firing during our own local updates
+  const isLocalUpdate = useRef(false);
+
+  // Subscribe to Y.Text changes
+  useEffect(() => {
+    if (!yText) return;
+
+    // Set initial value
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
+    setValue(yText.toString());
+
+    const observer = () => {
+      // Only update local state if the change came from a remote user
+      if (!isLocalUpdate.current) {
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        setValue(yText.toString());
+      }
+    };
+
+    yText.observe(observer);
+
+    return () => {
+      yText.unobserve(observer);
+    };
+  }, [yText]);
+
+  // Handle Local Changes
+  const handleChange = useCallback(
+    (newValue: string) => {
+      if (!yText) return;
+
+      // Update React state immediately (optimistic)
+      setValue(newValue);
+
+      // Lock the observer
+      isLocalUpdate.current = true;
+
+      yText.doc?.transact(() => {
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        const oldText = yText.toString();
+        // Calculate Delta
+        const delta = diffToDelta(diff(oldText, newValue));
+        yText.applyDelta(delta);
+      });
+
+      isLocalUpdate.current = false;
+    },
+    [yText]
+  );
+
+  return { value, onChange: handleChange };
+}
+
+function diffToDelta(diffResult: diff.Diff[]) {
+  return diffResult
+    .map(([op, value]) => {
+      if (op === diff.EQUAL) return { retain: value.length };
+      if (op === diff.INSERT) return { insert: value };
+      if (op === diff.DELETE) return { delete: value.length };
+      return null;
+    })
+    .filter(Boolean);
 }

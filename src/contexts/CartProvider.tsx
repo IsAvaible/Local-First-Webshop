@@ -523,7 +523,7 @@ function CartSession({
           itemMap.set("quantity", 1);
           itemMap.set("price_snapshot", price);
           itemMap.set("tag_ids", []);
-          itemMap.set("notes", null);
+          itemMap.set("notes", new Y.Text());
           itemMap.set("is_selected", true);
           itemMap.set("created_at", Date.now());
 
@@ -645,16 +645,15 @@ function CartSession({
     [ydoc, nodesMap]
   );
 
-  const updateItemNotes = useCallback(
-    (itemId: string, notes: string) => {
-      ydoc.transact(() => {
-        const item = nodesMap.get(itemId);
-        if (item && isYItemMap(item)) {
-          item.set("notes", notes);
-        }
-      });
+  const getItemNotesYText = useCallback(
+    (itemId: string) => {
+      const item = nodesMap.get(itemId);
+      if (item && isYItemMap(item)) {
+        return item.get("notes");
+      }
+      return undefined;
     },
-    [ydoc, nodesMap]
+    [nodesMap]
   );
 
   const updateFolder = useCallback(
@@ -812,7 +811,7 @@ function CartSession({
     addItem,
     removeItem,
     updateItemQuantity,
-    updateItemNotes,
+    getItemNotesYText,
     moveNode,
     createFolder,
     updateFolder,

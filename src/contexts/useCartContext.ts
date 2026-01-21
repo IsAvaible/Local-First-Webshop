@@ -109,7 +109,7 @@ export interface CartContextType {
   addItem: (productId: number, price: string) => string | undefined;
   removeItem: (itemId: string, parentFolderId?: string | null) => void;
   updateItemQuantity: (itemId: string, newQuantity: number) => void;
-  updateItemNotes: (itemId: string, notes: string) => void;
+  getItemNotesYText: (itemId: string) => Y.Text | undefined;
 
   moveNode: (
     activeId: string,

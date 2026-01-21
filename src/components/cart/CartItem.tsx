@@ -24,6 +24,7 @@ import {
   TAG_PILL_STYLES
 } from "@/lib/constants/tag-styles.ts";
 import { useCartDisplay } from "@/components/cart/CartDisplayContext.ts";
+import { useYjsText } from "@/contexts/useCartContextUtils.ts";
 
 export function CartItem({
   item,
@@ -37,14 +38,18 @@ export function CartItem({
 } & React.ComponentProps<"div">) {
   const {
     tags,
-    updateItemNotes,
     removeItem,
     updateItemQuantity,
     addTagToItem,
     removeTagFromItem,
-    toggleItemSelection
+    toggleItemSelection,
+    getItemNotesYText
   } = useCart();
   const { displayItemSelect } = useCartDisplay();
+
+  // --- YJS Notes Binding ---
+  const yNotes = getItemNotesYText(item.id);
+  const { value: notesValue, onChange: setNotesValue } = useYjsText(yNotes);
 
   const thisItemsTags = tags?.filter((t) => item.tag_ids.includes(t.id)) ?? [];
 
@@ -63,7 +68,7 @@ export function CartItem({
     }
   };
 
-  // --- Product name and image (joined in provider) ---
+  // --- Product name and image ---
   const product = item.product;
   const asset = item.asset;
   const productName = product?.name ?? `Product ${item.product_id}`;
@@ -102,15 +107,15 @@ export function CartItem({
             <Textarea
               placeholder={disabled ? "No notes" : "Add a note..."}
               className="min-h-8 resize-y"
-              value={item.notes ?? ""}
+              value={notesValue}
               disabled={disabled}
               onKeyDownCapture={(e) => {
                 if (e.key === " " || e.key === "Enter") e.stopPropagation();
               }}
-              onChange={(e) => updateItemNotes(item.id, e.target.value)}
+              onChange={(e) => setNotesValue(e.target.value)}
             />
 
-            {/* --- Display current tags with colored styles --- */}
+            {/* --- Display current tags --- */}
             <div className="flex max-w-34 flex-wrap gap-1 @[18rem]:max-w-none">
               {thisItemsTags.map((tag) => {
                 const color = tag.color ?? TAG_COLORS[0];
