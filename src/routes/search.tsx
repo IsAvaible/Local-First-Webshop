@@ -32,7 +32,7 @@ import {
   pricingTiersCollection,
   productsCollection
 } from "@/lib/collections.ts";
-import type { Asset, CustomFieldValue, Product } from "@/db/schema.ts";
+import type { CustomFieldValue, Product } from "@/db/schema.ts";
 import Browse from "@/components/Browse.tsx";
 
 const defaultValues = {
@@ -302,7 +302,7 @@ function RouteComponent() {
     // Select the final data shape for the component
     return query.select(({ p, price, asset }) => ({
       ...p,
-      min_price: price?.min_price,
+      min_price: price?.min_price as number | null,
       asset: asset
     }));
   }, [search, customFieldDefinitions]);
@@ -317,10 +317,6 @@ function RouteComponent() {
       )
       .select(({ cfv }) => ({ ...cfv }))
   );
-
-  const typedProducts = products as
-    | (Product & { min_price: number | null; asset?: Asset })[]
-    | undefined;
 
   // 4. Fetch Facet Counts (Categories)
   const { categories: _c, ...categoryCountSearch } = search;
@@ -367,7 +363,7 @@ function RouteComponent() {
   return (
     <Browse
       loading={isLoading}
-      products={typedProducts}
+      products={products}
       categories={categories}
       companies={companies}
       customFieldDefinitions={customFieldDefinitions}
