@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { eq, useLiveQuery } from "@tanstack/react-db";
+import { isNull, useLiveQuery } from "@tanstack/react-db";
 import { notificationsCollection } from "@/lib/collections";
 import { BellIcon, CheckCheckIcon } from "lucide-react";
 import {
@@ -29,7 +29,7 @@ export function NotificationPanel() {
   const { data: unseenRows = [] } = useLiveQuery((q) => {
     return q
       .from({ n: notificationsCollection })
-      .where(({ n }) => eq(n.seen_at, null))
+      .where(({ n }) => isNull(n.seen_at))
       .select(({ n }) => ({ id: n.id }));
   });
 
@@ -41,7 +41,7 @@ export function NotificationPanel() {
   const { data: unreadRows = [] } = useLiveQuery((q) => {
     return q
       .from({ n: notificationsCollection })
-      .where(({ n }) => eq(n.read_at, null))
+      .where(({ n }) => isNull(n.read_at))
       .select(({ n }) => ({ id: n.id }));
   });
 
