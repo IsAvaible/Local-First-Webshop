@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   CheckIcon,
   PencilIcon,
@@ -59,9 +59,10 @@ const ColorSwatch = ({
 
 interface TagManagerProps {
   disabled?: boolean;
+  trigger?: React.ReactNode;
 }
 
-export function TagManager({ disabled }: TagManagerProps) {
+export function TagManager({ disabled, trigger }: TagManagerProps) {
   const { tags, createTag, deleteTag, updateTag } = useCart();
 
   // Input states
@@ -155,15 +156,18 @@ export function TagManager({ disabled }: TagManagerProps) {
   return (
     <Dialog onOpenChange={(open) => !open && resetState()}>
       <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="default"
-          disabled={disabled}
-          className="gap-2"
-        >
-          <TagIcon className="h-4 w-4" />
-          Manage Tags
-        </Button>
+        {/* If a custom trigger is passed, use it; otherwise use default button */}
+        {trigger ?? (
+          <Button
+            variant="outline"
+            size="default"
+            disabled={disabled}
+            className="gap-2"
+          >
+            <TagIcon className="h-4 w-4" />
+            Manage Tags
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

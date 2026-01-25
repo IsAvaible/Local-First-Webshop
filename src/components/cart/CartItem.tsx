@@ -5,7 +5,7 @@ import {
 } from "@/contexts/useCartContext.ts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { GripVerticalIcon, Trash2Icon, XIcon } from "lucide-react";
+import { GripVerticalIcon, Trash2Icon, XIcon, PlusIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -25,6 +25,7 @@ import {
 } from "@/lib/constants/tag-styles.ts";
 import { useCartDisplay } from "@/components/cart/CartDisplayContext.ts";
 import { useYjsText } from "@/contexts/useCartContextUtils.ts";
+import { TagManager } from "./TagManager";
 
 export function CartItem({
   item,
@@ -159,23 +160,39 @@ export function CartItem({
                   <SelectValue placeholder="+ Tag" />
                 </SelectTrigger>
                 <SelectContent>
-                  {tags?.map((tag) => (
-                    <SelectItem
-                      key={tag.id}
-                      value={tag.id}
-                      disabled={item.tag_ids.includes(tag.id)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={cn(
-                            "h-2 w-2 rounded-full",
-                            SWATCH_BG_STYLES[tag.color ?? TAG_COLORS[0]]
-                          )}
-                        />
-                        {tag.name}
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {!tags || tags.length === 0 ? (
+                    <div className="flex flex-col items-center gap-2 p-2">
+                      <span className="text-muted-foreground text-xs">
+                        No tags found
+                      </span>
+                      <TagManager
+                        disabled={disabled}
+                        trigger={
+                          <Button variant="secondary" className="w-full">
+                            <PlusIcon className="mr-1 h-3 w-3" /> Create Tag
+                          </Button>
+                        }
+                      />
+                    </div>
+                  ) : (
+                    tags.map((tag) => (
+                      <SelectItem
+                        key={tag.id}
+                        value={tag.id}
+                        disabled={item.tag_ids.includes(tag.id)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={cn(
+                              "h-2 w-2 rounded-full",
+                              SWATCH_BG_STYLES[tag.color ?? TAG_COLORS[0]]
+                            )}
+                          />
+                          {tag.name}
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
