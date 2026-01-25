@@ -697,7 +697,7 @@ export function Cart({
           )}
 
           {/* CART BODY */}
-          <RootDroppable className="flex max-h-[62dvh] flex-1 flex-col gap-y-4 overflow-x-clip overflow-y-auto px-0.5 py-4">
+          <RootDroppable className="flex max-h-[calc(100vh-28rem)] flex-1 flex-col gap-y-4 overflow-x-clip overflow-y-auto px-0.5 py-4">
             {!rootNodes || rootNodes.length === 0 ? (
               <p className="text-muted-foreground p-4 text-center">
                 Your cart is empty.
