@@ -116,7 +116,7 @@
     "babel-plugin-react-compiler": "19.1.0-rc.3",
     "baseline-browser-mapping": "^2.9.11",
     "concurrently": "^9.2.1",
-    "drizzle-kit": "^0.31.8",
+    "drizzle-kit": "^0.31.9",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
@@ -139,8 +139,6 @@
   "pnpm": {
     "overrides": {
       "esbuild": "0.25.0",
-      "diff": "8.0.3",
-      "undici": "7.18.2",
       "seroval": "1.4.2"
     }
   },
