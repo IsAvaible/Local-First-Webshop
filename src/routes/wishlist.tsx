@@ -9,6 +9,7 @@ import {
 } from "@/lib/collections";
 
 export const Route = createFileRoute("/wishlist")({
+  ssr: false,
   loader: async () => {
     await Promise.all([
       wishlistCollection.preload(),

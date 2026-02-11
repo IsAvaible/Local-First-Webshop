@@ -81,6 +81,7 @@ export type ProductSearch = z.infer<typeof productSearchSchema>;
 // --- 2. Route Definition ---
 
 export const Route = createFileRoute("/search")({
+  ssr: false,
   // Validate URL search params against our Zod schema
   validateSearch: zodValidator(productSearchSchema),
   component: RouteComponent,

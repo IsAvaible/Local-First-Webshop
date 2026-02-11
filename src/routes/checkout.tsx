@@ -50,6 +50,7 @@ const cartUrlSchema = z.object({
 
 // --- Loader & Route Definition ---
 export const Route = createFileRoute("/checkout")({
+  ssr: false,
   validateSearch: zodValidator(cartUrlSchema),
   search: {
     middlewares: [stripSearchParams(urlDefaultValues)]

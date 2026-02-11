@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/card";
 
 export const Route = createFileRoute("/")({
+  ssr: false,
   component: Homepage
 });
 

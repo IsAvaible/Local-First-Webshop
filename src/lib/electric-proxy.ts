@@ -10,7 +10,7 @@ export function prepareElectricUrl(requestUrl: string): URL {
   const url = new URL(requestUrl);
   const electricUrl =
     process.env.NODE_ENV === "production"
-      ? "https://api.electric-sql.cloud"
+      ? "http://localhost:3000"
       : "http://localhost:3000";
   const originUrl = new URL(`${electricUrl}/v1/shape`);
 

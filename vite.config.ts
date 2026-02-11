@@ -26,9 +26,6 @@ export default defineConfig({
       }
     })
   ],
-  ssr: {
-    noExternal: ["zod"]
-  },
   // shadcn specific
   resolve: {
     alias: {

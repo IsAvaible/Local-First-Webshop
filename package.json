@@ -5,12 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "docker compose up -d && vite dev",
-    "start": "node .output/server/index.mjs",
     "build": "tsc -b && vite build",
     "db:seed": "tsx src/db/seed.ts",
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:generate": "drizzle-kit generate",
-    "serve": "vite preview",
     "stripe:listen": "stripe listen --forward-to http://localhost:5173/api/stripe-webhook",
     "format": "prettier --write . --ignore-unknown",
     "lint": "eslint .",

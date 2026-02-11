@@ -1,6 +1,5 @@
 import {
   HeadContent,
-  Outlet,
   Scripts,
   createRootRoute,
   ClientOnly
@@ -61,23 +60,11 @@ export const Route = createRootRoute({
     ]
   }),
   errorComponent: (props) => {
-    return (
-      <RootDocument>
-        <DefaultCatchBoundary {...props} />
-      </RootDocument>
-    );
+    return <DefaultCatchBoundary {...props} />;
   },
   notFoundComponent: () => <NotFound />,
-  component: RootComponent
+  shellComponent: RootDocument
 });
-
-function RootComponent() {
-  return (
-    <RootDocument>
-      <Outlet />
-    </RootDocument>
-  );
-}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { data: session, isPending } = authClient.useSession();

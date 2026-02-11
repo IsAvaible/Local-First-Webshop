@@ -54,6 +54,7 @@ const urlDefaultValues = {
 
 // --- Route Definition with Preloading ---
 export const Route = createFileRoute("/profile")({
+  ssr: false,
   validateSearch: zodValidator(profileUrlSchema),
   search: {
     middlewares: [stripSearchParams(urlDefaultValues)]
@@ -92,7 +93,7 @@ export const Route = createFileRoute("/profile")({
   component: EcommerceProfile
 });
 
-export function EcommerceProfile() {
+function EcommerceProfile() {
   // --- URL State Management ---
   const { tab } = Route.useSearch();
   const { user: authUser } = Route.useLoaderData();
