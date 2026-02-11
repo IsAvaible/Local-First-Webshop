@@ -37,7 +37,7 @@ export default function RelatedProducts({
       // Main Query
       let query = new Query()
         .from({ p: productsCollection })
-        .leftJoin({ price: minPriceSubquery }, ({ p, price }) =>
+        .innerJoin({ price: minPriceSubquery }, ({ p, price }) =>
           eq(p.id, price.product_id)
         )
         .leftJoin({ fa_id: firstAssetIdSubquery }, ({ p, fa_id }) =>
@@ -48,7 +48,7 @@ export default function RelatedProducts({
         )
         .select(({ p, price, asset }) => ({
           ...p,
-          min_price: price?.min_price as number | null | undefined,
+          min_price: price?.min_price,
           asset: asset
         }))
         .orderBy(({ p }) => p.id)

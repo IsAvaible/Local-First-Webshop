@@ -33,9 +33,7 @@ export default function Browse({
   customFieldValues
 }: {
   loading: boolean;
-  products:
-    | (Product & { min_price: number | null; asset?: Asset })[]
-    | undefined;
+  products: (Product & { min_price: string; asset?: Asset })[] | undefined;
   categories: (Category & { count: number })[] | undefined;
   companies: (Company & { count: number })[] | undefined;
   customFieldDefinitions?: CustomFieldDefinition[] | undefined;

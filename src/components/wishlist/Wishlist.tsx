@@ -38,7 +38,7 @@ export function Wishlist() {
           eq(w.product_id, p.id)
         )
         // Join calculated price
-        .leftJoin({ price: minPriceSubquery }, ({ p, price }) =>
+        .innerJoin({ price: minPriceSubquery }, ({ p, price }) =>
           eq(p.id, price.product_id)
         )
         // Join specific asset ID
@@ -53,7 +53,7 @@ export function Wishlist() {
           wishlistId: w.id,
           product: p,
           asset: as,
-          calculated_price: price!.max_price,
+          calculated_price: price.max_price,
           price_snapshot: w.price_snapshot
         }))
     );
@@ -92,8 +92,7 @@ export function Wishlist() {
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {wishlistItems.map((item) => {
         // Logic to fall back to snapshot if live price is unavailable
-        const finalPrice =
-          item.calculated_price ?? parseFloat(item.price_snapshot);
+        const finalPrice = item.calculated_price ?? item.price_snapshot;
 
         return (
           <div key={item.wishlistId} className="group/wishlist relative">
@@ -101,7 +100,7 @@ export function Wishlist() {
               className="transform-gpu"
               product={{
                 ...item.product,
-                min_price: finalPrice as number
+                min_price: finalPrice
               }}
               asset={item.asset}
             />

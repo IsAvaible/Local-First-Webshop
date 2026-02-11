@@ -20,13 +20,8 @@ import { useCart } from "@/contexts/useCartContext";
 import { cn, humanizeCustomFieldValue, type JsonValue } from "@/lib/utils";
 import type { Asset, Product } from "@/db/schema";
 
-const CURRENCY_FORMATTER = new Intl.NumberFormat("de-DE", {
-  style: "currency",
-  currency: "EUR"
-});
-
 interface ProductCardProps {
-  product: Product & { min_price?: number | null };
+  product: Product & { min_price: string };
   customFields?: Record<string, { value: JsonValue; type?: string }>;
   asset?: Asset;
   lazy?: boolean;
@@ -58,7 +53,7 @@ function ProductCardInternal({
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
-    addItem(product.id, (product.min_price ?? 0).toFixed(2));
+    addItem(product.id, product.min_price);
   };
 
   const hasCustomFields = customFields && Object.keys(customFields).length > 0;
@@ -114,7 +109,7 @@ function ProductCardInternal({
 
       <CardFooter className="mt-auto flex items-center justify-between px-4 pb-4">
         <p className="font-semibold text-slate-700">
-          {CURRENCY_FORMATTER.format(product.min_price ?? 0)}
+          {`${product.min_price ?? "0.00"} €`}
         </p>
 
         {!cartItem ? (

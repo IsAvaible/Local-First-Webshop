@@ -398,11 +398,7 @@ export function SearchBar() {
                         <ProductCommandItem
                           asset={p.asset}
                           name={p.name}
-                          price={
-                            p.min_price != null
-                              ? `${p.min_price as number} €`
-                              : "-"
-                          }
+                          price={p.min_price ? `${p.min_price} €` : "-"}
                         />
                       </CommandItem>
                     </Link>

@@ -34,6 +34,7 @@ import {
 } from "@/lib/collections.ts";
 import type { CustomFieldValue, Product } from "@/db/schema.ts";
 import Browse from "@/components/Browse.tsx";
+import Big from "big.js";
 
 const defaultValues = {
   q: "",
@@ -159,7 +160,7 @@ function buildFilteredProductQuery(search: ProductSearch) {
     }));
 
   // 2. Join the max price onto the main query.
-  let queryWithPrice = query.leftJoin(
+  let queryWithPrice = query.innerJoin(
     { price: minPriceSubquery },
     ({ p, price }) => eq(p.id, price.product_id)
   );
@@ -168,12 +169,18 @@ function buildFilteredProductQuery(search: ProductSearch) {
   if (price_min !== undefined) {
     queryWithPrice = queryWithPrice.where(({ price }) => {
       // Must check for undefined price (for products with no tiers)
-      return and(not(isUndefined(price)), gte(price!.min_price, price_min));
+      return and(
+        not(isUndefined(price)),
+        gte(price.min_price, new Big(price_min).toFixed(2))
+      );
     });
   }
   if (price_max !== undefined) {
     queryWithPrice = queryWithPrice.where(({ price }) => {
-      return and(not(isUndefined(price)), lte(price!.min_price, price_max));
+      return and(
+        not(isUndefined(price)),
+        lte(price.min_price, new Big(price_max).toFixed(2))
+      );
     });
   }
 
@@ -302,7 +309,7 @@ function RouteComponent() {
     // Select the final data shape for the component
     return query.select(({ p, price, asset }) => ({
       ...p,
-      min_price: price?.min_price as number | null,
+      min_price: price?.min_price,
       asset: asset
     }));
   }, [search, customFieldDefinitions]);

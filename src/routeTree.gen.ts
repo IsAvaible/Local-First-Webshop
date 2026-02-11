@@ -8,631 +8,631 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as YjsRouteImport } from "./routes/yjs";
-import { Route as WishlistRouteImport } from "./routes/wishlist";
-import { Route as SearchRouteImport } from "./routes/search";
-import { Route as ProfileRouteImport } from "./routes/profile";
-import { Route as LoginRouteImport } from "./routes/login";
-import { Route as CheckoutRouteImport } from "./routes/checkout";
-import { Route as CartRouteImport } from "./routes/cart";
-import { Route as IndexRouteImport } from "./routes/index";
-import { Route as ProductsProductIdRouteImport } from "./routes/products.$productId";
-import { Route as ApiYdocUpdatesRouteImport } from "./routes/api/ydoc-updates";
-import { Route as ApiYdocAwarenessRouteImport } from "./routes/api/ydoc-awareness";
-import { Route as ApiWishlistRouteImport } from "./routes/api/wishlist";
-import { Route as ApiUsersRouteImport } from "./routes/api/users";
-import { Route as ApiUserSettingsRouteImport } from "./routes/api/user-settings";
-import { Route as ApiUserSelectedCartRouteImport } from "./routes/api/user-selected-cart";
-import { Route as ApiStripeWebhookRouteImport } from "./routes/api/stripe-webhook";
-import { Route as ApiProductsRouteImport } from "./routes/api/products";
-import { Route as ApiPricingTiersRouteImport } from "./routes/api/pricing-tiers";
-import { Route as ApiOrdersRouteImport } from "./routes/api/orders";
-import { Route as ApiNotificationsRouteImport } from "./routes/api/notifications";
-import { Route as ApiCustomFieldValuesRouteImport } from "./routes/api/custom-field-values";
-import { Route as ApiCustomFieldDefinitionsRouteImport } from "./routes/api/custom-field-definitions";
-import { Route as ApiCompaniesRouteImport } from "./routes/api/companies";
-import { Route as ApiCategoriesRouteImport } from "./routes/api/categories";
-import { Route as ApiCartsRouteImport } from "./routes/api/carts";
-import { Route as ApiCartCollaboratorsRouteImport } from "./routes/api/cart-collaborators";
-import { Route as ApiAssetsRouteImport } from "./routes/api/assets";
-import { Route as ApiAddressesRouteImport } from "./routes/api/addresses";
-import { Route as ApiTrpcSplatRouteImport } from "./routes/api/trpc/$";
-import { Route as ApiAuthSplatRouteImport } from "./routes/api/auth/$";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as YjsRouteImport } from './routes/yjs'
+import { Route as WishlistRouteImport } from './routes/wishlist'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as CartRouteImport } from './routes/cart'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
+import { Route as ApiYdocUpdatesRouteImport } from './routes/api/ydoc-updates'
+import { Route as ApiYdocAwarenessRouteImport } from './routes/api/ydoc-awareness'
+import { Route as ApiWishlistRouteImport } from './routes/api/wishlist'
+import { Route as ApiUsersRouteImport } from './routes/api/users'
+import { Route as ApiUserSettingsRouteImport } from './routes/api/user-settings'
+import { Route as ApiUserSelectedCartRouteImport } from './routes/api/user-selected-cart'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe-webhook'
+import { Route as ApiProductsRouteImport } from './routes/api/products'
+import { Route as ApiPricingTiersRouteImport } from './routes/api/pricing-tiers'
+import { Route as ApiOrdersRouteImport } from './routes/api/orders'
+import { Route as ApiNotificationsRouteImport } from './routes/api/notifications'
+import { Route as ApiCustomFieldValuesRouteImport } from './routes/api/custom-field-values'
+import { Route as ApiCustomFieldDefinitionsRouteImport } from './routes/api/custom-field-definitions'
+import { Route as ApiCompaniesRouteImport } from './routes/api/companies'
+import { Route as ApiCategoriesRouteImport } from './routes/api/categories'
+import { Route as ApiCartsRouteImport } from './routes/api/carts'
+import { Route as ApiCartCollaboratorsRouteImport } from './routes/api/cart-collaborators'
+import { Route as ApiAssetsRouteImport } from './routes/api/assets'
+import { Route as ApiAddressesRouteImport } from './routes/api/addresses'
+import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const YjsRoute = YjsRouteImport.update({
-  id: "/yjs",
-  path: "/yjs",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/yjs',
+  path: '/yjs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WishlistRoute = WishlistRouteImport.update({
-  id: "/wishlist",
-  path: "/wishlist",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/wishlist',
+  path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
-  id: "/search",
-  path: "/search",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
-  id: "/profile",
-  path: "/profile",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
-  id: "/login",
-  path: "/login",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutRoute = CheckoutRouteImport.update({
-  id: "/checkout",
-  path: "/checkout",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CartRoute = CartRouteImport.update({
-  id: "/cart",
-  path: "/cart",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/cart',
+  path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
-  id: "/products/$productId",
-  path: "/products/$productId",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/products/$productId',
+  path: '/products/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiYdocUpdatesRoute = ApiYdocUpdatesRouteImport.update({
-  id: "/api/ydoc-updates",
-  path: "/api/ydoc-updates",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/ydoc-updates',
+  path: '/api/ydoc-updates',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiYdocAwarenessRoute = ApiYdocAwarenessRouteImport.update({
-  id: "/api/ydoc-awareness",
-  path: "/api/ydoc-awareness",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/ydoc-awareness',
+  path: '/api/ydoc-awareness',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiWishlistRoute = ApiWishlistRouteImport.update({
-  id: "/api/wishlist",
-  path: "/api/wishlist",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/wishlist',
+  path: '/api/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUsersRoute = ApiUsersRouteImport.update({
-  id: "/api/users",
-  path: "/api/users",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/users',
+  path: '/api/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUserSettingsRoute = ApiUserSettingsRouteImport.update({
-  id: "/api/user-settings",
-  path: "/api/user-settings",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/user-settings',
+  path: '/api/user-settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUserSelectedCartRoute = ApiUserSelectedCartRouteImport.update({
-  id: "/api/user-selected-cart",
-  path: "/api/user-selected-cart",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/user-selected-cart',
+  path: '/api/user-selected-cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
-  id: "/api/stripe-webhook",
-  path: "/api/stripe-webhook",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/stripe-webhook',
+  path: '/api/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProductsRoute = ApiProductsRouteImport.update({
-  id: "/api/products",
-  path: "/api/products",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/products',
+  path: '/api/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPricingTiersRoute = ApiPricingTiersRouteImport.update({
-  id: "/api/pricing-tiers",
-  path: "/api/pricing-tiers",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/pricing-tiers',
+  path: '/api/pricing-tiers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiOrdersRoute = ApiOrdersRouteImport.update({
-  id: "/api/orders",
-  path: "/api/orders",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/orders',
+  path: '/api/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiNotificationsRoute = ApiNotificationsRouteImport.update({
-  id: "/api/notifications",
-  path: "/api/notifications",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/notifications',
+  path: '/api/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCustomFieldValuesRoute = ApiCustomFieldValuesRouteImport.update({
-  id: "/api/custom-field-values",
-  path: "/api/custom-field-values",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/custom-field-values',
+  path: '/api/custom-field-values',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCustomFieldDefinitionsRoute =
   ApiCustomFieldDefinitionsRouteImport.update({
-    id: "/api/custom-field-definitions",
-    path: "/api/custom-field-definitions",
-    getParentRoute: () => rootRouteImport
-  } as any);
+    id: '/api/custom-field-definitions',
+    path: '/api/custom-field-definitions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiCompaniesRoute = ApiCompaniesRouteImport.update({
-  id: "/api/companies",
-  path: "/api/companies",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/companies',
+  path: '/api/companies',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCategoriesRoute = ApiCategoriesRouteImport.update({
-  id: "/api/categories",
-  path: "/api/categories",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/categories',
+  path: '/api/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCartsRoute = ApiCartsRouteImport.update({
-  id: "/api/carts",
-  path: "/api/carts",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/carts',
+  path: '/api/carts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCartCollaboratorsRoute = ApiCartCollaboratorsRouteImport.update({
-  id: "/api/cart-collaborators",
-  path: "/api/cart-collaborators",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/cart-collaborators',
+  path: '/api/cart-collaborators',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAssetsRoute = ApiAssetsRouteImport.update({
-  id: "/api/assets",
-  path: "/api/assets",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/assets',
+  path: '/api/assets',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAddressesRoute = ApiAddressesRouteImport.update({
-  id: "/api/addresses",
-  path: "/api/addresses",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/addresses',
+  path: '/api/addresses',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
-  id: "/api/trpc/$",
-  path: "/api/trpc/$",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/trpc/$',
+  path: '/api/trpc/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: "/api/auth/$",
-  path: "/api/auth/$",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/cart": typeof CartRoute;
-  "/checkout": typeof CheckoutRoute;
-  "/login": typeof LoginRoute;
-  "/profile": typeof ProfileRoute;
-  "/search": typeof SearchRoute;
-  "/wishlist": typeof WishlistRoute;
-  "/yjs": typeof YjsRoute;
-  "/api/addresses": typeof ApiAddressesRoute;
-  "/api/assets": typeof ApiAssetsRoute;
-  "/api/cart-collaborators": typeof ApiCartCollaboratorsRoute;
-  "/api/carts": typeof ApiCartsRoute;
-  "/api/categories": typeof ApiCategoriesRoute;
-  "/api/companies": typeof ApiCompaniesRoute;
-  "/api/custom-field-definitions": typeof ApiCustomFieldDefinitionsRoute;
-  "/api/custom-field-values": typeof ApiCustomFieldValuesRoute;
-  "/api/notifications": typeof ApiNotificationsRoute;
-  "/api/orders": typeof ApiOrdersRoute;
-  "/api/pricing-tiers": typeof ApiPricingTiersRoute;
-  "/api/products": typeof ApiProductsRoute;
-  "/api/stripe-webhook": typeof ApiStripeWebhookRoute;
-  "/api/user-selected-cart": typeof ApiUserSelectedCartRoute;
-  "/api/user-settings": typeof ApiUserSettingsRoute;
-  "/api/users": typeof ApiUsersRoute;
-  "/api/wishlist": typeof ApiWishlistRoute;
-  "/api/ydoc-awareness": typeof ApiYdocAwarenessRoute;
-  "/api/ydoc-updates": typeof ApiYdocUpdatesRoute;
-  "/products/$productId": typeof ProductsProductIdRoute;
-  "/api/auth/$": typeof ApiAuthSplatRoute;
-  "/api/trpc/$": typeof ApiTrpcSplatRoute;
+  '/': typeof IndexRoute
+  '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
+  '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
+  '/wishlist': typeof WishlistRoute
+  '/yjs': typeof YjsRoute
+  '/api/addresses': typeof ApiAddressesRoute
+  '/api/assets': typeof ApiAssetsRoute
+  '/api/cart-collaborators': typeof ApiCartCollaboratorsRoute
+  '/api/carts': typeof ApiCartsRoute
+  '/api/categories': typeof ApiCategoriesRoute
+  '/api/companies': typeof ApiCompaniesRoute
+  '/api/custom-field-definitions': typeof ApiCustomFieldDefinitionsRoute
+  '/api/custom-field-values': typeof ApiCustomFieldValuesRoute
+  '/api/notifications': typeof ApiNotificationsRoute
+  '/api/orders': typeof ApiOrdersRoute
+  '/api/pricing-tiers': typeof ApiPricingTiersRoute
+  '/api/products': typeof ApiProductsRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
+  '/api/user-selected-cart': typeof ApiUserSelectedCartRoute
+  '/api/user-settings': typeof ApiUserSettingsRoute
+  '/api/users': typeof ApiUsersRoute
+  '/api/wishlist': typeof ApiWishlistRoute
+  '/api/ydoc-awareness': typeof ApiYdocAwarenessRoute
+  '/api/ydoc-updates': typeof ApiYdocUpdatesRoute
+  '/products/$productId': typeof ProductsProductIdRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/cart": typeof CartRoute;
-  "/checkout": typeof CheckoutRoute;
-  "/login": typeof LoginRoute;
-  "/profile": typeof ProfileRoute;
-  "/search": typeof SearchRoute;
-  "/wishlist": typeof WishlistRoute;
-  "/yjs": typeof YjsRoute;
-  "/api/addresses": typeof ApiAddressesRoute;
-  "/api/assets": typeof ApiAssetsRoute;
-  "/api/cart-collaborators": typeof ApiCartCollaboratorsRoute;
-  "/api/carts": typeof ApiCartsRoute;
-  "/api/categories": typeof ApiCategoriesRoute;
-  "/api/companies": typeof ApiCompaniesRoute;
-  "/api/custom-field-definitions": typeof ApiCustomFieldDefinitionsRoute;
-  "/api/custom-field-values": typeof ApiCustomFieldValuesRoute;
-  "/api/notifications": typeof ApiNotificationsRoute;
-  "/api/orders": typeof ApiOrdersRoute;
-  "/api/pricing-tiers": typeof ApiPricingTiersRoute;
-  "/api/products": typeof ApiProductsRoute;
-  "/api/stripe-webhook": typeof ApiStripeWebhookRoute;
-  "/api/user-selected-cart": typeof ApiUserSelectedCartRoute;
-  "/api/user-settings": typeof ApiUserSettingsRoute;
-  "/api/users": typeof ApiUsersRoute;
-  "/api/wishlist": typeof ApiWishlistRoute;
-  "/api/ydoc-awareness": typeof ApiYdocAwarenessRoute;
-  "/api/ydoc-updates": typeof ApiYdocUpdatesRoute;
-  "/products/$productId": typeof ProductsProductIdRoute;
-  "/api/auth/$": typeof ApiAuthSplatRoute;
-  "/api/trpc/$": typeof ApiTrpcSplatRoute;
+  '/': typeof IndexRoute
+  '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
+  '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
+  '/wishlist': typeof WishlistRoute
+  '/yjs': typeof YjsRoute
+  '/api/addresses': typeof ApiAddressesRoute
+  '/api/assets': typeof ApiAssetsRoute
+  '/api/cart-collaborators': typeof ApiCartCollaboratorsRoute
+  '/api/carts': typeof ApiCartsRoute
+  '/api/categories': typeof ApiCategoriesRoute
+  '/api/companies': typeof ApiCompaniesRoute
+  '/api/custom-field-definitions': typeof ApiCustomFieldDefinitionsRoute
+  '/api/custom-field-values': typeof ApiCustomFieldValuesRoute
+  '/api/notifications': typeof ApiNotificationsRoute
+  '/api/orders': typeof ApiOrdersRoute
+  '/api/pricing-tiers': typeof ApiPricingTiersRoute
+  '/api/products': typeof ApiProductsRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
+  '/api/user-selected-cart': typeof ApiUserSelectedCartRoute
+  '/api/user-settings': typeof ApiUserSettingsRoute
+  '/api/users': typeof ApiUsersRoute
+  '/api/wishlist': typeof ApiWishlistRoute
+  '/api/ydoc-awareness': typeof ApiYdocAwarenessRoute
+  '/api/ydoc-updates': typeof ApiYdocUpdatesRoute
+  '/products/$productId': typeof ProductsProductIdRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
-  "/cart": typeof CartRoute;
-  "/checkout": typeof CheckoutRoute;
-  "/login": typeof LoginRoute;
-  "/profile": typeof ProfileRoute;
-  "/search": typeof SearchRoute;
-  "/wishlist": typeof WishlistRoute;
-  "/yjs": typeof YjsRoute;
-  "/api/addresses": typeof ApiAddressesRoute;
-  "/api/assets": typeof ApiAssetsRoute;
-  "/api/cart-collaborators": typeof ApiCartCollaboratorsRoute;
-  "/api/carts": typeof ApiCartsRoute;
-  "/api/categories": typeof ApiCategoriesRoute;
-  "/api/companies": typeof ApiCompaniesRoute;
-  "/api/custom-field-definitions": typeof ApiCustomFieldDefinitionsRoute;
-  "/api/custom-field-values": typeof ApiCustomFieldValuesRoute;
-  "/api/notifications": typeof ApiNotificationsRoute;
-  "/api/orders": typeof ApiOrdersRoute;
-  "/api/pricing-tiers": typeof ApiPricingTiersRoute;
-  "/api/products": typeof ApiProductsRoute;
-  "/api/stripe-webhook": typeof ApiStripeWebhookRoute;
-  "/api/user-selected-cart": typeof ApiUserSelectedCartRoute;
-  "/api/user-settings": typeof ApiUserSettingsRoute;
-  "/api/users": typeof ApiUsersRoute;
-  "/api/wishlist": typeof ApiWishlistRoute;
-  "/api/ydoc-awareness": typeof ApiYdocAwarenessRoute;
-  "/api/ydoc-updates": typeof ApiYdocUpdatesRoute;
-  "/products/$productId": typeof ProductsProductIdRoute;
-  "/api/auth/$": typeof ApiAuthSplatRoute;
-  "/api/trpc/$": typeof ApiTrpcSplatRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
+  '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
+  '/wishlist': typeof WishlistRoute
+  '/yjs': typeof YjsRoute
+  '/api/addresses': typeof ApiAddressesRoute
+  '/api/assets': typeof ApiAssetsRoute
+  '/api/cart-collaborators': typeof ApiCartCollaboratorsRoute
+  '/api/carts': typeof ApiCartsRoute
+  '/api/categories': typeof ApiCategoriesRoute
+  '/api/companies': typeof ApiCompaniesRoute
+  '/api/custom-field-definitions': typeof ApiCustomFieldDefinitionsRoute
+  '/api/custom-field-values': typeof ApiCustomFieldValuesRoute
+  '/api/notifications': typeof ApiNotificationsRoute
+  '/api/orders': typeof ApiOrdersRoute
+  '/api/pricing-tiers': typeof ApiPricingTiersRoute
+  '/api/products': typeof ApiProductsRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
+  '/api/user-selected-cart': typeof ApiUserSelectedCartRoute
+  '/api/user-settings': typeof ApiUserSettingsRoute
+  '/api/users': typeof ApiUsersRoute
+  '/api/wishlist': typeof ApiWishlistRoute
+  '/api/ydoc-awareness': typeof ApiYdocAwarenessRoute
+  '/api/ydoc-updates': typeof ApiYdocUpdatesRoute
+  '/products/$productId': typeof ProductsProductIdRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
-    | "/cart"
-    | "/checkout"
-    | "/login"
-    | "/profile"
-    | "/search"
-    | "/wishlist"
-    | "/yjs"
-    | "/api/addresses"
-    | "/api/assets"
-    | "/api/cart-collaborators"
-    | "/api/carts"
-    | "/api/categories"
-    | "/api/companies"
-    | "/api/custom-field-definitions"
-    | "/api/custom-field-values"
-    | "/api/notifications"
-    | "/api/orders"
-    | "/api/pricing-tiers"
-    | "/api/products"
-    | "/api/stripe-webhook"
-    | "/api/user-selected-cart"
-    | "/api/user-settings"
-    | "/api/users"
-    | "/api/wishlist"
-    | "/api/ydoc-awareness"
-    | "/api/ydoc-updates"
-    | "/products/$productId"
-    | "/api/auth/$"
-    | "/api/trpc/$";
-  fileRoutesByTo: FileRoutesByTo;
+    | '/'
+    | '/cart'
+    | '/checkout'
+    | '/login'
+    | '/profile'
+    | '/search'
+    | '/wishlist'
+    | '/yjs'
+    | '/api/addresses'
+    | '/api/assets'
+    | '/api/cart-collaborators'
+    | '/api/carts'
+    | '/api/categories'
+    | '/api/companies'
+    | '/api/custom-field-definitions'
+    | '/api/custom-field-values'
+    | '/api/notifications'
+    | '/api/orders'
+    | '/api/pricing-tiers'
+    | '/api/products'
+    | '/api/stripe-webhook'
+    | '/api/user-selected-cart'
+    | '/api/user-settings'
+    | '/api/users'
+    | '/api/wishlist'
+    | '/api/ydoc-awareness'
+    | '/api/ydoc-updates'
+    | '/products/$productId'
+    | '/api/auth/$'
+    | '/api/trpc/$'
+  fileRoutesByTo: FileRoutesByTo
   to:
-    | "/"
-    | "/cart"
-    | "/checkout"
-    | "/login"
-    | "/profile"
-    | "/search"
-    | "/wishlist"
-    | "/yjs"
-    | "/api/addresses"
-    | "/api/assets"
-    | "/api/cart-collaborators"
-    | "/api/carts"
-    | "/api/categories"
-    | "/api/companies"
-    | "/api/custom-field-definitions"
-    | "/api/custom-field-values"
-    | "/api/notifications"
-    | "/api/orders"
-    | "/api/pricing-tiers"
-    | "/api/products"
-    | "/api/stripe-webhook"
-    | "/api/user-selected-cart"
-    | "/api/user-settings"
-    | "/api/users"
-    | "/api/wishlist"
-    | "/api/ydoc-awareness"
-    | "/api/ydoc-updates"
-    | "/products/$productId"
-    | "/api/auth/$"
-    | "/api/trpc/$";
+    | '/'
+    | '/cart'
+    | '/checkout'
+    | '/login'
+    | '/profile'
+    | '/search'
+    | '/wishlist'
+    | '/yjs'
+    | '/api/addresses'
+    | '/api/assets'
+    | '/api/cart-collaborators'
+    | '/api/carts'
+    | '/api/categories'
+    | '/api/companies'
+    | '/api/custom-field-definitions'
+    | '/api/custom-field-values'
+    | '/api/notifications'
+    | '/api/orders'
+    | '/api/pricing-tiers'
+    | '/api/products'
+    | '/api/stripe-webhook'
+    | '/api/user-selected-cart'
+    | '/api/user-settings'
+    | '/api/users'
+    | '/api/wishlist'
+    | '/api/ydoc-awareness'
+    | '/api/ydoc-updates'
+    | '/products/$productId'
+    | '/api/auth/$'
+    | '/api/trpc/$'
   id:
-    | "__root__"
-    | "/"
-    | "/cart"
-    | "/checkout"
-    | "/login"
-    | "/profile"
-    | "/search"
-    | "/wishlist"
-    | "/yjs"
-    | "/api/addresses"
-    | "/api/assets"
-    | "/api/cart-collaborators"
-    | "/api/carts"
-    | "/api/categories"
-    | "/api/companies"
-    | "/api/custom-field-definitions"
-    | "/api/custom-field-values"
-    | "/api/notifications"
-    | "/api/orders"
-    | "/api/pricing-tiers"
-    | "/api/products"
-    | "/api/stripe-webhook"
-    | "/api/user-selected-cart"
-    | "/api/user-settings"
-    | "/api/users"
-    | "/api/wishlist"
-    | "/api/ydoc-awareness"
-    | "/api/ydoc-updates"
-    | "/products/$productId"
-    | "/api/auth/$"
-    | "/api/trpc/$";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/'
+    | '/cart'
+    | '/checkout'
+    | '/login'
+    | '/profile'
+    | '/search'
+    | '/wishlist'
+    | '/yjs'
+    | '/api/addresses'
+    | '/api/assets'
+    | '/api/cart-collaborators'
+    | '/api/carts'
+    | '/api/categories'
+    | '/api/companies'
+    | '/api/custom-field-definitions'
+    | '/api/custom-field-values'
+    | '/api/notifications'
+    | '/api/orders'
+    | '/api/pricing-tiers'
+    | '/api/products'
+    | '/api/stripe-webhook'
+    | '/api/user-selected-cart'
+    | '/api/user-settings'
+    | '/api/users'
+    | '/api/wishlist'
+    | '/api/ydoc-awareness'
+    | '/api/ydoc-updates'
+    | '/products/$productId'
+    | '/api/auth/$'
+    | '/api/trpc/$'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  CartRoute: typeof CartRoute;
-  CheckoutRoute: typeof CheckoutRoute;
-  LoginRoute: typeof LoginRoute;
-  ProfileRoute: typeof ProfileRoute;
-  SearchRoute: typeof SearchRoute;
-  WishlistRoute: typeof WishlistRoute;
-  YjsRoute: typeof YjsRoute;
-  ApiAddressesRoute: typeof ApiAddressesRoute;
-  ApiAssetsRoute: typeof ApiAssetsRoute;
-  ApiCartCollaboratorsRoute: typeof ApiCartCollaboratorsRoute;
-  ApiCartsRoute: typeof ApiCartsRoute;
-  ApiCategoriesRoute: typeof ApiCategoriesRoute;
-  ApiCompaniesRoute: typeof ApiCompaniesRoute;
-  ApiCustomFieldDefinitionsRoute: typeof ApiCustomFieldDefinitionsRoute;
-  ApiCustomFieldValuesRoute: typeof ApiCustomFieldValuesRoute;
-  ApiNotificationsRoute: typeof ApiNotificationsRoute;
-  ApiOrdersRoute: typeof ApiOrdersRoute;
-  ApiPricingTiersRoute: typeof ApiPricingTiersRoute;
-  ApiProductsRoute: typeof ApiProductsRoute;
-  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute;
-  ApiUserSelectedCartRoute: typeof ApiUserSelectedCartRoute;
-  ApiUserSettingsRoute: typeof ApiUserSettingsRoute;
-  ApiUsersRoute: typeof ApiUsersRoute;
-  ApiWishlistRoute: typeof ApiWishlistRoute;
-  ApiYdocAwarenessRoute: typeof ApiYdocAwarenessRoute;
-  ApiYdocUpdatesRoute: typeof ApiYdocUpdatesRoute;
-  ProductsProductIdRoute: typeof ProductsProductIdRoute;
-  ApiAuthSplatRoute: typeof ApiAuthSplatRoute;
-  ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute;
+  IndexRoute: typeof IndexRoute
+  CartRoute: typeof CartRoute
+  CheckoutRoute: typeof CheckoutRoute
+  LoginRoute: typeof LoginRoute
+  ProfileRoute: typeof ProfileRoute
+  SearchRoute: typeof SearchRoute
+  WishlistRoute: typeof WishlistRoute
+  YjsRoute: typeof YjsRoute
+  ApiAddressesRoute: typeof ApiAddressesRoute
+  ApiAssetsRoute: typeof ApiAssetsRoute
+  ApiCartCollaboratorsRoute: typeof ApiCartCollaboratorsRoute
+  ApiCartsRoute: typeof ApiCartsRoute
+  ApiCategoriesRoute: typeof ApiCategoriesRoute
+  ApiCompaniesRoute: typeof ApiCompaniesRoute
+  ApiCustomFieldDefinitionsRoute: typeof ApiCustomFieldDefinitionsRoute
+  ApiCustomFieldValuesRoute: typeof ApiCustomFieldValuesRoute
+  ApiNotificationsRoute: typeof ApiNotificationsRoute
+  ApiOrdersRoute: typeof ApiOrdersRoute
+  ApiPricingTiersRoute: typeof ApiPricingTiersRoute
+  ApiProductsRoute: typeof ApiProductsRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
+  ApiUserSelectedCartRoute: typeof ApiUserSelectedCartRoute
+  ApiUserSettingsRoute: typeof ApiUserSettingsRoute
+  ApiUsersRoute: typeof ApiUsersRoute
+  ApiWishlistRoute: typeof ApiWishlistRoute
+  ApiYdocAwarenessRoute: typeof ApiYdocAwarenessRoute
+  ApiYdocUpdatesRoute: typeof ApiYdocUpdatesRoute
+  ProductsProductIdRoute: typeof ProductsProductIdRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/yjs": {
-      id: "/yjs";
-      path: "/yjs";
-      fullPath: "/yjs";
-      preLoaderRoute: typeof YjsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/wishlist": {
-      id: "/wishlist";
-      path: "/wishlist";
-      fullPath: "/wishlist";
-      preLoaderRoute: typeof WishlistRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/search": {
-      id: "/search";
-      path: "/search";
-      fullPath: "/search";
-      preLoaderRoute: typeof SearchRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/profile": {
-      id: "/profile";
-      path: "/profile";
-      fullPath: "/profile";
-      preLoaderRoute: typeof ProfileRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/login": {
-      id: "/login";
-      path: "/login";
-      fullPath: "/login";
-      preLoaderRoute: typeof LoginRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/checkout": {
-      id: "/checkout";
-      path: "/checkout";
-      fullPath: "/checkout";
-      preLoaderRoute: typeof CheckoutRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/cart": {
-      id: "/cart";
-      path: "/cart";
-      fullPath: "/cart";
-      preLoaderRoute: typeof CartRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/products/$productId": {
-      id: "/products/$productId";
-      path: "/products/$productId";
-      fullPath: "/products/$productId";
-      preLoaderRoute: typeof ProductsProductIdRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/ydoc-updates": {
-      id: "/api/ydoc-updates";
-      path: "/api/ydoc-updates";
-      fullPath: "/api/ydoc-updates";
-      preLoaderRoute: typeof ApiYdocUpdatesRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/ydoc-awareness": {
-      id: "/api/ydoc-awareness";
-      path: "/api/ydoc-awareness";
-      fullPath: "/api/ydoc-awareness";
-      preLoaderRoute: typeof ApiYdocAwarenessRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/wishlist": {
-      id: "/api/wishlist";
-      path: "/api/wishlist";
-      fullPath: "/api/wishlist";
-      preLoaderRoute: typeof ApiWishlistRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/users": {
-      id: "/api/users";
-      path: "/api/users";
-      fullPath: "/api/users";
-      preLoaderRoute: typeof ApiUsersRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/user-settings": {
-      id: "/api/user-settings";
-      path: "/api/user-settings";
-      fullPath: "/api/user-settings";
-      preLoaderRoute: typeof ApiUserSettingsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/user-selected-cart": {
-      id: "/api/user-selected-cart";
-      path: "/api/user-selected-cart";
-      fullPath: "/api/user-selected-cart";
-      preLoaderRoute: typeof ApiUserSelectedCartRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/stripe-webhook": {
-      id: "/api/stripe-webhook";
-      path: "/api/stripe-webhook";
-      fullPath: "/api/stripe-webhook";
-      preLoaderRoute: typeof ApiStripeWebhookRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/products": {
-      id: "/api/products";
-      path: "/api/products";
-      fullPath: "/api/products";
-      preLoaderRoute: typeof ApiProductsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/pricing-tiers": {
-      id: "/api/pricing-tiers";
-      path: "/api/pricing-tiers";
-      fullPath: "/api/pricing-tiers";
-      preLoaderRoute: typeof ApiPricingTiersRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/orders": {
-      id: "/api/orders";
-      path: "/api/orders";
-      fullPath: "/api/orders";
-      preLoaderRoute: typeof ApiOrdersRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/notifications": {
-      id: "/api/notifications";
-      path: "/api/notifications";
-      fullPath: "/api/notifications";
-      preLoaderRoute: typeof ApiNotificationsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/custom-field-values": {
-      id: "/api/custom-field-values";
-      path: "/api/custom-field-values";
-      fullPath: "/api/custom-field-values";
-      preLoaderRoute: typeof ApiCustomFieldValuesRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/custom-field-definitions": {
-      id: "/api/custom-field-definitions";
-      path: "/api/custom-field-definitions";
-      fullPath: "/api/custom-field-definitions";
-      preLoaderRoute: typeof ApiCustomFieldDefinitionsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/companies": {
-      id: "/api/companies";
-      path: "/api/companies";
-      fullPath: "/api/companies";
-      preLoaderRoute: typeof ApiCompaniesRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/categories": {
-      id: "/api/categories";
-      path: "/api/categories";
-      fullPath: "/api/categories";
-      preLoaderRoute: typeof ApiCategoriesRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/carts": {
-      id: "/api/carts";
-      path: "/api/carts";
-      fullPath: "/api/carts";
-      preLoaderRoute: typeof ApiCartsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/cart-collaborators": {
-      id: "/api/cart-collaborators";
-      path: "/api/cart-collaborators";
-      fullPath: "/api/cart-collaborators";
-      preLoaderRoute: typeof ApiCartCollaboratorsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/assets": {
-      id: "/api/assets";
-      path: "/api/assets";
-      fullPath: "/api/assets";
-      preLoaderRoute: typeof ApiAssetsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/addresses": {
-      id: "/api/addresses";
-      path: "/api/addresses";
-      fullPath: "/api/addresses";
-      preLoaderRoute: typeof ApiAddressesRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/trpc/$": {
-      id: "/api/trpc/$";
-      path: "/api/trpc/$";
-      fullPath: "/api/trpc/$";
-      preLoaderRoute: typeof ApiTrpcSplatRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/auth/$": {
-      id: "/api/auth/$";
-      path: "/api/auth/$";
-      fullPath: "/api/auth/$";
-      preLoaderRoute: typeof ApiAuthSplatRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+    '/yjs': {
+      id: '/yjs'
+      path: '/yjs'
+      fullPath: '/yjs'
+      preLoaderRoute: typeof YjsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wishlist': {
+      id: '/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof WishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cart': {
+      id: '/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/$productId': {
+      id: '/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof ProductsProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ydoc-updates': {
+      id: '/api/ydoc-updates'
+      path: '/api/ydoc-updates'
+      fullPath: '/api/ydoc-updates'
+      preLoaderRoute: typeof ApiYdocUpdatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ydoc-awareness': {
+      id: '/api/ydoc-awareness'
+      path: '/api/ydoc-awareness'
+      fullPath: '/api/ydoc-awareness'
+      preLoaderRoute: typeof ApiYdocAwarenessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/wishlist': {
+      id: '/api/wishlist'
+      path: '/api/wishlist'
+      fullPath: '/api/wishlist'
+      preLoaderRoute: typeof ApiWishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/users': {
+      id: '/api/users'
+      path: '/api/users'
+      fullPath: '/api/users'
+      preLoaderRoute: typeof ApiUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/user-settings': {
+      id: '/api/user-settings'
+      path: '/api/user-settings'
+      fullPath: '/api/user-settings'
+      preLoaderRoute: typeof ApiUserSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/user-selected-cart': {
+      id: '/api/user-selected-cart'
+      path: '/api/user-selected-cart'
+      fullPath: '/api/user-selected-cart'
+      preLoaderRoute: typeof ApiUserSelectedCartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe-webhook': {
+      id: '/api/stripe-webhook'
+      path: '/api/stripe-webhook'
+      fullPath: '/api/stripe-webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/products': {
+      id: '/api/products'
+      path: '/api/products'
+      fullPath: '/api/products'
+      preLoaderRoute: typeof ApiProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/pricing-tiers': {
+      id: '/api/pricing-tiers'
+      path: '/api/pricing-tiers'
+      fullPath: '/api/pricing-tiers'
+      preLoaderRoute: typeof ApiPricingTiersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/orders': {
+      id: '/api/orders'
+      path: '/api/orders'
+      fullPath: '/api/orders'
+      preLoaderRoute: typeof ApiOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/notifications': {
+      id: '/api/notifications'
+      path: '/api/notifications'
+      fullPath: '/api/notifications'
+      preLoaderRoute: typeof ApiNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/custom-field-values': {
+      id: '/api/custom-field-values'
+      path: '/api/custom-field-values'
+      fullPath: '/api/custom-field-values'
+      preLoaderRoute: typeof ApiCustomFieldValuesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/custom-field-definitions': {
+      id: '/api/custom-field-definitions'
+      path: '/api/custom-field-definitions'
+      fullPath: '/api/custom-field-definitions'
+      preLoaderRoute: typeof ApiCustomFieldDefinitionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/companies': {
+      id: '/api/companies'
+      path: '/api/companies'
+      fullPath: '/api/companies'
+      preLoaderRoute: typeof ApiCompaniesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/categories': {
+      id: '/api/categories'
+      path: '/api/categories'
+      fullPath: '/api/categories'
+      preLoaderRoute: typeof ApiCategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/carts': {
+      id: '/api/carts'
+      path: '/api/carts'
+      fullPath: '/api/carts'
+      preLoaderRoute: typeof ApiCartsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cart-collaborators': {
+      id: '/api/cart-collaborators'
+      path: '/api/cart-collaborators'
+      fullPath: '/api/cart-collaborators'
+      preLoaderRoute: typeof ApiCartCollaboratorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/assets': {
+      id: '/api/assets'
+      path: '/api/assets'
+      fullPath: '/api/assets'
+      preLoaderRoute: typeof ApiAssetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/addresses': {
+      id: '/api/addresses'
+      path: '/api/addresses'
+      fullPath: '/api/addresses'
+      preLoaderRoute: typeof ApiAddressesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trpc/$': {
+      id: '/api/trpc/$'
+      path: '/api/trpc/$'
+      fullPath: '/api/trpc/$'
+      preLoaderRoute: typeof ApiTrpcSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -666,18 +666,18 @@ const rootRouteChildren: RootRouteChildren = {
   ApiYdocUpdatesRoute: ApiYdocUpdatesRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
-  ApiTrpcSplatRoute: ApiTrpcSplatRoute
-};
+  ApiTrpcSplatRoute: ApiTrpcSplatRoute,
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from "./router.tsx";
-import type { startInstance } from "./start.tsx";
-declare module "@tanstack/react-start" {
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.tsx'
+declare module '@tanstack/react-start' {
   interface Register {
-    ssr: true;
-    router: Awaited<ReturnType<typeof getRouter>>;
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>;
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }
