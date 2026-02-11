@@ -339,10 +339,16 @@ function CartSession({
 
       void persistence.destroy();
       electricProvider.destroy();
-      ydoc.destroy();
       setIsSynced(false);
     };
   }, [roomName, ydoc, awareness, userId]);
+
+  useEffect(() => {
+    // Destroy the doc when the component unmounts
+    return () => {
+      ydoc.destroy();
+    };
+  }, [ydoc]);
 
   // --- Data Fetching: Collaborators & Users ---
 
@@ -455,16 +461,19 @@ function CartSession({
 
   // 2. Broadcast Local Presence
   useEffect(() => {
-    if (!isSynced || !currentUserProfile) return;
+    if (!currentUserProfile) return;
 
     awareness.setLocalStateField("user", currentUserProfile);
+  }, [awareness, currentUserProfile]);
 
+  // 3. Handle Disconnect on Unmount
+  useEffect(() => {
     return () => {
       awareness.setLocalState(null);
     };
-  }, [awareness, currentUserProfile, isSynced]);
+  }, [awareness]);
 
-  // 3. Listen for Remote Presence
+  // 4. Listen for Remote Presence
   useEffect(() => {
     const onAwarenessChange = () => {
       const states = awareness.getStates();
@@ -488,6 +497,7 @@ function CartSession({
     };
 
     awareness.on("change", onAwarenessChange);
+
     // Trigger initial load
     onAwarenessChange();
 
