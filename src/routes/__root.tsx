@@ -5,7 +5,8 @@ import {
   createRootRoute,
   ClientOnly
 } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { TanStackDevtools } from "@tanstack/react-devtools";
+import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import * as React from "react";
 import appCss from "@/index.css?url";
 import { seo } from "@/utils/seo.ts";
@@ -104,7 +105,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           </div>
           <Toaster position={"bottom-center"} />
         </ClientOnly>
-        <TanStackRouterDevtools position="bottom-right" />
+        <TanStackDevtools
+          plugins={[
+            {
+              name: "TanStack Router",
+              render: <TanStackRouterDevtoolsPanel />,
+              defaultOpen: true
+            }
+          ]}
+        />
         <Scripts />
       </body>
     </html>
