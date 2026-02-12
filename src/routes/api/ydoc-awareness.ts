@@ -18,6 +18,9 @@ const serve = async ({ request }: { request: Request }) => {
 };
 
 const putHandler = async ({ request }: { request: Request }) => {
+  // Immediately clone the request to avoid issues with the body being consumed by other middlewares or handlers
+  const requestClone = request.clone();
+
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -59,7 +62,7 @@ const putHandler = async ({ request }: { request: Request }) => {
   }
 
   try {
-    const update = new Uint8Array(await request.arrayBuffer());
+    const update = new Uint8Array(await requestClone.arrayBuffer());
 
     await db.transaction(async (tx) => {
       await tx
