@@ -2,13 +2,7 @@ import Filter from "@/components/browse/Filter.tsx";
 import { useEffect, useState, useMemo } from "react";
 import { FilterIcon, Loader2Icon } from "lucide-react";
 import FilterChips from "@/components/browse/FilterChips.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "./ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { Cart } from "@/components/cart/Cart";
 import { Button } from "@/components/ui/button.tsx";
 import ProductCard from "@/components/browse/ProductCard.tsx";
@@ -85,6 +79,7 @@ export default function Browse({
         <div className="relative grid w-full gap-8 px-8 md:grid-cols-[1fr_auto_minmax(0,1fr)] 2xl:gap-12">
           <aside className="sticky top-28 col-span-full mt-8 hidden h-full max-h-[calc(100vh-10rem)] justify-end self-start overflow-y-auto 2xl:col-span-1 2xl:flex">
             <Filter
+              className="sticky h-fit w-80 rounded-lg bg-white p-4 shadow-md dark:bg-slate-800"
               categories={categories}
               companies={companies}
               customFieldDefinitions={customFieldDefinitions}
@@ -108,11 +103,8 @@ export default function Browse({
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Configure Filters</DialogTitle>
-                      </DialogHeader>
                       <Filter
-                        className="mx-auto"
+                        className="mx-auto w-full"
                         categories={categories}
                         companies={companies}
                         customFieldDefinitions={customFieldDefinitions}
@@ -126,7 +118,7 @@ export default function Browse({
                   companies={companies}
                   customFieldDefinitions={customFieldDefinitions}
                 />
-                <div className="flex-grow"></div>
+                <div className="grow"></div>
                 <BrowseSortSelect
                   customFieldDefinitions={customFieldDefinitions}
                 />
@@ -140,7 +132,7 @@ export default function Browse({
                   <span className="sr-only">Loading...</span>
                 </div>
               ) : !products || products.length === 0 ? (
-                <div className="col-span-full flex aspect-[2/1] items-center justify-center">
+                <div className="col-span-full flex aspect-2/1 items-center justify-center">
                   <div className="alert alert-info flex flex-col">
                     No articles found. Please try change your search or filters.
                     <Link to="/search">Reset search & filters</Link>
@@ -149,7 +141,7 @@ export default function Browse({
               ) : (
                 <section
                   aria-description="List of articles"
-                  className="col-span-full grid grid-cols-[inherit] gap-[inherit] 2xl:min-w-[1024px]"
+                  className="col-span-full grid grid-cols-[inherit] gap-[inherit] 2xl:min-w-5xl"
                 >
                   {products.map((product, index) => (
                     <ProductCard

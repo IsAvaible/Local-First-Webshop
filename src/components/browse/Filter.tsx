@@ -95,13 +95,7 @@ export default function Filter({
   };
 
   return (
-    <div
-      className={cn(
-        "sticky h-fit w-80 space-y-6 rounded-lg bg-white p-4 shadow-md dark:bg-slate-800",
-        className
-      )}
-      {...props}
-    >
+    <div className={cn("space-y-6", className)} {...props}>
       <h3 className="text-xl font-semibold">Filters</h3>
       <Accordion
         type="multiple"
@@ -117,7 +111,7 @@ export default function Filter({
                   checked={search.categories?.includes(c.id) ?? false}
                   onCheckedChange={() => handleCategoryChange(c.id)}
                 />
-                <Label htmlFor={c.name} className="flex-grow">
+                <Label htmlFor={c.name} className="grow">
                   {c.name}
                 </Label>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -137,7 +131,7 @@ export default function Filter({
                   checked={search.companies?.includes(c.id) ?? false}
                   onCheckedChange={() => handleCompanyChange(c.id)}
                 />
-                <Label htmlFor={c.name} className="flex-grow">
+                <Label htmlFor={c.name} className="grow">
                   {c.name}
                 </Label>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
