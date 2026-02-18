@@ -140,7 +140,7 @@ export default function Browse({
                 </div>
               ) : (
                 <section
-                  aria-description="List of articles"
+                  aria-description="List of products matching the current search and filters"
                   className="col-span-full grid grid-cols-[inherit] gap-[inherit] 2xl:min-w-5xl"
                 >
                   {products.map((product, index) => (

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/carousel";
 import type { Asset } from "@/db/schema";
 import { AssetImage } from "@/components/ui/assetImage.tsx";
+import { ImageOff } from "lucide-react";
 
 // A simple and reusable hook to check for a media query
 const useMediaQuery = (query: string) => {
@@ -64,10 +65,11 @@ export default function ProductImageCarousel({ images }: { images: Asset[] }) {
 
   if (!images || images.length === 0) {
     return (
-      <Card>
+      <Card className="p-0">
         <CardContent className="p-0">
-          <div className="flex aspect-square items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
-            <p className="text-gray-500 dark:text-gray-400">No Image</p>
+          <div className="flex aspect-square flex-col items-center justify-center rounded-lg bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+            <ImageOff className="h-6 w-6 opacity-50" />
+            <p className="sr-only">No Image</p>
           </div>
         </CardContent>
       </Card>

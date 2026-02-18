@@ -99,3 +99,16 @@ export function isDatabaseError(
     "code" in error.cause
   );
 }
+
+export interface TrpcRequestEnvelope<T> {
+  json: T;
+  meta?: unknown;
+}
+
+export interface TrpcResponseEnvelope<T> {
+  result: {
+    data: {
+      json: T;
+    };
+  };
+}

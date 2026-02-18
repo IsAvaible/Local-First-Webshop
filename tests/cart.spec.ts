@@ -1,15 +1,19 @@
 import { test, expect } from "@playwright/test";
 import { ProductPage } from "./pages/ProductPage";
 import { CartPage } from "./pages/CartPage";
-import { db } from "../src/db/connection";
+import { db } from "@/db/connection";
+import { resetDatabase, seedDatabase } from "./utils/db-helpers";
 
 test.describe("Shopping Cart User Journey", () => {
   let productPage: ProductPage;
   let cartPage: CartPage;
 
-  test.beforeEach(({ page }) => {
+  test.beforeEach(async ({ page }) => {
     productPage = new ProductPage(page);
     cartPage = new CartPage(page);
+
+    await resetDatabase();
+    await seedDatabase({ categories: 2, productsPerCategory: 3 });
   });
 
   test("User can manage cart lifecycle and proceed to checkout", async ({

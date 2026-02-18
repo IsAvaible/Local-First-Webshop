@@ -2,6 +2,10 @@
   "extends": "./tsconfig.node.json",
   "include": ["tests/**/*", "playwright.config.ts"],
   "compilerOptions": {
-    "types": ["node", "@playwright/test"]
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": ["node", "@playwright/test"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   }
 }

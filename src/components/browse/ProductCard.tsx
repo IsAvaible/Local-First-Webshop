@@ -64,6 +64,7 @@ function ProductCardInternal({
         "flex h-full flex-col overflow-hidden pt-0 transition-shadow hover:shadow-md",
         className
       )}
+      data-testid="product-card"
       {...props}
     >
       <Link
