@@ -955,14 +955,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   // Loading state
-  // If we are loading carts, or if we have carts but no active one yet (logic pending), we show generic loading or nothing.
-  // But we must provide context even if loading to avoid errors in children?
-  // No, children use `useCart()`. If we don't render `CartSession` (which renders Provider), `useCart` throws.
-  // So we must render *something* or make sure children handle missing context (they don't).
-  // So we delay rendering children until we have a session.
-
+  // If we are loading carts, or if we have carts but no active one yet (logic pending),
+  // we delay rendering children until we have a session.
   if (!activeCartId) {
-    return null; // Or a spinner
+    return null;
   }
 
   return (

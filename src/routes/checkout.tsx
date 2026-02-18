@@ -107,7 +107,7 @@ function CheckoutPage() {
   );
 
   // --- Sync db data with form ---
-  // In production the form data and order state would need to be more closely coupled
+  // TODO: In production the form data and order state would need to be more closely coupled
   const hasHydratedRef = useRef(false);
 
   useEffect(() => {

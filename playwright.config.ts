@@ -18,7 +18,9 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: "http://localhost:5173",
+    baseURL: "https://local-first-webshop.localhost/",
+
+    ignoreHTTPSErrors: true,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry"
@@ -40,13 +42,16 @@ export default defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
+  /* Run dev server before starting the tests */
   webServer: {
-    command: !process.env.CI
-      ? "pnpm run dev"
-      : "pnpm run build && pnpm run preview",
-    url: "http://localhost:5173",
+    command: `${
+      !process.env.CI ? "pnpm run dev" : "pnpm run build && pnpm run preview"
+    } && pnpm run stripe:listen`,
+    url: "https://local-first-webshop.localhost/",
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000
+    timeout: 120 * 1000,
+    // This is necessary because, the dev server uses a self-signed certificate,
+    // and without this, Playwright will fail to connect to it. (Caddy)
+    ignoreHTTPSErrors: true
   }
 });

@@ -73,6 +73,7 @@ export function CartItem({
   const product = item.product;
   const asset = item.asset;
   const productName = product?.name ?? `Product ${item.product_id}`;
+  const priceDisplay = `${item.price ?? item.price_snapshot ?? "N/A"}€`;
 
   return (
     <div className={"@container"}>
@@ -82,6 +83,8 @@ export function CartItem({
           "origin-top-left @[16rem]:@max-[18rem]:scale-88",
           className
         )}
+        role="group"
+        aria-label={`Cart item: ${productName}`}
       >
         {displayItemSelect && (
           <Checkbox
@@ -89,20 +92,25 @@ export function CartItem({
             checked={item.is_selected ?? true}
             onCheckedChange={() => toggleItemSelection(item.id)}
             disabled={disabled}
+            aria-label={`Select ${productName} for checkout`}
           />
         )}
         <AssetImage
           asset={asset}
+          alt={productName}
           containerClassName="my-auto aspect-3/4 w-20 rounded-md object-cover @max-[16rem]:hidden @sm:w-28"
         />
 
         <div className="flex flex-1 justify-between gap-3">
           <div className="flex flex-1 flex-col justify-between gap-y-2">
             <h3 className="flex items-center justify-between text-sm font-semibold">
-              <span className="inline-block max-w-28 truncate @[16rem]:max-w-20 @sm:max-w-none!">
+              <span
+                className="inline-block max-w-28 truncate @[16rem]:max-w-20 @sm:max-w-none!"
+                title={productName}
+              >
                 {productName}
               </span>
-              <span>{`${item.price ?? item.price_snapshot ?? "N/A"}€`}</span>
+              <span aria-label={`Price: ${priceDisplay}`}>{priceDisplay}</span>
             </h3>
 
             <Textarea
@@ -110,6 +118,7 @@ export function CartItem({
               className="min-h-8 resize-y"
               value={notesValue}
               disabled={disabled}
+              aria-label={`Notes for ${productName}`}
               onKeyDownCapture={(e) => {
                 if (e.key === " " || e.key === "Enter") e.stopPropagation();
               }}
@@ -117,13 +126,18 @@ export function CartItem({
             />
 
             {/* --- Display current tags --- */}
-            <div className="flex max-w-34 flex-wrap gap-1 @[18rem]:max-w-none">
+            <div
+              className="flex max-w-34 flex-wrap gap-1 @[18rem]:max-w-none"
+              role="list"
+              aria-label={`Tags for ${productName}`}
+            >
               {thisItemsTags.map((tag) => {
                 const color = tag.color ?? TAG_COLORS[0];
 
                 return (
                   <span
                     key={tag.id}
+                    role="listitem"
                     className={cn(
                       "flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors",
                       TAG_PILL_STYLES[color]
@@ -134,7 +148,7 @@ export function CartItem({
                       <button
                         onClick={() => handleRemoveTag(tag.id)}
                         className="-mr-0.5 ml-1 rounded-full p-0.5 opacity-60 hover:bg-black/10 hover:opacity-100"
-                        aria-label={`Remove tag ${tag.name}`}
+                        aria-label={`Remove tag ${tag.name} from ${productName}`}
                       >
                         <XIcon className="h-3 w-3" />
                       </button>
@@ -152,11 +166,14 @@ export function CartItem({
                 min={1}
                 disabled={disabled}
                 onChange={handleQuantityChange}
-                aria-label="Quantity"
+                aria-label={`Quantity of ${productName}`}
               />
               {/* --- Tag Select --- */}
               <Select value="" onValueChange={handleAddTag} disabled={disabled}>
-                <SelectTrigger className="h-8!">
+                <SelectTrigger
+                  className="h-8!"
+                  aria-label={`Add tag to ${productName}`}
+                >
                   <SelectValue placeholder="+ Tag" />
                 </SelectTrigger>
                 <SelectContent>
@@ -187,6 +204,7 @@ export function CartItem({
                               "h-2 w-2 rounded-full",
                               SWATCH_BG_STYLES[tag.color ?? TAG_COLORS[0]]
                             )}
+                            aria-hidden="true"
                           />
                           {tag.name}
                         </div>
@@ -198,6 +216,7 @@ export function CartItem({
             </div>
           </div>
         </div>
+
         <div className="flex flex-col justify-between self-stretch">
           {/* --- Drag Handle --- */}
           <Button
@@ -205,6 +224,8 @@ export function CartItem({
             size="icon"
             disabled={disabled}
             className={cn("h-8 w-8", !disabled && "cursor-grab")}
+            aria-label={`Reorder ${productName}`}
+            aria-description="Press Space or Enter to activate drag mode, then use arrow keys to move."
             {...dragHandleProps}
           >
             <GripVerticalIcon className="text-muted-foreground w-4" />
@@ -217,6 +238,7 @@ export function CartItem({
             className="h-8 w-8"
             disabled={disabled}
             onClick={() => removeItem(item.id)}
+            aria-label={`Remove ${productName} from cart`}
           >
             <Trash2Icon className="h-4 w-4" />
           </Button>

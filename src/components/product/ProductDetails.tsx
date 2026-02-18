@@ -169,7 +169,10 @@ export default function ProductDetails({
         )}
 
         <div className="mt-6">
-          <p className="text-3xl font-bold text-gray-900 dark:text-slate-100">
+          <p
+            className="text-3xl font-bold text-gray-900 dark:text-slate-100"
+            id="price-id"
+          >
             {Number(activeTier.price_per_unit).toLocaleString()}€
             <span className="ml-2 text-sm font-normal text-gray-500">
               / unit
@@ -263,9 +266,11 @@ export default function ProductDetails({
           onClick={handleAddToCart}
           aria-label={`Add ${cartItem ? "another " : ""}${product.name} to cart`}
           disabled={!!cartItem}
+          aria-describedby="price-id"
+          data-testid="main-add-to-cart"
         >
           <ShoppingCart className="mr-2 h-5 w-5" aria-hidden="true" />
-          {cartItem ? "Already in " : "Add to "}cart
+          {cartItem ? "Already in " : "Add to "}Cart
         </Button>
 
         <div className="flex-1">
