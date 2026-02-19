@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useId } from "react";
 import type { CustomFieldDefinition } from "@/db/schema.ts";
 import type { JsonValue } from "@/lib/utils.ts";
 import { Label } from "@/components/ui/label";
@@ -35,14 +35,22 @@ export default function CustomFieldInput({
   onClear
 }: Props) {
   const [open, setOpen] = useState(false);
+
+  // Unique ID to link labels and inputs reliably
+  const id = useId();
+  const labelId = `${id}-label`;
+
   let fieldContent: React.ReactNode;
 
   switch (def.field_type) {
     case "number": {
       fieldContent = (
         <>
-          <Label className="w-40">{def.field_name}</Label>
+          <Label htmlFor={id} className="w-40">
+            {def.field_name}
+          </Label>
           <Input
+            id={id}
             type="number"
             value={(currentValue as number) ?? ""}
             onChange={(e) =>
@@ -52,7 +60,11 @@ export default function CustomFieldInput({
             }
           />
           {currentValue !== undefined && (
-            <Button variant="ghost" onClick={onClear}>
+            <Button
+              variant="ghost"
+              onClick={onClear}
+              aria-label={`Clear ${def.field_name}`}
+            >
               Clear
             </Button>
           )}
@@ -64,18 +76,22 @@ export default function CustomFieldInput({
     case "boolean": {
       fieldContent = (
         <>
-          <Label htmlFor={def.field_name}>{def.field_name}</Label>
-          <div>
+          <Label htmlFor={id}>{def.field_name}</Label>
+          <div className="flex items-center gap-2">
             <Checkbox
-              id={def.field_name}
+              id={id}
               checked={!!currentValue}
               onCheckedChange={(v) => onChange(!!v)}
             />
-            {currentValue !== undefined && (
-              <Button variant="ghost" onClick={onClear}>
-                Clear
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              onClick={onClear}
+              aria-label={`Clear ${def.field_name}`}
+              className={currentValue !== undefined ? "" : "invisible"}
+              aria-hidden={`${currentValue !== undefined}`}
+            >
+              Clear
+            </Button>
           </div>
         </>
       );
@@ -88,12 +104,15 @@ export default function CustomFieldInput({
         : undefined;
       fieldContent = (
         <>
-          <Label className="w-40">{def.field_name}</Label>
+          <Label id={labelId} className="w-40">
+            {def.field_name}
+          </Label>
           <Popover open={open} onOpenChange={(isOpen) => setOpen(isOpen)}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 className="w-48 justify-between font-normal"
+                aria-labelledby={labelId}
               >
                 {dateValue
                   ? humanizeCustomFieldValue(currentValue, "date")
@@ -113,7 +132,12 @@ export default function CustomFieldInput({
             </PopoverContent>
           </Popover>
           {currentValue !== undefined && (
-            <Button variant="ghost" size="sm" onClick={onClear}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClear}
+              aria-label={`Clear ${def.field_name}`}
+            >
               Clear
             </Button>
           )}
@@ -125,9 +149,11 @@ export default function CustomFieldInput({
     case "select": {
       fieldContent = (
         <>
-          <Label className="w-40">{def.field_name}</Label>
+          <Label id={labelId} className="w-40">
+            {def.field_name}
+          </Label>
           <Select onValueChange={onChange}>
-            <SelectTrigger>
+            <SelectTrigger aria-labelledby={labelId}>
               <SelectValue placeholder="Select Value" />
             </SelectTrigger>
             <SelectContent>
@@ -146,14 +172,21 @@ export default function CustomFieldInput({
     case "text": {
       fieldContent = (
         <>
-          <Label className="w-40">{def.field_name}</Label>
+          <Label htmlFor={id} className="w-40">
+            {def.field_name}
+          </Label>
           <Input
+            id={id}
             type="text"
             value={(currentValue as string) ?? ""}
             onChange={(e) => onChange(e.target.value || undefined)}
           />
           {currentValue !== undefined && (
-            <Button variant="ghost" onClick={onClear}>
+            <Button
+              variant="ghost"
+              onClick={onClear}
+              aria-label={`Clear ${def.field_name}`}
+            >
               Clear
             </Button>
           )}

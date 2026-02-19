@@ -40,16 +40,49 @@ const DirComponent = ({
   property: string;
   dir: "asc" | "desc";
 }) => {
+  const screenReaderText = (
+    <span className="sr-only">
+      {dir === "asc" ? "Ascending" : "Descending"}
+    </span>
+  );
+
   switch (property) {
     case "name":
-      return dir === "asc" ? <ArrowUpAZIcon /> : <ArrowDownAZIcon />;
+      return (
+        <>
+          {screenReaderText}
+          {dir === "asc" ? (
+            <ArrowUpAZIcon aria-hidden="true" focusable="false" />
+          ) : (
+            <ArrowDownAZIcon aria-hidden="true" focusable="false" />
+          )}
+        </>
+      );
 
     case "price":
     case "id":
-      return dir === "asc" ? <ArrowUp10Icon /> : <ArrowDown10Icon />;
+      return (
+        <>
+          {screenReaderText}
+          {dir === "asc" ? (
+            <ArrowUp10Icon aria-hidden="true" focusable="false" />
+          ) : (
+            <ArrowDown10Icon aria-hidden="true" focusable="false" />
+          )}
+        </>
+      );
 
     default:
-      return dir === "asc" ? <ArrowUpIcon /> : <ArrowDownIcon />;
+      return (
+        <>
+          {screenReaderText}
+          {dir === "asc" ? (
+            <ArrowUpIcon aria-hidden="true" focusable="false" />
+          ) : (
+            <ArrowDownIcon aria-hidden="true" focusable="false" />
+          )}
+        </>
+      );
   }
 };
 
@@ -90,9 +123,11 @@ export default function BrowseSortSelect({
 
   return (
     <Select onValueChange={handleSortChange} value={sortBy}>
-      <SelectTrigger>
+      <SelectTrigger aria-label="Sort products by">
         <SelectValue placeholder="Sort by">
-          {capitalize(order)} <DirComponent property={order} dir={dir} />
+          <span className="flex items-center gap-2">
+            {capitalize(order)} <DirComponent property={order} dir={dir} />
+          </span>
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
@@ -104,12 +139,16 @@ export default function BrowseSortSelect({
         </SelectGroup>
         <SelectGroup>
           <SelectLabel>Custom</SelectLabel>
-          <div className="flex gap-1 p-2">
+          <div
+            className="flex gap-1 p-2"
+            role="group"
+            aria-label="Custom sorting options"
+          >
             <Select
               onValueChange={handleCustomPropertyChange}
               value={customProperty}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-label="Custom sort property">
                 <SelectValue placeholder="Property" />
               </SelectTrigger>
               <SelectContent>
@@ -126,7 +165,7 @@ export default function BrowseSortSelect({
               </SelectContent>
             </Select>
             <Select onValueChange={handleCustomOrderChange} value={customOrder}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Custom sort order">
                 <SelectValue placeholder="Order" />
               </SelectTrigger>
               <SelectContent>

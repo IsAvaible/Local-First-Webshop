@@ -115,39 +115,51 @@ export default function FilterChips({
     });
   }
 
-  return (
-    <>
-      {filters.length > 0 && (
-        <Link
-          from={Route.fullPath}
-          search={(prev) => ({ q: prev.q })}
-          className={cn(
-            "rounded bg-gray-800 px-4 py-2 font-bold text-white",
-            className
-          )}
-        >
-          Clear All
-        </Link>
-      )}
+  if (filters.length === 0) return null;
 
-      {filters.map((filter) => (
-        <button
-          type="button"
-          key={filter.name}
-          onClick={filter.clear}
-          title={`Clear ${filter.name} Filter`}
-          className={cn(
-            "group relative overflow-hidden rounded bg-gray-100 px-4 py-2 font-semibold hover:bg-gray-200",
-            className
-          )}
-        >
-          <span>{filter.value}</span>
-          <span className="absolute top-0 left-0 hidden h-full w-full items-center justify-center bg-inherit p-[inherit] group-hover:flex">
-            <span className="truncate">{filter.value}</span>
-            <span className="ml-1 cursor-pointer text-nowrap">X</span>
-          </span>
-        </button>
-      ))}
-    </>
+  return (
+    <div
+      aria-label="Active filters"
+      role="region"
+      className="flex flex-wrap items-center gap-2"
+    >
+      <Link
+        from={Route.fullPath}
+        search={(prev) => ({ q: prev.q })}
+        aria-label="Clear all active filters"
+        className={cn(
+          "rounded bg-gray-800 px-4 py-2 font-bold text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+          className
+        )}
+      >
+        Clear All
+      </Link>
+
+      <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
+        {filters.map((filter) => (
+          <li key={filter.name}>
+            <button
+              type="button"
+              onClick={filter.clear}
+              aria-label={`Remove filter: ${filter.name} (${filter.value})`}
+              className={cn(
+                "group relative overflow-hidden rounded bg-gray-100 px-4 py-2 font-semibold hover:bg-gray-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+                className
+              )}
+            >
+              <span aria-hidden="true">{filter.value}</span>
+
+              <span
+                aria-hidden="true"
+                className="absolute top-0 left-0 hidden h-full w-full items-center justify-center bg-inherit p-[inherit] group-hover:flex group-focus-visible:flex"
+              >
+                <span className="truncate">{filter.value}</span>
+                <span className="ml-1 text-nowrap">✕</span>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

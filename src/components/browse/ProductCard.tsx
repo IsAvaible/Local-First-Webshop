@@ -71,6 +71,7 @@ function ProductCardInternal({
         to="/products/$productId"
         params={{ productId: product.id }}
         className="flex grow flex-col"
+        aria-label={`View details for ${product.name}`}
       >
         <CardHeader className="relative p-0">
           <AssetImage
@@ -87,7 +88,10 @@ function ProductCardInternal({
           </CardDescription>
 
           {hasCustomFields && (
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div
+              className="mt-3 flex flex-wrap gap-2"
+              aria-label="Product specifications"
+            >
               {Object.entries(customFields).map(([key, field]) => {
                 const humanized = humanizeCustomFieldValue(
                   field?.value,
@@ -97,7 +101,6 @@ function ProductCardInternal({
                   <span
                     key={key}
                     className="rounded bg-gray-100 px-2 py-1 text-xs font-medium"
-                    title={humanized}
                   >
                     {key}: {humanized}
                   </span>
@@ -119,9 +122,9 @@ function ProductCardInternal({
             onClick={handleAddToCart}
             disabled={!canManageItems}
             className="size-9 shrink-0 transition-transform active:scale-95"
-            aria-label="Add to cart"
+            aria-label={`Add ${product.name} to cart`}
           >
-            <ShoppingCartIcon className="h-4 w-4" />
+            <ShoppingCartIcon className="h-4 w-4" aria-hidden="true" />
           </Button>
         ) : (
           <CartQuantitySelector
@@ -130,6 +133,7 @@ function ProductCardInternal({
             onUpdate={updateItemQuantity}
             onRemove={removeItem}
             disabled={!canManageItems}
+            productName={product.name}
           />
         )}
       </CardFooter>
@@ -144,6 +148,9 @@ function ProductCardSkeleton({ className }: { className?: string }) {
   return (
     <Card
       className={cn("flex h-full flex-col overflow-hidden pt-0", className)}
+      aria-hidden="true"
+      aria-busy="true"
+      aria-label="Loading product"
     >
       {/* Image Skeleton */}
       <CardHeader className="p-0">
@@ -209,7 +216,7 @@ function QuantityActionButton({
       aria-label={label}
       type="button"
     >
-      <Icon className="h-3 w-3" />
+      <Icon className="h-3 w-3" aria-hidden="true" />
     </button>
   );
 }
@@ -220,6 +227,7 @@ interface CartQuantitySelectorProps {
   onUpdate: (id: string, qty: number) => void;
   onRemove: (id: string) => void;
   disabled?: boolean;
+  productName: string;
 }
 
 function CartQuantitySelector({
@@ -227,7 +235,8 @@ function CartQuantitySelector({
   quantity,
   onUpdate,
   onRemove,
-  disabled
+  disabled,
+  productName
 }: CartQuantitySelectorProps) {
   const [inputValue, setInputValue] = useState(quantity.toString());
   const [isHoverEnabled, setIsHoverEnabled] = useState(false);
@@ -284,7 +293,7 @@ function CartQuantitySelector({
       <QuantityActionButton
         onClick={handleDecrement}
         icon={Minus}
-        label="Decrease quantity"
+        label={`Decrease quantity of ${productName}`}
         disabled={disabled}
       />
 
@@ -292,6 +301,7 @@ function CartQuantitySelector({
       <div className="relative flex h-full items-center justify-center">
         {/* IDLE State: Icon + Badge */}
         <div
+          aria-hidden="true"
           className={cn(
             "pointer-events-none absolute inset-0 flex items-center justify-center transition-opacity duration-300",
             "group-focus-within/quantity:opacity-0 group-hover/quantity:opacity-0"
@@ -316,6 +326,7 @@ function CartQuantitySelector({
             value={inputValue}
             onChange={handleInputChange}
             disabled={disabled}
+            aria-label={`Quantity for ${productName}`}
             className={cn(
               "size-9 border-0 bg-transparent p-0 text-center text-sm font-bold shadow-none",
               "text-primary-foreground placeholder:text-primary-foreground/50",
@@ -330,7 +341,7 @@ function CartQuantitySelector({
       <QuantityActionButton
         onClick={handleIncrement}
         icon={Plus}
-        label="Increase quantity"
+        label={`Increase quantity of ${productName}`}
         disabled={disabled}
       />
     </div>

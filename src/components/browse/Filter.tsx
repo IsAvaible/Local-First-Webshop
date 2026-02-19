@@ -95,8 +95,15 @@ export default function Filter({
   };
 
   return (
-    <div className={cn("space-y-6", className)} {...props}>
-      <h3 className="text-xl font-semibold">Filters</h3>
+    <section
+      aria-labelledby="filter-heading"
+      className={cn("space-y-6", className)}
+      {...props}
+    >
+      <h3 id="filter-heading" className="text-xl font-semibold">
+        Filters
+      </h3>
+
       <Accordion
         type="multiple"
         defaultValue={["item-1", "item-2", "item-3", "item-4"]}
@@ -104,43 +111,57 @@ export default function Filter({
         <AccordionItem value="item-2">
           <AccordionTrigger>Categories</AccordionTrigger>
           <AccordionContent className="space-y-2">
-            {categories?.map((c) => (
-              <div key={c.id} className="flex items-center gap-2">
-                <Checkbox
-                  id={c.name}
-                  checked={search.categories?.includes(c.id) ?? false}
-                  onCheckedChange={() => handleCategoryChange(c.id)}
-                />
-                <Label htmlFor={c.name} className="grow">
-                  {c.name}
-                </Label>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  ({c.count})
-                </span>
-              </div>
-            ))}
+            {categories?.map((c) => {
+              const elementId = `category-${c.id}`;
+              return (
+                <div key={c.id} className="flex items-center gap-2">
+                  <Checkbox
+                    id={elementId}
+                    checked={search.categories?.includes(c.id) ?? false}
+                    onCheckedChange={() => handleCategoryChange(c.id)}
+                  />
+                  <Label htmlFor={elementId} className="grow">
+                    {c.name}
+                  </Label>
+                  <span
+                    className="text-sm text-gray-500 dark:text-gray-400"
+                    aria-label={`${c.count} items`}
+                  >
+                    ({c.count})
+                  </span>
+                </div>
+              );
+            })}
           </AccordionContent>
         </AccordionItem>
+
         <AccordionItem value="item-3">
           <AccordionTrigger>Companies</AccordionTrigger>
           <AccordionContent className="space-y-2">
-            {companies?.map((c) => (
-              <div key={c.id} className="flex items-center gap-2">
-                <Checkbox
-                  id={c.name}
-                  checked={search.companies?.includes(c.id) ?? false}
-                  onCheckedChange={() => handleCompanyChange(c.id)}
-                />
-                <Label htmlFor={c.name} className="grow">
-                  {c.name}
-                </Label>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  ({c.count})
-                </span>
-              </div>
-            ))}
+            {companies?.map((c) => {
+              const elementId = `company-${c.id}`;
+              return (
+                <div key={c.id} className="flex items-center gap-2">
+                  <Checkbox
+                    id={elementId}
+                    checked={search.companies?.includes(c.id) ?? false}
+                    onCheckedChange={() => handleCompanyChange(c.id)}
+                  />
+                  <Label htmlFor={elementId} className="grow">
+                    {c.name}
+                  </Label>
+                  <span
+                    className="text-sm text-gray-500 dark:text-gray-400"
+                    aria-label={`${c.count} items`}
+                  >
+                    ({c.count})
+                  </span>
+                </div>
+              );
+            })}
           </AccordionContent>
         </AccordionItem>
+
         <AccordionItem value="item-4">
           <AccordionTrigger>Price Range</AccordionTrigger>
           <AccordionContent>
@@ -148,15 +169,17 @@ export default function Filter({
               <Input
                 type="number"
                 placeholder="Min"
+                aria-label="Minimum price"
                 value={minPrice ?? ""}
                 onChange={(e) =>
                   setMinPrice(Number(e.target.value) || undefined)
                 }
               />
-              <span>-</span>
+              <span aria-hidden="true">-</span>
               <Input
                 type="number"
                 placeholder="Max"
+                aria-label="Maximum price"
                 value={maxPrice ?? ""}
                 onChange={(e) =>
                   setMaxPrice(Number(e.target.value) || undefined)
@@ -194,6 +217,6 @@ export default function Filter({
       <Button className="w-full" onClick={resetFilters}>
         Reset Filters
       </Button>
-    </div>
+    </section>
   );
 }
