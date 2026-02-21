@@ -1,4 +1,5 @@
-import { test, expect } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { throttledTest as test } from "./test-setup";
 import { resetDatabase, seedDatabase } from "./utils/db-helpers";
 import { db } from "@/db/connection.ts";
 import * as schema from "@/db/schema";

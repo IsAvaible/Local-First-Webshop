@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { throttledTest } from "./test-setup";
 import { resetDatabase, seedDatabase } from "./utils/db-helpers";
 import { db } from "@/db/connection.ts";
 import * as schema from "../src/db/schema";
@@ -72,7 +73,7 @@ test.describe("Consistency & Conflict Tests", () => {
   //   await contextB.close();
   // });
 
-  test("Time to Consistency", async ({ page }) => {
+  throttledTest("Time to Consistency", async ({ page }) => {
     const MAX_CONSISTENCY_DELAY_MS = 3000;
     const NEW_PRODUCT_NAME = "Synced Name Verify";
 
@@ -83,27 +84,33 @@ test.describe("Consistency & Conflict Tests", () => {
     const products = await db.query.productsTable.findMany();
     const targetProduct = products[0];
 
-    await test.step("Navigate to search results", async () => {
+    await throttledTest.step("Navigate to search results", async () => {
       await searchPage.goto();
     });
 
-    await test.step("Go offline and perform server-side update", async () => {
-      await page.context().setOffline(true);
+    await throttledTest.step(
+      "Go offline and perform server-side update",
+      async () => {
+        await page.context().setOffline(true);
 
-      // Simulate a background process or another user updating the DB
-      await db
-        .update(schema.productsTable)
-        .set({ name: NEW_PRODUCT_NAME })
-        .where(eq(schema.productsTable.id, targetProduct.id));
-    });
+        // Simulate a background process or another user updating the DB
+        await db
+          .update(schema.productsTable)
+          .set({ name: NEW_PRODUCT_NAME })
+          .where(eq(schema.productsTable.id, targetProduct.id));
+      }
+    );
 
-    await test.step("Verify stale data persists while offline", async () => {
-      await expect(searchPage.productCards.first()).not.toContainText(
-        NEW_PRODUCT_NAME
-      );
-    });
+    await throttledTest.step(
+      "Verify stale data persists while offline",
+      async () => {
+        await expect(searchPage.productCards.first()).not.toContainText(
+          NEW_PRODUCT_NAME
+        );
+      }
+    );
 
-    await test.step("Reconnect and measure sync time", async () => {
+    await throttledTest.step("Reconnect and measure sync time", async () => {
       const startTime = performance.now();
 
       // Go Online
