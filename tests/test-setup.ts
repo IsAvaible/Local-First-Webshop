@@ -1,51 +1,109 @@
 import { test as baseTest, expect } from "@playwright/test";
+import "dotenv/config";
 
 const FAST_4G = {
   offline: false,
-  downloadThroughput: (1.5 * 1024 * 1024) / 8,
-  uploadThroughput: (0.75 * 1024 * 1024) / 8,
-  latency: 40
+  downloadThroughput: ((9 * 1e3 * 1e3) / 8) * 0.9, // 9 Mbps
+  uploadThroughput: ((9 * 1e3 * 1e3) / 8) * 0.9, // 9 Mbps
+  latency: 165
 };
 
-// Define baseline to compare against host device performance.
 const TARGET_BENCHMARK_MS = 500;
 
-export const throttledTest = baseTest.extend({
-  page: async ({ page }, runTest) => {
-    const client = await page.context().newCDPSession(page);
+type MyTestFixtures = object;
 
-    // Run the Benchmark in the browser context
-    const hostTimeMs = await page.evaluate(() => {
-      const start = performance.now();
-      let sum = 0;
-      // An arbitrary heavy loop.
-      for (let i = 0; i < 20000000; i++) {
-        sum += Math.sqrt(i);
+type MyWorkerFixtures = {
+  dynamicRate: number;
+};
+
+// This test fixture dynamically calibrates CPU throttling for each worker based on the host machine's performance.
+// Note: This only modifies the default page fixture. If the test opens additional pages, they will not have throttling applied.
+export const throttledTest = baseTest.extend<MyTestFixtures, MyWorkerFixtures>({
+  dynamicRate: [
+    async ({ browser }, use) => {
+      // Only Chromium supports CDP
+      if (browser.browserType().name() !== "chromium") {
+        console.log(
+          `[Worker CPU Calibration] Skipped: Browser is not Chromium.`
+        );
+        await use(1); // Default rate
+        return;
       }
-      return performance.now() - start;
-    });
+      if (!process.env.CI) {
+        console.log(
+          `[Worker CPU Calibration] Skipped: Not running in CI environment.`
+        );
+        await use(1);
+        return;
+      }
 
-    // Calculate the dynamic throttling rate
-    const dynamicRate = Math.max(1, TARGET_BENCHMARK_MS / hostTimeMs);
+      const page = await browser.newPage();
 
-    if (dynamicRate < 1) {
-      console.warn(
-        `[CPU Calibration] WARNING: Host is slower (${hostTimeMs.toFixed(2)}ms) than target. Results may be pessimistic.`
-      );
+      const hostTimeMs = await page.evaluate(() => {
+        const times: number[] = [];
+
+        for (let run = 0; run < 5; run++) {
+          const start = performance.now();
+          const container = document.createElement("div");
+          document.body.appendChild(container);
+
+          // This number was selected to approximately match the "Mid-tier mobile device" preset in Chrome.
+          // Throttling applied by the Preset after calibration: 3.6x
+          // Throttling applied by this benchmark after calibration: 3.5x-3.7x
+          for (let i = 0; i < 37000; i++) {
+            const el = document.createElement("div");
+            el.style.width = `${i % 100}px`;
+            el.textContent = "test";
+            container.appendChild(el);
+          }
+
+          container.getBoundingClientRect();
+          document.body.removeChild(container);
+
+          times.push(performance.now() - start);
+        }
+
+        // Sort and grab the middle value
+        times.sort((a, b) => a - b);
+        return times[Math.floor(times.length / 2)];
+      });
+
+      await page.close();
+
+      const rate = Math.max(1, TARGET_BENCHMARK_MS / hostTimeMs);
+      if (rate === 1) {
+        console.log(
+          `[Worker CPU Calibration] Host baseline median: ${hostTimeMs.toFixed(2)}ms. No throttling applied.`
+        );
+      } else {
+        console.log(
+          `[Worker CPU Calibration] Host baseline median: ${hostTimeMs.toFixed(2)}ms. Applied Rate: ${rate.toFixed(2)}x`
+        );
+      }
+
+      await use(rate);
+    },
+    { scope: "worker" }
+  ],
+
+  // Extend the page fixture to apply the pre-calculated throttling rate
+  page: async ({ page, dynamicRate, browserName }, startTest) => {
+    if (browserName === "chromium" && process.env.CI) {
+      const client = await page.context().newCDPSession(page);
+
+      // Apply CPU throttling if needed
+      if (dynamicRate > 1) {
+        await client.send("Emulation.setCPUThrottlingRate", {
+          rate: dynamicRate
+        });
+      }
+
+      await client.send("Network.enable");
+      // Apply network conditions
+      await client.send("Network.emulateNetworkConditions", FAST_4G);
     }
 
-    console.log(
-      `[CPU Calibration] Host baseline: ${hostTimeMs.toFixed(2)}ms. Target: ${TARGET_BENCHMARK_MS}ms. Applied Rate: ${dynamicRate.toFixed(2)}x`
-    );
-
-    // 4. Apply the Dynamic CPU Throttling
-    await client.send("Emulation.setCPUThrottlingRate", { rate: dynamicRate });
-
-    // 5. Apply Network Throttling
-    await client.send("Network.emulateNetworkConditions", FAST_4G);
-
-    // Yield the globally throttled page to the actual test
-    await runTest(page);
+    await startTest(page);
   }
 });
 

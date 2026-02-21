@@ -89,7 +89,7 @@ export default function Browse({
         </h1>
       </div>
       <div className="w-full">
-        <div className="relative grid w-full gap-8 px-8 md:grid-cols-[1fr_auto_minmax(0,1fr)] 2xl:gap-12">
+        <div className="relative grid w-full gap-8 px-8 2xl:grid-cols-[1fr_auto_minmax(0,1fr)] 2xl:gap-12">
           <aside className="sticky top-28 col-span-full mt-8 hidden h-full max-h-[calc(100vh-10rem)] justify-end self-start overflow-y-auto 2xl:col-span-1 2xl:flex">
             <Filter
               className="sticky h-fit w-80 rounded-lg bg-white p-4 shadow-md dark:bg-slate-800"
@@ -98,7 +98,7 @@ export default function Browse({
               customFieldDefinitions={customFieldDefinitions}
             />
           </aside>
-          <div className="col-span-full max-w-5xl md:col-span-1 md:col-start-2">
+          <div className="col-span-full mx-auto w-full max-w-5xl 2xl:col-span-1 2xl:col-start-2 2xl:mx-0">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
               <div className="col-span-full flex flex-row items-start gap-2">
                 {isMobile && (
@@ -196,39 +196,35 @@ export default function Browse({
 }
 
 // Define the grid container for Virtuoso.
-const GridList = ({
-  ref,
-  className,
-  ...props
-}: HTMLAttributes<HTMLDivElement> & {
-  ref?: React.RefObject<HTMLDivElement | null>;
-}) => (
-  <div
-    {...props}
-    ref={ref}
-    aria-description="List of products matching the current search and filters"
-    className={cn(
-      "grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3",
-      className
-    )}
-  />
+// eslint-disable-next-line react-x/no-forward-ref
+const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      {...props}
+      ref={ref}
+      aria-description="List of products matching the current search and filters"
+      className={cn(
+        "grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3",
+
+        className
+      )}
+    />
+  )
 );
+
 GridList.displayName = "GridList";
 
-const GridItem = ({
-  ref,
-  children,
-  className,
-  ...props
-}: HTMLAttributes<HTMLDivElement> & {
-  ref?: React.RefObject<HTMLDivElement | null>;
-}) => (
-  <div
-    {...props}
-    ref={ref}
-    className={cn("flex h-full w-full flex-col", className)}
-  >
-    {children}
-  </div>
+// eslint-disable-next-line react-x/no-forward-ref
+const GridItem = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
+  ({ children, className, ...props }, ref) => (
+    <div
+      {...props}
+      ref={ref}
+      className={cn("flex h-full w-full flex-col", className)}
+    >
+      {children}
+    </div>
+  )
 );
+
 GridItem.displayName = "GridItem";
