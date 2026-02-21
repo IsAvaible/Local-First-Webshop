@@ -18,19 +18,13 @@ export function AssetImage({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [enableTransition, setEnableTransition] = useState(false);
   const [showBlurhash, setShowBlurhash] = useState(false);
-  const [showFallback, setShowFallback] = useState(false);
+  const [showFallback, setShowFallback] = useState(true);
 
   const imgRef = useRef<HTMLImageElement>(null);
 
-  // Effect 1: Handle Missing Asset Delay
+  // Effect 1: Handle Missing Asset
   useEffect(() => {
-    if (!asset) {
-      // If no asset, wait 500ms before showing the fallback
-      const timer = setTimeout(() => {
-        setShowFallback(true);
-      }, 500);
-      return () => clearTimeout(timer);
-    } else {
+    if (asset) {
       setShowFallback(false);
     }
   }, [asset]);
@@ -48,10 +42,10 @@ export function AssetImage({
         setImageLoaded(true);
       }
 
-      // Timer A: Wait 500ms before showing the Blurhash
+      // Timer A: Wait 200ms before showing the Blurhash
       const blurHashTimer = setTimeout(() => {
         setShowBlurhash(true);
-      }, 500);
+      }, 200);
 
       // Timer B: Wait 1000ms before enabling CSS transitions
       const transitionTimer = setTimeout(() => {
@@ -65,18 +59,21 @@ export function AssetImage({
     }
   }, [asset]);
 
-  const durationClass = enableTransition ? "duration-500" : "duration-0";
+  const durationClass = enableTransition ? "duration-300" : "duration-0";
 
-  // 1. Handle Missing Asset (Fallback) with Fade-In
+  // 1. Handle Missing Asset (Fallback)
   if (!asset) {
     return (
       <div
-        className={`flex h-full w-full items-center justify-center bg-gray-100 text-gray-400 transition-opacity duration-500 ${
-          showFallback ? "opacity-100" : "opacity-0"
-        } ${containerClassName}`}
+        className={`flex h-full w-full items-center justify-center bg-gray-100 text-gray-400 ${containerClassName}`}
         aria-label="No asset available"
       >
-        <ImageOff className="h-6 w-6 opacity-50" />
+        <ImageOff
+          // Move the fade transition to the icon itself
+          className={`h-6 w-6 ${durationClass} ${
+            showFallback ? "opacity-50" : "opacity-0"
+          }`}
+        />
       </div>
     );
   }
@@ -84,13 +81,12 @@ export function AssetImage({
   // 2. Handle Existing Asset
   return (
     <div
-      className={`relative overflow-hidden bg-gray-100 ${containerClassName}`}
+      className={`relative h-full w-full overflow-hidden bg-gray-100 ${containerClassName}`}
     >
       {/* BlurHash Placeholder */}
       {asset.blur_hash && (
         <div
-          className={`absolute inset-0 z-0 transition-opacity duration-200 ease-in-out ${
-            // Hide if image is loaded OR if the 500ms blurhash timer hasn't fired yet
+          className={`absolute inset-0 z-0 transition-opacity ${durationClass} ease-in-out ${
             imageLoaded || !showBlurhash ? "opacity-0" : "opacity-100"
           }`}
         >

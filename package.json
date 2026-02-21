@@ -85,6 +85,7 @@
     "react-day-picker": "^9.11.1",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.67.0",
+    "react-virtuoso": "^4.18.1",
     "sonner": "^2.0.7",
     "stripe": "^20.3.1",
     "superjson": "^2.2.6",

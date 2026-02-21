@@ -82,17 +82,17 @@ function ProductCardInternal({
           />
         </CardHeader>
         <CardContent className="flex-grow p-4">
-          <CardTitle className="line-clamp-1">{product.name}</CardTitle>
-          <CardDescription className="mt-2 line-clamp-2 text-sm">
+          <CardTitle className="line-clamp-1 h-6">{product.name}</CardTitle>
+          <CardDescription className="mt-2 line-clamp-2 h-10 text-sm">
             {product.description}
           </CardDescription>
 
-          {hasCustomFields && (
-            <div
-              className="mt-3 flex flex-wrap gap-2"
-              aria-label="Product specifications"
-            >
-              {Object.entries(customFields).map(([key, field]) => {
+          <div
+            className="mt-3 flex h-6 flex-wrap gap-2 overflow-hidden"
+            aria-label="Product specifications"
+          >
+            {hasCustomFields &&
+              Object.entries(customFields).map(([key, field]) => {
                 const humanized = humanizeCustomFieldValue(
                   field?.value,
                   field?.type
@@ -100,14 +100,13 @@ function ProductCardInternal({
                 return (
                   <span
                     key={key}
-                    className="rounded bg-gray-100 px-2 py-1 text-xs font-medium"
+                    className="rounded bg-gray-100 px-2 py-1 text-xs font-medium whitespace-nowrap"
                   >
                     {key}: {humanized}
                   </span>
                 );
               })}
-            </div>
-          )}
+          </div>
         </CardContent>
       </Link>
 

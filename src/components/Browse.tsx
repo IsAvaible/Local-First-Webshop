@@ -1,5 +1,11 @@
 import Filter from "@/components/browse/Filter.tsx";
-import { useEffect, useState, useMemo } from "react";
+import {
+  useEffect,
+  useState,
+  useMemo,
+  forwardRef,
+  type HTMLAttributes
+} from "react";
 import { FilterIcon, Loader2Icon } from "lucide-react";
 import FilterChips from "@/components/browse/FilterChips.tsx";
 import {
@@ -21,8 +27,9 @@ import type {
   Asset
 } from "@/db/schema.ts";
 import BrowseSortSelect from "@/components/browse/BrowseSortSelect.tsx";
-import type { JsonValue } from "@/lib/utils.ts";
+import { cn, type JsonValue } from "@/lib/utils.ts";
 import { Link } from "@tanstack/react-router";
+import { VirtuosoGrid } from "react-virtuoso";
 
 export default function Browse({
   loading,
@@ -137,6 +144,7 @@ export default function Browse({
                   customFieldDefinitions={customFieldDefinitions}
                 />
               </div>
+
               {loading && (!products || products.length === 0) ? (
                 <div
                   role="status"
@@ -153,20 +161,24 @@ export default function Browse({
                   </div>
                 </div>
               ) : (
-                <section
-                  aria-description="List of products matching the current search and filters"
-                  className="col-span-full grid grid-cols-[inherit] gap-[inherit] 2xl:min-w-5xl"
-                >
-                  {products.map((product, index) => (
+                <VirtuosoGrid
+                  useWindowScroll
+                  className="col-span-full w-full 2xl:min-w-5xl"
+                  data={products}
+                  components={{
+                    List: GridList,
+                    Item: GridItem
+                  }}
+                  itemContent={(_index, product) => (
                     <ProductCard
                       key={product.id}
                       product={product}
                       customFields={productCustomFields.get(product.id)}
                       asset={product.asset}
-                      lazy={index > 5}
+                      lazy={false}
                     />
-                  ))}
-                </section>
+                  )}
+                />
               )}
             </div>
           </div>
@@ -182,3 +194,41 @@ export default function Browse({
     </div>
   );
 }
+
+// Define the grid container for Virtuoso.
+const GridList = ({
+  ref,
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & {
+  ref?: React.RefObject<HTMLDivElement | null>;
+}) => (
+  <div
+    {...props}
+    ref={ref}
+    aria-description="List of products matching the current search and filters"
+    className={cn(
+      "grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3",
+      className
+    )}
+  />
+);
+GridList.displayName = "GridList";
+
+const GridItem = ({
+  ref,
+  children,
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & {
+  ref?: React.RefObject<HTMLDivElement | null>;
+}) => (
+  <div
+    {...props}
+    ref={ref}
+    className={cn("flex h-full w-full flex-col", className)}
+  >
+    {children}
+  </div>
+);
+GridItem.displayName = "GridItem";
