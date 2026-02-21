@@ -13,6 +13,7 @@ export class CartPage {
 
   async goto() {
     await this.page.goto("/cart");
+    await expect(this.checkoutBtn).toBeVisible();
   }
 
   async verifyItemVisible(itemName: string) {

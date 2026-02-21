@@ -2,7 +2,13 @@ import Filter from "@/components/browse/Filter.tsx";
 import { useEffect, useState, useMemo } from "react";
 import { FilterIcon, Loader2Icon } from "lucide-react";
 import FilterChips from "@/components/browse/FilterChips.tsx";
-import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger
+} from "./ui/dialog";
 import { Cart } from "@/components/cart/Cart";
 import { Button } from "@/components/ui/button.tsx";
 import ProductCard from "@/components/browse/ProductCard.tsx";
@@ -103,6 +109,14 @@ export default function Browse({
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
+                      <DialogTitle className="sr-only">
+                        Product Filters
+                      </DialogTitle>
+                      <DialogDescription className="sr-only">
+                        Apply categories, companies, and custom fields to filter
+                        the product list.
+                      </DialogDescription>
+
                       <Filter
                         className="mx-auto w-full"
                         categories={categories}

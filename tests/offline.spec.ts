@@ -20,7 +20,6 @@ test.describe("Offline & Recovery Tests", () => {
     await test.step("Setup: Seed DB and navigate to Search", async () => {
       await seedDatabase({ categories: 2, productsPerCategory: 5 });
       await searchPage.goto();
-      await expect(searchPage.productCards.first()).toBeVisible();
     });
 
     await test.step("Action: Simulate Network Disconnect", async () => {
@@ -77,7 +76,6 @@ test.describe("Offline & Recovery Tests", () => {
     await test.step("Setup: Seed and navigate", async () => {
       await seedDatabase({ categories: 1, productsPerCategory: 1 });
       await searchPage.goto();
-      await expect(searchPage.productCards.first()).toBeVisible();
     });
 
     await test.step("Action: Go Offline and navigate to Product", async () => {

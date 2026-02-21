@@ -85,7 +85,6 @@ test.describe("Consistency & Conflict Tests", () => {
 
     await test.step("Navigate to search results", async () => {
       await searchPage.goto();
-      await expect(searchPage.productCards.first()).toBeVisible();
     });
 
     await test.step("Go offline and perform server-side update", async () => {

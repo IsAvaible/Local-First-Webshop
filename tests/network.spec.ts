@@ -46,7 +46,6 @@ test.describe("Network Efficiency Tests", () => {
       const initialBytesBeforeNav = totalBytes;
 
       await searchPage.goto();
-      await expect(searchPage.productCards.first()).toBeVisible();
 
       const bytesAfterSearch = totalBytes - initialBytesBeforeNav;
       console.log(
@@ -79,7 +78,6 @@ test.describe("Network Efficiency Tests", () => {
     await test.step("Setup: Seed DB and Navigate", async () => {
       await seedDatabase({ categories: 1, productsPerCategory: 1 });
       await searchPage.goto();
-      await expect(searchPage.productCards.first()).toBeVisible();
     });
 
     await test.step("Trigger Server-Side DB Update & Catch HTTP Payload", async () => {

@@ -1,4 +1,4 @@
-import { type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 export class SearchPage {
   readonly page: Page;
@@ -22,6 +22,7 @@ export class SearchPage {
 
   async goto() {
     await this.page.goto("/search");
+    await expect(this.productCards.first()).toBeVisible();
   }
 
   async getProductCount() {
@@ -66,7 +67,13 @@ export class SearchPage {
   /**
    * Toggles a category by its user-facing label text.
    */
-  async toggleCategory(categoryName: string) {
+  async toggleCategory(
+    categoryName: string,
+    args: {
+      beforeToggleCallback?: () => void | Promise<void>;
+      afterToggleCallback?: () => void | Promise<void>;
+    } = {}
+  ) {
     await this.openFilters();
 
     const label = this.filterArea.locator("label").filter({
@@ -76,7 +83,9 @@ export class SearchPage {
     const categoryInnerDiv = label.locator("..");
 
     const checkbox = categoryInnerDiv.getByRole("checkbox");
+    await args.beforeToggleCallback?.();
     await checkbox.click();
+    await args.afterToggleCallback?.();
 
     await this.closeFilters();
   }
