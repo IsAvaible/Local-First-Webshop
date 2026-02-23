@@ -81,7 +81,7 @@ export function AssetImage({
   // 2. Handle Existing Asset
   return (
     <div
-      className={`relative h-full w-full overflow-hidden bg-gray-100 ${containerClassName}`}
+      className={`relative overflow-hidden bg-gray-100 ${containerClassName}`}
     >
       {/* BlurHash Placeholder */}
       {asset.blur_hash && (
