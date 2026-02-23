@@ -17,8 +17,10 @@ import { CartProvider } from "@/contexts/CartProvider.tsx";
 import { authClient } from "@/lib/auth-client.ts";
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { Serwist } from "@serwist/window";
 
 export const Route = createRootRoute({
+  ssr: false,
   head: () => ({
     meta: [
       {
@@ -72,9 +74,22 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Only run if not loading and no user exists
     if (!isPending && !session) {
-      void authClient.signIn.anonymous();
+      authClient.signIn.anonymous().catch((error) => {
+        console.error("Failed to sign in anonymously:", error);
+      });
     }
   }, [session, isPending]);
+
+  useEffect(() => {
+    const registerServiceWorker = async () => {
+      if ("serviceWorker" in navigator) {
+        const serwist = new Serwist("/sw.js", { scope: "/", type: "module" });
+        await serwist.register();
+      }
+    };
+
+    registerServiceWorker().catch(console.error);
+  }, []);
 
   return (
     <html lang="en">

@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
 import { devtools } from "@tanstack/devtools-vite";
+import { tanstackSerwistPlugin } from "./src/vite-plugin-serwist.ts";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -12,6 +13,7 @@ export default defineConfig({
     host: true
   },
   plugins: [
+    tanstackSerwistPlugin(),
     devtools(),
     caddyPlugin(),
     tailwindcss(),
