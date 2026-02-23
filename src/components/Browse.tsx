@@ -161,24 +161,34 @@ export default function Browse({
                   </div>
                 </div>
               ) : (
-                <VirtuosoGrid
-                  useWindowScroll
-                  className="col-span-full w-full 2xl:min-w-5xl"
-                  data={products}
-                  components={{
-                    List: GridList,
-                    Item: GridItem
-                  }}
-                  itemContent={(_index, product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      customFields={productCustomFields.get(product.id)}
-                      asset={product.asset}
-                      lazy={false}
-                    />
-                  )}
-                />
+                <>
+                  {/* Hidden tracker for E2E tests to bypass virtual scrolling limitations */}
+                  <span
+                    data-testid="total-product-count"
+                    data-count={products.length}
+                    className="sr-only"
+                  />
+
+                  <VirtuosoGrid
+                    useWindowScroll
+                    className="col-span-full w-full 2xl:min-w-5xl"
+                    data={products}
+                    overscan={500}
+                    components={{
+                      List: GridList,
+                      Item: GridItem
+                    }}
+                    itemContent={(_index, product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        customFields={productCustomFields.get(product.id)}
+                        asset={product.asset}
+                        lazy={false}
+                      />
+                    )}
+                  />
+                </>
               )}
             </div>
           </div>

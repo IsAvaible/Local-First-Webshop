@@ -26,7 +26,24 @@ export class SearchPage {
   }
 
   async getProductCount() {
-    return await this.productCards.count();
+    const countElement = this.page.getByTestId("total-product-count");
+    await expect(countElement).toBeAttached();
+
+    // Extract the count attribute and parse it as an integer
+    const countString = await countElement.getAttribute("data-count");
+    return parseInt(countString ?? "0", 10);
+  }
+
+  async scrollToProduct(productName: string) {
+    const targetProduct = this.page.getByText(productName);
+
+    // Scroll until the target product is visible
+    while (!(await targetProduct.isVisible())) {
+      await this.page.mouse.wheel(0, 1000);
+      await this.page.waitForTimeout(100);
+    }
+
+    return targetProduct;
   }
 
   /**

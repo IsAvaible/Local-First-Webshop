@@ -4,6 +4,19 @@ import { reset } from "drizzle-seed";
 import { faker } from "@faker-js/faker";
 import type { Product } from "@/db/schema";
 
+// Helper function to chunk arrays for safe bulk inserts
+function chunkArray<T>(array: T[], size: number): T[][] {
+  if (size <= 0) {
+    throw new Error("Chunk size must be greater than 0.");
+  }
+
+  const result = [];
+  for (let i = 0; i < array.length; i += size) {
+    result.push(array.slice(i, i + size));
+  }
+  return result;
+}
+
 export async function resetDatabase() {
   await reset(db, schema);
 }
@@ -23,16 +36,16 @@ export async function seedDatabase(
   faker.seed(123);
 
   await db.transaction(async (tx) => {
-    // Insert Companies
+    // Bulk Insert Companies
     const companyData = Array.from({ length: COMPANIES_TO_CREATE }, () => ({
       name: faker.company.name()
     }));
     const insertedCompanies = await tx
       .insert(schema.companiesTable)
       .values(companyData)
-      .returning();
+      .returning({ id: schema.companiesTable.id });
 
-    // Insert Categories
+    // Bulk Insert Categories
     const categoryData = Array.from({ length: CATEGORIES_TO_CREATE }, () => ({
       name: faker.commerce.department(),
       description: faker.commerce.productDescription().slice(0, 250)
@@ -40,31 +53,47 @@ export async function seedDatabase(
     const insertedCategories = await tx
       .insert(schema.categoriesTable)
       .values(categoryData)
-      .returning();
+      .returning({ id: schema.categoriesTable.id });
 
-    // Insert Products
+    // Generate Product Data in Memory
+    const allProductData: Omit<Product, "id" | "created_at">[] = [];
+
     for (const category of insertedCategories) {
       for (let i = 0; i < PRODUCTS_PER_CATEGORY; i++) {
-        const productData: Omit<Product, "id" | "created_at"> = {
+        allProductData.push({
           name: faker.commerce.productName(),
           description: faker.commerce.productDescription(),
           category_id: category.id,
           company_id: faker.helpers.arrayElement(insertedCompanies).id,
           base_product_id: null
-        };
-
-        const [product] = await tx
-          .insert(schema.productsTable)
-          .values(productData)
-          .returning();
-
-        // Pricing Tier (Simple)
-        await tx.insert(schema.pricingTiersTable).values({
-          product_id: product.id,
-          min_quantity: 1,
-          price_per_unit: faker.commerce.price({ min: 10, max: 200 })
         });
       }
+    }
+
+    // Bulk Insert Products in Chunks
+    const CHUNK_SIZE = 2500;
+    const productChunks = chunkArray(allProductData, CHUNK_SIZE);
+    const insertedProducts: { id: number }[] = [];
+
+    for (const chunk of productChunks) {
+      const insertedChunk = await tx
+        .insert(schema.productsTable)
+        .values(chunk)
+        .returning({ id: schema.productsTable.id }); // Only return what we need
+      insertedProducts.push(...insertedChunk);
+    }
+
+    // Generate Pricing Tier Data in Memory using inserted Product IDs
+    const allPricingTiers = insertedProducts.map((product) => ({
+      product_id: product.id,
+      min_quantity: 1,
+      price_per_unit: faker.commerce.price({ min: 10, max: 200 })
+    }));
+
+    // Bulk Insert Pricing Tiers in Chunks
+    const pricingChunks = chunkArray(allPricingTiers, CHUNK_SIZE);
+    for (const chunk of pricingChunks) {
+      await tx.insert(schema.pricingTiersTable).values(chunk);
     }
   });
 }
