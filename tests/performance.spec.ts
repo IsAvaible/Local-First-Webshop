@@ -271,14 +271,57 @@ test.describe("Performance & Resource Tests", () => {
       await searchPage.goto();
     });
 
-    // Act
-    await test.step("Perform scroll interaction", async () => {
-      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await page.waitForTimeout(500); // Allow for potential crash/lag
+    type ExtendedWindow = typeof window & {
+      __longTaskCount: number;
+      __totalLagTime: number;
+    };
+
+    // Inject a Performance Observer to track UI freezes (Long Tasks)
+    await test.step("Setup lag detection", async () => {
+      await page.evaluate(() => {
+        const w = window as ExtendedWindow;
+        w.__longTaskCount = 0;
+        w.__totalLagTime = 0;
+
+        const observer = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            w.__longTaskCount++;
+            w.__totalLagTime += entry.duration;
+          }
+        });
+        // Start observing main thread blocking tasks
+        observer.observe({ type: "longtask", buffered: true });
+      });
     });
 
-    // Assert
-    await test.step("Verify application is still responsive", async () => {
+    // Perform a realistic scroll interaction to stress the virtualized list
+    await test.step("Perform human-like scrolling", async () => {
+      for (let i = 0; i < 10; i++) {
+        await page.mouse.wheel(0, 800);
+        await page.waitForTimeout(150);
+      }
+    });
+
+    // Assert that the application remained responsive
+    await test.step("Verify application responsiveness", async () => {
+      // Check custom lag metrics
+      const metrics = await page.evaluate(() => {
+        const w = window as ExtendedWindow;
+
+        return {
+          longTasks: w.__longTaskCount,
+          totalLag: w.__totalLagTime
+        };
+      });
+
+      console.log(
+        `Scroll Performance: ${metrics.longTasks} lag spikes, ${metrics.totalLag.toFixed(0)}ms total lag.`
+      );
+
+      // Assert that the UI didn't choke too badly.
+      expect(metrics.longTasks).toBeLessThan(process.env.CI ? 15 : 5);
+
+      // Fallback assert to ensure the page is still alive
       const title = await page.title();
       expect(title).toBeTruthy();
     });
