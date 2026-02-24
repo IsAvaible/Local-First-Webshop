@@ -26,10 +26,6 @@ export const throttledTest = baseTest.extend({
 
       await client.send("Network.enable");
       await client.send("Network.emulateNetworkConditions", FAST_4G);
-    } else {
-      console.log(
-        `[Worker CPU Calibration] Skipped: Browser is not Chromium or not running in CI.`
-      );
     }
 
     await startTest(page);

@@ -6,8 +6,9 @@ import * as schema from "@/db/schema";
 import { SearchPage } from "./pages/SearchPage";
 import { ProductPage } from "./pages/ProductPage";
 import { eq } from "drizzle-orm";
+import { MetricType } from "./utils/metrics-reporter.ts";
 
-test.describe("Network Efficiency Tests", () => {
+test.describe("Network Efficiency Tests", { tag: "@metric" }, () => {
   test.beforeEach(async () => {
     await resetDatabase();
   });
@@ -38,9 +39,12 @@ test.describe("Network Efficiency Tests", () => {
         page.getByRole("heading", { name: "Partslist" })
       ).toBeVisible();
 
-      console.log(
-        `Bandwidth after Home Load: ${(totalBytes / 1024).toFixed(2)} KB`
-      );
+      const homeKb = (totalBytes / 1024).toFixed(2);
+      console.log(`Bandwidth after Home Load: ${homeKb} KB`);
+      test.info().annotations.push({
+        type: MetricType.BANDWIDTH_HOME_LOAD,
+        description: JSON.stringify({ value: Number(homeKb), unit: "KB" })
+      });
     });
 
     await test.step("Step 2: Navigate to Search Page", async () => {
@@ -48,12 +52,12 @@ test.describe("Network Efficiency Tests", () => {
 
       await searchPage.goto();
 
-      const bytesAfterSearch = totalBytes - initialBytesBeforeNav;
-      console.log(
-        `Bandwidth for Search Navigation: ${(bytesAfterSearch / 1024).toFixed(
-          2
-        )} KB`
-      );
+      const searchKb = ((totalBytes - initialBytesBeforeNav) / 1024).toFixed(2);
+      console.log(`Bandwidth for Search Navigation: ${searchKb} KB`);
+      test.info().annotations.push({
+        type: MetricType.BANDWIDTH_SEARCH_NAV,
+        description: JSON.stringify({ value: Number(searchKb), unit: "KB" })
+      });
     });
 
     await test.step("Step 3: Navigate to Product Page", async () => {
@@ -63,12 +67,12 @@ test.describe("Network Efficiency Tests", () => {
       await expect(page).toHaveURL(/product/);
       await expect(productPage.addToCartBtn).toBeVisible();
 
-      const bytesAfterProduct = totalBytes - productBytesStart;
-      console.log(
-        `Bandwidth for Product Navigation: ${(bytesAfterProduct / 1024).toFixed(
-          2
-        )} KB`
-      );
+      const productKb = ((totalBytes - productBytesStart) / 1024).toFixed(2);
+      console.log(`Bandwidth for Product Navigation: ${productKb} KB`);
+      test.info().annotations.push({
+        type: MetricType.BANDWIDTH_PRODUCT_NAV,
+        description: JSON.stringify({ value: Number(productKb), unit: "KB" })
+      });
     });
   });
 
@@ -87,7 +91,7 @@ test.describe("Network Efficiency Tests", () => {
 
       if (!product) throw new Error("No product found");
 
-      // Set up the listener before triggering the action to prevent
+      // Set up the listener before triggering the action to prevent race conditions
       const responsePromise = page.waitForResponse(
         (res) => res.url().includes("/api/products") && res.status() === 200
       );
@@ -107,6 +111,13 @@ test.describe("Network Efficiency Tests", () => {
 
       const payload = await deltaResponse.body();
       console.log(`Update received. Payload size: ${payload.byteLength} bytes`);
+      test.info().annotations.push({
+        type: MetricType.DELTA_UPDATE_PAYLOAD_SIZE,
+        description: JSON.stringify({
+          value: payload.byteLength,
+          unit: "bytes"
+        })
+      });
 
       expect(deltaResponse).toBeDefined();
     });

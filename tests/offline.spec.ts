@@ -7,6 +7,7 @@ import { CartPage } from "./pages/CartPage";
 import { db } from "@/db/connection.ts";
 import * as schema from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { MetricType } from "./utils/metrics-reporter.ts";
 
 test.describe("Offline & Recovery Tests", () => {
   test.beforeEach(async () => {
@@ -69,7 +70,7 @@ test.describe("Offline & Recovery Tests", () => {
     });
   });
 
-  test("Sync Recovery Stress Test", async ({ page }) => {
+  test("Sync Recovery Stress Test", { tag: "@metric" }, async ({ page }) => {
     const searchPage = new SearchPage(page);
     const productPage = new ProductPage(page);
     const mutationCount = 20;
@@ -105,9 +106,18 @@ test.describe("Offline & Recovery Tests", () => {
       }).toPass({ timeout: 15000 });
 
       const duration = performance.now() - start;
+
       console.log(
-        `Sync Recovery Time for ${mutationCount} mutations: ${duration}ms`
+        `Sync Recovery Time for ${mutationCount} mutations: ${duration.toFixed(2)}ms`
       );
+
+      test.info().annotations.push({
+        type: MetricType.SYNC_RECOVERY_TIME,
+        description: JSON.stringify({
+          value: Number(duration.toFixed(2)),
+          unit: "ms"
+        })
+      });
     });
   });
 

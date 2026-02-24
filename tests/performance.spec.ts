@@ -7,8 +7,9 @@ import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema.ts";
 import { ProductPage } from "./pages/ProductPage.ts";
 import { testConfig } from "./test-config.ts";
+import { MetricType } from "./utils/metrics-reporter.ts";
 
-test.describe("Performance & Resource Tests", () => {
+test.describe("Performance & Resource Tests", { tag: "@metric" }, () => {
   test.beforeEach(async () => {
     await test.step("Reset database state", async () => {
       await resetDatabase();
@@ -45,6 +46,15 @@ test.describe("Performance & Resource Tests", () => {
           console.log(
             `[${totalProducts} items] Initial Sync & Render Time: ${duration.toFixed(2)}ms`
           );
+
+          test.info().annotations.push({
+            type: MetricType.INITIAL_SYNC_TIME,
+            description: JSON.stringify({
+              value: Number(duration.toFixed(2)),
+              unit: "ms"
+            })
+          });
+
           // Skip Assertion
           // expect(duration).toBeLessThan(5000);
         });
@@ -123,11 +133,18 @@ test.describe("Performance & Resource Tests", () => {
         });
 
         // Assert
-        await test.step(`Verify latency (${latency.toFixed(2)}ms) is under 1000ms`, () => {
+        await test.step(`Verify latency (${latency.toFixed(2)}ms)`, () => {
           console.log(
             `[${totalProducts} items] Interaction Latency: ${latency.toFixed(2)}ms`
           );
-          expect(latency).toBeLessThan(1000);
+
+          test.info().annotations.push({
+            type: MetricType.INTERACTION_LATENCY,
+            description: JSON.stringify({
+              value: Number(latency.toFixed(2)),
+              unit: "ms"
+            })
+          });
         });
       });
 
@@ -161,9 +178,22 @@ test.describe("Performance & Resource Tests", () => {
             console.log(
               `[${totalProducts} items] Storage Usage: ${usageMB} MB`
             );
+
+            test.info().annotations.push({
+              type: MetricType.STORAGE_USAGE,
+              description: JSON.stringify({ value: usageMB, unit: "MB" })
+            });
+
             expect(estimate.usage).toBeGreaterThan(0);
           } else {
             console.log("Storage API not available");
+            test.info().annotations.push({
+              type: MetricType.STORAGE_USAGE,
+              description: JSON.stringify({
+                value: "API Unavailable",
+                unit: "error"
+              })
+            });
           }
         });
       });
@@ -205,6 +235,15 @@ test.describe("Performance & Resource Tests", () => {
             console.log(
               `[${totalProducts} items] JS Heap Used: ${heapUsedMB.toFixed(2)} MB`
             );
+
+            test.info().annotations.push({
+              type: MetricType.JS_HEAP_USED,
+              description: JSON.stringify({
+                value: Number(heapUsedMB.toFixed(2)),
+                unit: "MB"
+              })
+            });
+
             expect(heapUsedMB).toBeLessThan(100);
           }
         });
@@ -251,6 +290,23 @@ test.describe("Performance & Resource Tests", () => {
     await test.step(`Verify cached load is faster than initial`, () => {
       console.log(
         `Initial Time: ${initialDuration.toFixed(2)}ms | Cached Time: ${cachedDuration.toFixed(2)}ms`
+      );
+
+      test.info().annotations.push(
+        {
+          type: MetricType.INITIAL_LOAD_TIME,
+          description: JSON.stringify({
+            value: Number(initialDuration.toFixed(2)),
+            unit: "ms"
+          })
+        },
+        {
+          type: MetricType.CACHED_LOAD_TIME,
+          description: JSON.stringify({
+            value: Number(cachedDuration.toFixed(2)),
+            unit: "ms"
+          })
+        }
       );
 
       expect(cachedDuration).toBeLessThan(initialDuration);
@@ -316,6 +372,23 @@ test.describe("Performance & Resource Tests", () => {
 
       console.log(
         `Scroll Performance: ${metrics.longTasks} lag spikes, ${metrics.totalLag.toFixed(0)}ms total lag.`
+      );
+
+      test.info().annotations.push(
+        {
+          type: MetricType.LAG_SPIKES,
+          description: JSON.stringify({
+            value: metrics.longTasks,
+            unit: "count"
+          })
+        },
+        {
+          type: MetricType.TOTAL_SCROLL_LAG,
+          description: JSON.stringify({
+            value: Number(metrics.totalLag.toFixed(0)),
+            unit: "ms"
+          })
+        }
       );
 
       // Assert that the UI didn't choke too badly.

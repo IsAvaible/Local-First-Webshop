@@ -14,7 +14,11 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: "html",
+  reporter: [
+    ["html"],
+    ["list"],
+    ["./tests/utils/metrics-reporter.ts", { outputDir: "tests/results" }]
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -41,7 +45,7 @@ export default defineConfig({
       !process.env.CI ? "pnpm run dev" : "pnpm run build && pnpm run preview"
     } && pnpm run stripe:listen`,
     url: "https://local-first-webshop.localhost/",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     timeout: 120 * 1000,
     // This is necessary because, the dev server uses a self-signed certificate,
     // and without this, Playwright will fail to connect to it. (Caddy)

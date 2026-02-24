@@ -40,4 +40,8 @@ dist-ssr
 docs/sources/*
 !docs/sources/**.md
 
+# Service Worker
 public/sw.js
+
+# Test Results
+tests/results

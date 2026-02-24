@@ -11,6 +11,7 @@ import { SearchPage } from "./pages/SearchPage.ts";
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "@/routes/api/trpc/$.ts";
 import type { TrpcRequestEnvelope, TrpcResponseEnvelope } from "@/lib/utils.ts";
+import { MetricType } from "./utils/metrics-reporter.ts";
 
 test.describe("Consistency & Conflict Tests", () => {
   test.beforeEach(async () => {
@@ -73,7 +74,7 @@ test.describe("Consistency & Conflict Tests", () => {
   //   await contextB.close();
   // });
 
-  throttledTest("Time to Consistency", async ({ page }) => {
+  throttledTest("Time to Consistency", { tag: "@metric" }, async ({ page }) => {
     const MAX_CONSISTENCY_DELAY_MS = 3000;
     const NEW_PRODUCT_NAME = "Synced Name Verify";
 
@@ -122,7 +123,15 @@ test.describe("Consistency & Conflict Tests", () => {
       });
 
       const duration = performance.now() - startTime;
-      console.log(`Time to Consistency: ${duration}ms`);
+
+      console.log(`Time to Consistency: ${duration.toFixed(2)}ms`);
+      test.info().annotations.push({
+        type: MetricType.TIME_TO_CONSISTENCY,
+        description: JSON.stringify({
+          value: Number(duration.toFixed(2)),
+          unit: "ms"
+        })
+      });
 
       expect(duration).toBeLessThan(MAX_CONSISTENCY_DELAY_MS);
     });
@@ -195,6 +204,15 @@ test.describe("Consistency & Conflict Tests", () => {
       // Extract the calculated subtotal from the server response
       const responseSubtotal: string =
         orderResponsePayload.result.data.json.breakdown.subtotal;
+
+      console.log(`Server Validated Subtotal: ${responseSubtotal} €`);
+      test.info().annotations.push({
+        type: MetricType.SERVER_VALIDATED_SUBTOTAL,
+        description: JSON.stringify({
+          value: Number(responseSubtotal),
+          unit: "€"
+        })
+      });
 
       expect(Number(responseSubtotal)).not.toBe(0);
     });
