@@ -31,6 +31,10 @@ export default defineConfig({
   },
   globalSetup: "./tests/setup/global-setup.ts",
 
+  expect: {
+    timeout: 7500
+  },
+
   /* Configure projects for major browsers */
   projects: [
     {

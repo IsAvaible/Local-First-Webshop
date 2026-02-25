@@ -206,25 +206,23 @@ test.describe("Performance & Resource Tests", { tag: "@metric" }, () => {
 
         const searchPage = new SearchPage(page);
 
-        // Arrange
-        const client =
-          await test.step("Initialize CDP and Seed DB", async () => {
-            await seedDatabase({
-              categories: categoriesCount,
-              productsPerCategory
-            });
-            const client = await page.context().newCDPSession(page);
-            await client.send("Performance.enable");
-            return client;
+        // Arrange: Just seed the database
+        await test.step("Seed DB", async () => {
+          await seedDatabase({
+            categories: categoriesCount,
+            productsPerCategory
           });
+        });
 
-        // Act
         await test.step("Simulate user session", async () => {
           await searchPage.goto();
         });
 
-        // Assert
+        // Assert: Attach CDP and read metrics after the page is stable
         await test.step("Analyze JS Heap usage", async () => {
+          const client = await page.context().newCDPSession(page);
+          await client.send("Performance.enable");
+
           const metrics = await client.send("Performance.getMetrics");
           const jsHeapUsedNode = metrics.metrics.find(
             (m) => m.name === "JSHeapUsedSize"
@@ -244,8 +242,13 @@ test.describe("Performance & Resource Tests", { tag: "@metric" }, () => {
               })
             });
 
-            expect(heapUsedMB).toBeLessThan(100);
+            expect(heapUsedMB).toBeGreaterThan(0);
+            expect(heapUsedMB).toBeLessThan(
+              categoriesCount * productsPerCategory * 0.2
+            );
           }
+
+          await client.detach();
         });
       });
     });

@@ -76,7 +76,7 @@ test.describe("Consistency & Conflict Tests", () => {
 
   throttledTest("Time to Consistency", { tag: "@metric" }, async ({ page }) => {
     const MAX_CONSISTENCY_DELAY_MS = 3000;
-    const NEW_PRODUCT_NAME = "Synced Name Verify";
+    const NEW_PRODUCT_NAME = `Synced Name Verify - ${Date.now()}`;
 
     const searchPage = new SearchPage(page);
 
@@ -87,12 +87,19 @@ test.describe("Consistency & Conflict Tests", () => {
 
     await throttledTest.step("Navigate to search results", async () => {
       await searchPage.goto();
+
+      await expect(searchPage.productCards.first()).toContainText(
+        targetProduct.name
+      );
     });
 
     await throttledTest.step(
       "Go offline and perform server-side update",
       async () => {
         await page.context().setOffline(true);
+
+        // Wait until the page detects offline status
+        await page.waitForFunction(() => !navigator.onLine);
 
         // Simulate a background process or another user updating the DB
         await db

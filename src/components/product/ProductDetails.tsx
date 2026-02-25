@@ -131,8 +131,15 @@ export default function ProductDetails({
             {product.name}
           </h1>
           {isSyncing && (
-            <Badge variant="secondary" className="-my-1 gap-1.5 px-2.5 py-1">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            <Badge
+              variant="secondary"
+              className="-my-1 gap-1.5 px-2.5 py-1"
+              aria-live="polite"
+            >
+              <Loader2
+                className="h-3.5 w-3.5 animate-spin"
+                aria-hidden="true"
+              />
               Syncing
             </Badge>
           )}
@@ -143,9 +150,8 @@ export default function ProductDetails({
         </p>
 
         {customFields && Object.keys(customFields).length > 0 && (
-          <div
+          <ul
             className="mt-3 flex flex-wrap gap-2"
-            role="list"
             aria-label="Product specifications"
           >
             {customFields?.map((customField) => {
@@ -154,36 +160,35 @@ export default function ProductDetails({
                 customField.field_type
               );
               return (
-                <span
+                <li
                   key={customField.field_name}
-                  role="listitem"
                   className="rounded bg-gray-100 px-2 py-1 text-xs font-medium"
                   title={humanized}
                   aria-label={`${customField.field_name}: ${humanized}`}
                 >
                   {customField.field_name}: {humanized}
-                </span>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
 
-        <div className="mt-6">
+        <div className="mt-6" aria-live="polite" aria-atomic="true">
           <p
             className="text-3xl font-bold text-gray-900 dark:text-slate-100"
             id="price-id"
           >
             {Number(activeTier.price_per_unit).toLocaleString()}€
             <span className="ml-2 text-sm font-normal text-gray-500">
-              / unit
+              <span className="sr-only">per</span> unit
             </span>
           </p>
         </div>
 
         <div className="mt-6 grid gap-3">
-          <p className="text-sm font-medium text-gray-900 dark:text-slate-200">
+          <h2 className="text-sm font-medium text-gray-900 dark:text-slate-200">
             Volume Discounts
-          </p>
+          </h2>
           <div className="grid gap-2">
             {displayTiers.map((tier) => {
               const isCurrent = activeTier.id === tier.id;
@@ -196,10 +201,12 @@ export default function ProductDetails({
                   : 0;
 
               return (
-                <div
+                <button
+                  type="button"
                   key={tier.id}
                   onClick={() => handleTierClick(tier.min_quantity)}
-                  className={`relative flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-all ${
+                  aria-pressed={isCurrent}
+                  className={`relative flex w-full cursor-pointer items-center justify-between rounded-lg border p-3 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 ${
                     isCurrent
                       ? "border-gray-600 bg-gray-50 dark:border-gray-400 dark:bg-gray-950/30"
                       : "border-gray-200 bg-white hover:border-gray-300 dark:border-slate-700 dark:bg-slate-900"
@@ -212,6 +219,7 @@ export default function ProductDetails({
                           ? "border-gray-600 bg-gray-600 text-white"
                           : "border-gray-300"
                       }`}
+                      aria-hidden="true"
                     >
                       {isCurrent && <Check className="h-3 w-3" />}
                     </div>
@@ -244,7 +252,7 @@ export default function ProductDetails({
                       {price.toLocaleString()}€
                     </span>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -264,7 +272,11 @@ export default function ProductDetails({
           size="lg"
           className="flex-1"
           onClick={handleAddToCart}
-          aria-label={`Add ${cartItem ? "another " : ""}${product.name} to cart`}
+          aria-label={
+            cartItem
+              ? `Add another ${product.name} to cart`
+              : `Add ${product.name} to cart`
+          }
           disabled={!!cartItem}
           aria-describedby="price-id"
           data-testid="main-add-to-cart"
@@ -290,7 +302,7 @@ export default function ProductDetails({
               value={currentQuantity}
               onChange={handleInputChange}
               min={1}
-              aria-label="Quantity"
+              aria-label={`Quantity for ${product.name}`}
             />
             <Button
               variant="outline"
@@ -310,7 +322,8 @@ export default function ProductDetails({
           onClick={onToggleWishlist}
           disabled={!onToggleWishlist}
           className={isInWishlist ? "text-red-500 hover:text-red-600" : ""}
-          aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+          aria-label="Wishlist"
+          aria-pressed={isInWishlist}
         >
           <Heart
             className={`h-5 w-5 ${isInWishlist ? "fill-current" : ""}`}

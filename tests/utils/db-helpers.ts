@@ -96,4 +96,7 @@ export async function seedDatabase(
       await tx.insert(schema.pricingTiersTable).values(chunk);
     }
   });
+
+  // Wait to stabilize
+  await new Promise((resolve) => setTimeout(resolve, 500));
 }
