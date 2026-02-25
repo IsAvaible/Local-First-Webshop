@@ -30,7 +30,7 @@ import {
   customFieldValuesCollection,
   productsCollection
 } from "@/lib/collections.ts";
-import type { CustomFieldValue, Product } from "@/db/schema.ts";
+import type { Product } from "@/db/schema.ts";
 import Browse from "@/components/Browse.tsx";
 import Big from "big.js";
 
@@ -101,20 +101,18 @@ export const Route = createFileRoute("/search")({
   }
 });
 
-// --- 3. Reusable Query Builder Function ---
+// --- 3. Reusable Query Builder Functions ---
 
 /**
  * Builds a base TanStack DB query for products based on search parameters.
  *
  * This function constructs a single, complex query that applies all
- * filters (text, category, company, price, and custom fields).
- *
- * It also joins a minimum price and a primary asset for data enrichment.
+ * filters (text, category, company, price, and custom fields)
  *
  * @param search - The validated search parameters object.
  * @returns A TanStack DB Query instance, ready for `select` or `orderBy`.
  */
-function buildFilteredProductQuery(search: ProductSearch) {
+function buildBaseFilterQuery(search: ProductSearch) {
   const { q, categories, companies, price_min, price_max, custom_fields } =
     search;
 
@@ -148,7 +146,6 @@ function buildFilteredProductQuery(search: ProductSearch) {
   }
 
   // --- Price Filter (via Subquery) ---
-  // 3. Apply price range filters (if they exist).
   if (price_min !== undefined) {
     query = query.where(({ p }) => {
       return and(
@@ -204,6 +201,15 @@ function buildFilteredProductQuery(search: ProductSearch) {
     );
   }
 
+  return queryWithPriceFiltered;
+}
+
+/**
+ * Extends the base query with expensive display joins (like assets).
+ */
+function buildFilteredProductQuery(search: ProductSearch) {
+  const baseQuery = buildBaseFilterQuery(search);
+
   // --- Asset/Image Join (for display) ---
   // 1. Subquery to find the ID of the "first" asset (e.g., primary image).
   const firstAssetIdSubquery = new Query()
@@ -215,7 +221,7 @@ function buildFilteredProductQuery(search: ProductSearch) {
     }));
 
   // 2. Join the asset ID, then join the asset data itself.
-  return queryWithPriceFiltered
+  return baseQuery
     .leftJoin({ fa_id: firstAssetIdSubquery }, ({ p, fa_id }) =>
       eq(p.id, fa_id.product_id)
     )
@@ -227,7 +233,7 @@ function buildFilteredProductQuery(search: ProductSearch) {
 // --- 4. Route Component ---
 
 /**
- * Renders the search page, orchestraing all data fetching
+ * Renders the search page, orchestrating all data fetching
  * for products, filters, and facet counts.
  */
 function RouteComponent() {
@@ -244,8 +250,6 @@ function RouteComponent() {
     let query = buildFilteredProductQuery(search);
 
     // Check if sorting by a custom field.
-    // We'll attempt to perform the sort on the DB by joining the single
-    // custom field's values per-product and ordering by that value.
     const isCustomFieldSort = customFieldDefinitions?.some(
       (cfd) => cfd.field_name === search.order
     );
@@ -271,7 +275,6 @@ function RouteComponent() {
       );
 
       // Order by the custom field value (if present). Fall back to id
-      // to stabilize ordering.
       query = query_with_sort
         .orderBy(({ sort_val }) => sort_val?.sort_value, {
           direction: search.dir,
@@ -295,21 +298,22 @@ function RouteComponent() {
     }));
   }, [search, customFieldDefinitions]);
 
-  // 3. Fetch custom field values for the currently returned products so the UI
-  // can show/filter/sort by custom properties on the client-side.
-  const { data: customFieldValues } = useLiveQuery((q) =>
-    q
+  // 3. Fetch custom field values for the currently returned products
+  const { data: customFieldValues } = useLiveQuery(() => {
+    const filteredProductsQuery = buildBaseFilterQuery(search);
+
+    return new Query()
       .from({ cfv: customFieldValuesCollection })
-      .innerJoin({ p: productsCollection }, ({ cfv, p }) =>
+      .innerJoin({ p: filteredProductsQuery }, ({ cfv, p }) =>
         eq(cfv.product_id, p.id)
       )
-      .select(({ cfv }) => ({ ...cfv }))
-  );
+      .select(({ cfv }) => ({ ...cfv }));
+  }, [search]);
 
   // 4. Fetch Facet Counts (Categories)
   const { categories: _c, ...categoryCountSearch } = search;
   const { data: categoryCounts } = useLiveQuery(() => {
-    return buildFilteredProductQuery(categoryCountSearch)
+    return buildBaseFilterQuery(categoryCountSearch)
       .groupBy(({ p }) => p.category_id)
       .select(({ p }) => ({
         id: p.category_id,
@@ -320,7 +324,7 @@ function RouteComponent() {
   // 5. Fetch Facet Counts (Companies)
   const { companies: _co, ...companyCountSearch } = search;
   const { data: companyCounts } = useLiveQuery(() => {
-    return buildFilteredProductQuery(companyCountSearch)
+    return buildBaseFilterQuery(companyCountSearch)
       .groupBy(({ p }) => p.company_id)
       .select(({ p }) => ({
         id: p.company_id,
@@ -355,7 +359,7 @@ function RouteComponent() {
       categories={categories}
       companies={companies}
       customFieldDefinitions={customFieldDefinitions}
-      customFieldValues={customFieldValues as CustomFieldValue[] | undefined}
+      customFieldValues={customFieldValues}
     />
   );
 }
