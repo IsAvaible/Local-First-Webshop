@@ -1,0 +1,1 @@
+CREATE INDEX "min_quantity_idx" ON "pricing_tiers" USING btree ("min_quantity");

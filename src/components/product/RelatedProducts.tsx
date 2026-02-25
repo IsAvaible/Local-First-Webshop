@@ -1,9 +1,5 @@
 import { useLiveQuery, Query, min, eq, not } from "@tanstack/react-db";
-import {
-  productsCollection,
-  pricingTiersCollection,
-  assetsCollection
-} from "@/lib/collections";
+import { productsCollection, assetsCollection } from "@/lib/collections";
 import ProductCard from "@/components/browse/ProductCard";
 
 interface RelatedProductsProps {
@@ -16,15 +12,6 @@ export default function RelatedProducts({
   // 1. Define the Query logic
   const { data: products, isLoading } = useLiveQuery(
     () => {
-      // Subquery: Get lowest price per product
-      const minPriceSubquery = new Query()
-        .from({ pt: pricingTiersCollection })
-        .groupBy(({ pt }) => pt.product_id)
-        .select(({ pt }) => ({
-          product_id: pt.product_id,
-          min_price: min(pt.price_per_unit)
-        }));
-
       // Subquery: Get the first asset ID (thumbnail) per product
       const firstAssetIdSubquery = new Query()
         .from({ a: assetsCollection })
@@ -37,18 +24,14 @@ export default function RelatedProducts({
       // Main Query
       let query = new Query()
         .from({ p: productsCollection })
-        .innerJoin({ price: minPriceSubquery }, ({ p, price }) =>
-          eq(p.id, price.product_id)
-        )
         .leftJoin({ fa_id: firstAssetIdSubquery }, ({ p, fa_id }) =>
           eq(p.id, fa_id.product_id)
         )
         .leftJoin({ asset: assetsCollection }, ({ asset, fa_id }) =>
           eq(asset.id, fa_id?.first_asset_id)
         )
-        .select(({ p, price, asset }) => ({
+        .select(({ p, asset }) => ({
           ...p,
-          min_price: price?.min_price,
           asset: asset
         }))
         .orderBy(({ p }) => p.id)

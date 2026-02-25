@@ -19,9 +19,10 @@ import { AssetImage } from "@/components/ui/assetImage";
 import { useCart } from "@/contexts/useCartContext";
 import { cn, humanizeCustomFieldValue, type JsonValue } from "@/lib/utils";
 import type { Asset, Product } from "@/db/schema";
+import { toast } from "sonner";
 
 interface ProductCardProps {
-  product: Product & { min_price: string };
+  product: Product;
   customFields?: Record<string, { value: JsonValue; type?: string }>;
   asset?: Asset;
   lazy?: boolean;
@@ -53,7 +54,13 @@ function ProductCardInternal({
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
-    addItem(product.id, product.min_price);
+    if (product.base_price) {
+      addItem(product.id, product.base_price);
+    } else {
+      toast("This product cannot be added to the cart.", {
+        description: "Price information is missing."
+      });
+    }
   };
 
   const hasCustomFields = customFields && Object.keys(customFields).length > 0;
@@ -112,7 +119,7 @@ function ProductCardInternal({
 
       <CardFooter className="mt-auto flex items-center justify-between px-4 pb-4">
         <p className="font-semibold text-slate-700">
-          {`${product.min_price ?? "0.00"} €`}
+          {`${product.base_price ?? "0.00"} €`}
         </p>
 
         {!cartItem ? (

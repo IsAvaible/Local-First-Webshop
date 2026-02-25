@@ -5,7 +5,7 @@ import { reset } from "drizzle-seed";
 import { faker } from "@faker-js/faker";
 import sharp from "sharp";
 import { encode } from "blurhash";
-import type { Product } from "./schema";
+import type { CreateProduct } from "./schema";
 
 // --- Configuration ---
 const COMPANIES_TO_CREATE = 5;
@@ -169,7 +169,7 @@ async function main() {
         );
         const productName = faker.commerce.productName();
 
-        const productData: Omit<Product, "id" | "created_at"> = {
+        const productData: CreateProduct = {
           name: isVariant ? `${productName} (Variant)` : productName,
           description: faker.commerce.productDescription(),
           category_id: category.id,

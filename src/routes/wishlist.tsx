@@ -4,8 +4,7 @@ import { Wishlist } from "@/components/wishlist/Wishlist.tsx";
 import {
   wishlistCollection,
   productsCollection,
-  assetsCollection,
-  pricingTiersCollection
+  assetsCollection
 } from "@/lib/collections";
 
 export const Route = createFileRoute("/wishlist")({
@@ -14,8 +13,7 @@ export const Route = createFileRoute("/wishlist")({
     await Promise.all([
       wishlistCollection.preload(),
       productsCollection.preload(),
-      assetsCollection.preload(),
-      pricingTiersCollection.preload()
+      assetsCollection.preload()
     ]);
   },
   component: WishlistPage

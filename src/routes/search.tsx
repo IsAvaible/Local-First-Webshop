@@ -19,8 +19,7 @@ import {
   min,
   not,
   isUndefined,
-  count,
-  max
+  count
 } from "@tanstack/react-db";
 
 import {
@@ -29,7 +28,6 @@ import {
   companiesCollection,
   customFieldDefinitionsCollection,
   customFieldValuesCollection,
-  pricingTiersCollection,
   productsCollection
 } from "@/lib/collections.ts";
 import type { CustomFieldValue, Product } from "@/db/schema.ts";
@@ -93,7 +91,6 @@ export const Route = createFileRoute("/search")({
   loader: async () => {
     await Promise.all([
       productsCollection.preload(),
-      pricingTiersCollection.preload(),
       customFieldValuesCollection.preload(),
       customFieldDefinitionsCollection.preload(),
       categoriesCollection.preload(),
@@ -151,36 +148,20 @@ function buildFilteredProductQuery(search: ProductSearch) {
   }
 
   // --- Price Filter (via Subquery) ---
-  // 1. Create a subquery to find the maximum price for each product.
-  const minPriceSubquery = new Query()
-    .from({ pt: pricingTiersCollection })
-    .groupBy(({ pt }) => pt.product_id)
-    .select(({ pt }) => ({
-      product_id: pt.product_id,
-      min_price: max(pt.price_per_unit)
-    }));
-
-  // 2. Join the max price onto the main query.
-  let queryWithPrice = query.innerJoin(
-    { price: minPriceSubquery },
-    ({ p, price }) => eq(p.id, price.product_id)
-  );
-
   // 3. Apply price range filters (if they exist).
   if (price_min !== undefined) {
-    queryWithPrice = queryWithPrice.where(({ price }) => {
-      // Must check for undefined price (for products with no tiers)
+    query = query.where(({ p }) => {
       return and(
-        not(isUndefined(price)),
-        gte(price.min_price, new Big(price_min).toFixed(2))
+        not(isUndefined(p.base_price)),
+        gte(p.base_price, new Big(price_min).toFixed(2))
       );
     });
   }
   if (price_max !== undefined) {
-    queryWithPrice = queryWithPrice.where(({ price }) => {
+    query = query.where(({ p }) => {
       return and(
-        not(isUndefined(price)),
-        lte(price.min_price, new Big(price_max).toFixed(2))
+        not(isUndefined(p.base_price)),
+        lte(p.base_price, new Big(price_max).toFixed(2))
       );
     });
   }
@@ -190,7 +171,7 @@ function buildFilteredProductQuery(search: ProductSearch) {
     ([_, v]) => v !== undefined && v !== null
   );
 
-  let queryWithPriceFiltered = queryWithPrice;
+  let queryWithPriceFiltered = query;
   if (customFieldFilters.length > 0) {
     // 1. Create a subquery to find product IDs that match ALL filters.
     const matchingProductIdsSubquery = new Query()
@@ -217,7 +198,7 @@ function buildFilteredProductQuery(search: ProductSearch) {
       }));
 
     // 3. Join these matching IDs with the main query.
-    queryWithPriceFiltered = queryWithPrice.innerJoin(
+    queryWithPriceFiltered = query.innerJoin(
       { cf_matches: matchingProductIdsSubquery },
       ({ p, cf_matches }) => eq(p.id, cf_matches.product_id)
     );
@@ -298,19 +279,18 @@ function RouteComponent() {
         })
         .orderBy(({ p }) => p.id, search.dir);
     } else {
-      query = query.orderBy(({ p, price }) => {
+      query = query.orderBy(({ p }) => {
         const orderKey =
           search.order === "price"
-            ? price?.min_price
+            ? p.base_price
             : p[search.order as keyof Product];
         return [orderKey, search.dir];
       }, search.dir ?? defaultValues.dir);
     }
 
     // Select the final data shape for the component
-    return query.select(({ p, price, asset }) => ({
+    return query.select(({ p, asset }) => ({
       ...p,
-      min_price: price?.min_price,
       asset: asset
     }));
   }, [search, customFieldDefinitions]);

@@ -155,6 +155,27 @@
       "when": 1767796080722,
       "tag": "0021_tranquil_microbe",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1772023311291,
+      "tag": "0022_loving_wallflower",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1772023317458,
+      "tag": "0023_sync_product_price_trigger",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1772024269610,
+      "tag": "0024_special_prism",
+      "breakpoints": true
     }
   ]
 }

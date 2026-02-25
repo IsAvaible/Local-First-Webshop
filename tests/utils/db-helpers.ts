@@ -2,7 +2,7 @@ import { db } from "@/db/connection";
 import * as schema from "@/db/schema";
 import { reset } from "drizzle-seed";
 import { faker } from "@faker-js/faker";
-import type { Product } from "@/db/schema";
+import type { CreateProduct } from "@/db/schema";
 
 // Helper function to chunk arrays for safe bulk inserts
 function chunkArray<T>(array: T[], size: number): T[][] {
@@ -56,7 +56,7 @@ export async function seedDatabase(
       .returning({ id: schema.categoriesTable.id });
 
     // Generate Product Data in Memory
-    const allProductData: Omit<Product, "id" | "created_at">[] = [];
+    const allProductData: CreateProduct[] = [];
 
     for (const category of insertedCategories) {
       for (let i = 0; i < PRODUCTS_PER_CATEGORY; i++) {

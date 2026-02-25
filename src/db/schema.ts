@@ -112,6 +112,11 @@ export const productsTable = pgTable(
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     name: varchar({ length: 255 }).notNull(),
     description: text("description"),
+    // Denormalized price field (lowest min_quantity price from pricing_tiers)
+    base_price: decimal("base_price", {
+      precision: 10,
+      scale: 2
+    }),
     company_id: integer()
       .notNull()
       .references(() => companiesTable.id, { onDelete: "restrict" }),
@@ -128,30 +133,41 @@ export const productsTable = pgTable(
   (table) => ({
     baseProductIdIdx: index("base_product_id_idx").on(table.base_product_id),
     companyIdIdx: index("company_id_idx").on(table.company_id),
-    categoryIdIdx: index("category_id_idx").on(table.category_id)
+    categoryIdIdx: index("category_id_idx").on(table.category_id),
+    priceIdx: index("base_price_idx").on(table.base_price)
   })
 );
 
 export const selectProductSchema = createSelectSchema(productsTable);
 export const createProductSchema = createInsertSchema(productsTable).omit({
-  created_at: true
+  created_at: true,
+  base_price: true
 });
 export const updateProductSchema = createUpdateSchema(productsTable).omit({
-  created_at: true
+  created_at: true,
+  base_price: true
 });
 
 // --- TIERED PRICING SCHEMA ---
-export const pricingTiersTable = pgTable("pricing_tiers", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  product_id: integer()
-    .notNull()
-    .references(() => productsTable.id, { onDelete: "cascade" }),
-  min_quantity: integer().notNull().default(1),
-  price_per_unit: decimal("price_per_unit", {
-    precision: 10,
-    scale: 2
-  }).notNull()
-});
+export const pricingTiersTable = pgTable(
+  "pricing_tiers",
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    product_id: integer()
+      .notNull()
+      .references(() => productsTable.id, { onDelete: "cascade" }),
+    min_quantity: integer().notNull().default(1),
+    price_per_unit: decimal("price_per_unit", {
+      precision: 10,
+      scale: 2
+    }).notNull()
+  },
+  (table) => {
+    return {
+      minQuantityIdx: index("min_quantity_idx").on(table.min_quantity)
+    };
+  }
+);
 
 export const selectPricingTierSchema = createSelectSchema(pricingTiersTable);
 export const createPricingTierSchema = createInsertSchema(pricingTiersTable);
@@ -426,6 +442,7 @@ export type YdocUpdate = z.infer<typeof updateYdocSchema>;
 export type YdocAwarenessUpdate = z.infer<typeof updateYdocAwarenessSchema>;
 export type User = z.infer<typeof selectUsersSchema>;
 export type Product = z.infer<typeof selectProductSchema>;
+export type CreateProduct = z.infer<typeof createProductSchema>;
 export type Category = z.infer<typeof selectCategorySchema>;
 export type Company = z.infer<typeof selectCompanySchema>;
 export type PricingTier = z.infer<typeof selectPricingTierSchema>;

@@ -178,7 +178,7 @@ export default function ProductDetails({
             className="text-3xl font-bold text-gray-900 dark:text-slate-100"
             id="price-id"
           >
-            {Number(activeTier.price_per_unit).toLocaleString()}€
+            {activeTier.price_per_unit}€
             <span className="ml-2 text-sm font-normal text-gray-500">
               <span className="sr-only">per</span> unit
             </span>
@@ -249,7 +249,7 @@ export default function ProductDetails({
                           : "text-gray-700 dark:text-slate-300"
                       }`}
                     >
-                      {price.toLocaleString()}€
+                      {tier.price_per_unit}€
                     </span>
                   </div>
                 </button>

@@ -22,7 +22,6 @@ import { Link, useLocation, useSearch } from "@tanstack/react-router";
 import { useLiveQuery, Query, or, ilike, min, eq } from "@tanstack/react-db";
 import {
   productsCollection,
-  pricingTiersCollection,
   assetsCollection,
   categoriesCollection,
   companiesCollection
@@ -97,20 +96,6 @@ export function SearchBar() {
         );
       }
 
-      // Join min price subquery
-      const minPriceSubquery = new Query()
-        .from({ pt: pricingTiersCollection })
-        .groupBy(({ pt }) => pt.product_id)
-        .select(({ pt }) => ({
-          product_id: pt.product_id,
-          min_price: min(pt.price_per_unit)
-        }));
-
-      const queryWithPrice = query.leftJoin(
-        { price: minPriceSubquery },
-        ({ p, price }) => eq(p.id, price.product_id)
-      );
-
       // Join first asset
       const firstAssetIdSubquery = new Query()
         .from({ a: assetsCollection })
@@ -120,20 +105,19 @@ export function SearchBar() {
           first_asset_id: min(a.id)
         }));
 
-      return queryWithPrice
+      return query
         .leftJoin({ fa_id: firstAssetIdSubquery }, ({ p, fa_id }) =>
           eq(p.id, fa_id?.product_id)
         )
         .leftJoin({ asset: assetsCollection }, ({ asset, fa_id }) =>
           eq(asset.id, fa_id?.first_asset_id)
         )
-        .orderBy(({ price }) => price?.min_price, {
+        .orderBy(({ p }) => p.base_price, {
           direction: "asc",
           nulls: "last"
         })
-        .select(({ p, price, asset }) => ({
+        .select(({ p, asset }) => ({
           ...p,
-          min_price: price?.min_price,
           asset
         }))
         .limit(3);
@@ -398,7 +382,7 @@ export function SearchBar() {
                         <ProductCommandItem
                           asset={p.asset}
                           name={p.name}
-                          price={p.min_price ? `${p.min_price} €` : "-"}
+                          price={p.base_price ? `${p.base_price} €` : "-"}
                         />
                       </CommandItem>
                     </Link>

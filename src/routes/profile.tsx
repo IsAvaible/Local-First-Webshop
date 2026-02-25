@@ -19,8 +19,7 @@ import {
   usersCollection,
   wishlistCollection,
   productsCollection,
-  assetsCollection,
-  pricingTiersCollection
+  assetsCollection
 } from "@/lib/collections";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -84,8 +83,7 @@ export const Route = createFileRoute("/profile")({
       // Wishlist tab
       wishlistCollection.preload(),
       productsCollection.preload(),
-      assetsCollection.preload(),
-      pricingTiersCollection.preload()
+      assetsCollection.preload()
     ]);
 
     return { user: context.user };

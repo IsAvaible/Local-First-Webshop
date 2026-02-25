@@ -1,10 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { eq, useLiveQuery, Query, min, max } from "@tanstack/react-db";
+import { eq, useLiveQuery, Query, min } from "@tanstack/react-db";
 import {
   wishlistCollection,
   productsCollection,
-  assetsCollection,
-  pricingTiersCollection
+  assetsCollection
 } from "@/lib/collections";
 import ProductCard from "@/components/browse/ProductCard";
 import { Button } from "@/components/ui/button";
@@ -12,16 +11,7 @@ import { HeartIcon, Search } from "lucide-react";
 
 export function Wishlist() {
   const { data: wishlistItems, isLoading } = useLiveQuery((q) => {
-    // 1. Subquery: Find the minimum price for each product
-    const minPriceSubquery = new Query()
-      .from({ pt: pricingTiersCollection })
-      .groupBy(({ pt }) => pt.product_id)
-      .select(({ pt }) => ({
-        product_id: pt.product_id,
-        max_price: max(pt.price_per_unit)
-      }));
-
-    // 2. Subquery: Find the ID of the first asset for each product
+    // Subquery: Find the ID of the first asset for each product
     const firstAssetIdSubquery = new Query()
       .from({ a: assetsCollection })
       .groupBy(({ a }) => a.product_id)
@@ -30,16 +20,12 @@ export function Wishlist() {
         first_asset_id: min(a.id)
       }));
 
-    // 3. Main Query
+    // Main Query
     return (
       q
         .from({ w: wishlistCollection })
         .innerJoin({ p: productsCollection }, ({ w, p }) =>
           eq(w.product_id, p.id)
-        )
-        // Join calculated price
-        .innerJoin({ price: minPriceSubquery }, ({ p, price }) =>
-          eq(p.id, price.product_id)
         )
         // Join specific asset ID
         .leftJoin({ fa_id: firstAssetIdSubquery }, ({ p, fa_id }) =>
@@ -49,11 +35,10 @@ export function Wishlist() {
         .leftJoin({ as: assetsCollection }, ({ fa_id, as }) =>
           eq(as.id, fa_id?.first_asset_id)
         )
-        .select(({ w, p, as, price }) => ({
+        .select(({ w, p, as }) => ({
           wishlistId: w.id,
           product: p,
           asset: as,
-          calculated_price: price.max_price,
           price_snapshot: w.price_snapshot
         }))
     );
@@ -92,7 +77,7 @@ export function Wishlist() {
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {wishlistItems.map((item) => {
         // Logic to fall back to snapshot if live price is unavailable
-        const finalPrice = item.calculated_price ?? item.price_snapshot;
+        const finalPrice = item.product.base_price ?? item.price_snapshot;
 
         return (
           <div key={item.wishlistId} className="group/wishlist relative">
@@ -100,7 +85,7 @@ export function Wishlist() {
               className="transform-gpu"
               product={{
                 ...item.product,
-                min_price: finalPrice
+                base_price: finalPrice
               }}
               asset={item.asset}
             />
