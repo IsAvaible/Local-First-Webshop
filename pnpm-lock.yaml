@@ -12,15 +12,6 @@ overrides:
 importers:
   .:
     dependencies:
-      "@codemirror/lang-javascript":
-        specifier: ^6.2.4
-        version: 6.2.4
-      "@codemirror/state":
-        specifier: ^6.5.2
-        version: 6.5.2
-      "@codemirror/view":
-        specifier: ^6.38.7
-        version: 6.38.7
       "@dnd-kit/core":
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -153,9 +144,6 @@ importers:
       cmdk:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      codemirror:
-        specifier: ^6.0.2
-        version: 6.0.2
       country-data-list:
         specifier: ^1.5.5
         version: 1.5.5
@@ -240,9 +228,6 @@ importers:
       uuid:
         specifier: ^13.0.0
         version: 13.0.0
-      y-codemirror.next:
-        specifier: ^0.3.5
-        version: 0.3.5(@codemirror/state@6.5.2)(@codemirror/view@6.38.7)(yjs@13.6.27)
       y-indexeddb:
         specifier: ^9.0.12
         version: 9.0.12(yjs@13.6.27)
@@ -652,54 +637,6 @@ packages:
     resolution:
       {
         integrity: sha512-/ImESw0sskqlVR94jB+5+Pxjf+xBwDZF/N5+y2/q4EqD7IARUTSpPfIo8uf39SYpCxyOCtbyYpUrZ3F/k0zT4A==
-      }
-
-  "@codemirror/autocomplete@6.19.1":
-    resolution:
-      {
-        integrity: sha512-q6NenYkEy2fn9+JyjIxMWcNjzTL/IhwqfzOut1/G3PrIFkrbl4AL7Wkse5tLrQUUyqGoAKU5+Pi5jnnXxH5HGw==
-      }
-
-  "@codemirror/commands@6.10.0":
-    resolution:
-      {
-        integrity: sha512-2xUIc5mHXQzT16JnyOFkh8PvfeXuIut3pslWGfsGOhxP/lpgRm9HOl/mpzLErgt5mXDovqA0d11P21gofRLb9w==
-      }
-
-  "@codemirror/lang-javascript@6.2.4":
-    resolution:
-      {
-        integrity: sha512-0WVmhp1QOqZ4Rt6GlVGwKJN3KW7Xh4H2q8ZZNGZaP6lRdxXJzmjm4FqvmOojVj6khWJHIb9sp7U/72W7xQgqAA==
-      }
-
-  "@codemirror/language@6.11.3":
-    resolution:
-      {
-        integrity: sha512-9HBM2XnwDj7fnu0551HkGdrUrrqmYq/WC5iv6nbY2WdicXdGbhR/gfbZOH73Aqj4351alY1+aoG9rCNfiwS1RA==
-      }
-
-  "@codemirror/lint@6.9.2":
-    resolution:
-      {
-        integrity: sha512-sv3DylBiIyi+xKwRCJAAsBZZZWo82shJ/RTMymLabAdtbkV5cSKwWDeCgtUq3v8flTaXS2y1kKkICuRYtUswyQ==
-      }
-
-  "@codemirror/search@6.5.11":
-    resolution:
-      {
-        integrity: sha512-KmWepDE6jUdL6n8cAAqIpRmLPBZ5ZKnicE8oGU/s3QrAVID+0VhLFrzUucVKHG5035/BSykhExDL/Xm7dHthiA==
-      }
-
-  "@codemirror/state@6.5.2":
-    resolution:
-      {
-        integrity: sha512-FVqsPqtPWKVVL3dPSxy8wEF/ymIEuVzF1PK3VbUgrxXpJUSHQWWZz4JMToquRxnkw+36LTamCZG2iua2Ptq0fA==
-      }
-
-  "@codemirror/view@6.38.7":
-    resolution:
-      {
-        integrity: sha512-+b0imJTgzehmMToqT9DWPBdeRj7/qDsJj7MzQ+1+do2KK2UkxKuLaHlUVeZk855wO6my6cfbF1c+Qozs8B3YqA==
       }
 
   "@commitlint/cli@20.4.1":
@@ -1616,36 +1553,6 @@ packages:
     resolution:
       {
         integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==
-      }
-
-  "@lezer/common@1.3.0":
-    resolution:
-      {
-        integrity: sha512-L9X8uHCYU310o99L3/MpJKYxPzXPOS7S0NmBaM7UO/x2Kb2WbmMLSkfvdr1KxRIFYOpbY0Jhn7CfLSUDzL8arQ==
-      }
-
-  "@lezer/highlight@1.2.3":
-    resolution:
-      {
-        integrity: sha512-qXdH7UqTvGfdVBINrgKhDsVTJTxactNNxLk7+UMwZhU13lMHaOBlJe9Vqp907ya56Y3+ed2tlqzys7jDkTmW0g==
-      }
-
-  "@lezer/javascript@1.5.4":
-    resolution:
-      {
-        integrity: sha512-vvYx3MhWqeZtGPwDStM2dwgljd5smolYD2lR2UyFcHfxbBQebqx8yjmFmxtJ/E6nN6u1D9srOiVWm3Rb4tmcUA==
-      }
-
-  "@lezer/lr@1.4.3":
-    resolution:
-      {
-        integrity: sha512-yenN5SqAxAPv/qMnpWW0AT7l+SxVrgG+u0tNsRQWqbrz66HIl8DnEbBObvy21J5K7+I1v7gsAnlE2VQ5yYVSeA==
-      }
-
-  "@marijn/find-cluster-break@1.0.2":
-    resolution:
-      {
-        integrity: sha512-l0h88YhZFyKdXIFNfSWpyjStDjGHwZ/U7iobcK1cQQD8sejsONdQtTVU+1wVN1PBw40PiiHB1vA5S7VTfQiP9g==
       }
 
   "@microsoft/fetch-event-source@2.0.1":
@@ -3707,12 +3614,6 @@ packages:
       react: ^18 || ^19 || ^19.0.0-rc
       react-dom: ^18 || ^19 || ^19.0.0-rc
 
-  codemirror@6.0.2:
-    resolution:
-      {
-        integrity: sha512-VhydHotNW5w1UGK0Qj96BwSk/Zqbp9WbnyK2W/eVMv4QyF41INRGpjUhFJY7/uDNuudSc33a/PKr4iDqRduvHw==
-      }
-
   color-convert@2.0.1:
     resolution:
       {
@@ -3841,12 +3742,6 @@ packages:
     resolution:
       {
         integrity: sha512-igoAbJvlD/foOq4+aB3t24Hndvb5y/DasXcrVOtJMZ0UFLgfYq/mPMcCcSjJAIykLcTWOHZehZgNUJyaKMz1iA==
-      }
-
-  crelt@1.0.6:
-    resolution:
-      {
-        integrity: sha512-VQ2MBenTq1fWZUH9DJNGti7kKv6EeAuYr3cLwxUWhIu1baTaXh4Ib5W2CqHVqib4/MqbYGJqiL3Zb8GJZr3l4g==
       }
 
   cross-spawn@7.0.6:
@@ -6411,12 +6306,6 @@ packages:
       "@types/node":
         optional: true
 
-  style-mod@4.1.3:
-    resolution:
-      {
-        integrity: sha512-i/n8VsZydrugj3Iuzll8+x/00GH2vnYsk1eomD8QiRrSAeW6ItbCQDtfXCeJHd0iwiNagqjQkvpvREEPtW3IoQ==
-      }
-
   superjson@2.2.6:
     resolution:
       {
@@ -6695,12 +6584,6 @@ packages:
       vite:
         optional: true
 
-  w3c-keyname@2.2.8:
-    resolution:
-      {
-        integrity: sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==
-      }
-
   wait-on@9.0.4:
     resolution:
       {
@@ -6812,16 +6695,6 @@ packages:
         integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==
       }
     engines: { node: ">=0.4" }
-
-  y-codemirror.next@0.3.5:
-    resolution:
-      {
-        integrity: sha512-VluNu3e5HfEXybnypnsGwKAj+fKLd4iAnR7JuX1Sfyydmn1jCBS5wwEL/uS04Ch2ib0DnMAOF6ZRR/8kK3wyGw==
-      }
-    peerDependencies:
-      "@codemirror/state": ^6.0.0
-      "@codemirror/view": ^6.0.0
-      yjs: ^13.5.6
 
   y-indexeddb@9.0.12:
     resolution:
@@ -7159,62 +7032,6 @@ snapshots:
   "@better-auth/utils@0.3.0": {}
 
   "@better-fetch/fetch@1.1.21": {}
-
-  "@codemirror/autocomplete@6.19.1":
-    dependencies:
-      "@codemirror/language": 6.11.3
-      "@codemirror/state": 6.5.2
-      "@codemirror/view": 6.38.7
-      "@lezer/common": 1.3.0
-
-  "@codemirror/commands@6.10.0":
-    dependencies:
-      "@codemirror/language": 6.11.3
-      "@codemirror/state": 6.5.2
-      "@codemirror/view": 6.38.7
-      "@lezer/common": 1.3.0
-
-  "@codemirror/lang-javascript@6.2.4":
-    dependencies:
-      "@codemirror/autocomplete": 6.19.1
-      "@codemirror/language": 6.11.3
-      "@codemirror/lint": 6.9.2
-      "@codemirror/state": 6.5.2
-      "@codemirror/view": 6.38.7
-      "@lezer/common": 1.3.0
-      "@lezer/javascript": 1.5.4
-
-  "@codemirror/language@6.11.3":
-    dependencies:
-      "@codemirror/state": 6.5.2
-      "@codemirror/view": 6.38.7
-      "@lezer/common": 1.3.0
-      "@lezer/highlight": 1.2.3
-      "@lezer/lr": 1.4.3
-      style-mod: 4.1.3
-
-  "@codemirror/lint@6.9.2":
-    dependencies:
-      "@codemirror/state": 6.5.2
-      "@codemirror/view": 6.38.7
-      crelt: 1.0.6
-
-  "@codemirror/search@6.5.11":
-    dependencies:
-      "@codemirror/state": 6.5.2
-      "@codemirror/view": 6.38.7
-      crelt: 1.0.6
-
-  "@codemirror/state@6.5.2":
-    dependencies:
-      "@marijn/find-cluster-break": 1.0.2
-
-  "@codemirror/view@6.38.7":
-    dependencies:
-      "@codemirror/state": 6.5.2
-      crelt: 1.0.6
-      style-mod: 4.1.3
-      w3c-keyname: 2.2.8
 
   "@commitlint/cli@20.4.1(@types/node@24.9.1)(typescript@5.9.3)":
     dependencies:
@@ -7753,24 +7570,6 @@ snapshots:
     dependencies:
       "@jridgewell/resolve-uri": 3.1.2
       "@jridgewell/sourcemap-codec": 1.5.5
-
-  "@lezer/common@1.3.0": {}
-
-  "@lezer/highlight@1.2.3":
-    dependencies:
-      "@lezer/common": 1.3.0
-
-  "@lezer/javascript@1.5.4":
-    dependencies:
-      "@lezer/common": 1.3.0
-      "@lezer/highlight": 1.2.3
-      "@lezer/lr": 1.4.3
-
-  "@lezer/lr@1.4.3":
-    dependencies:
-      "@lezer/common": 1.3.0
-
-  "@marijn/find-cluster-break@1.0.2": {}
 
   "@microsoft/fetch-event-source@2.0.1": {}
 
@@ -9274,16 +9073,6 @@ snapshots:
       - "@types/react"
       - "@types/react-dom"
 
-  codemirror@6.0.2:
-    dependencies:
-      "@codemirror/autocomplete": 6.19.1
-      "@codemirror/commands": 6.10.0
-      "@codemirror/language": 6.11.3
-      "@codemirror/lint": 6.9.2
-      "@codemirror/search": 6.5.11
-      "@codemirror/state": 6.5.2
-      "@codemirror/view": 6.38.7
-
   color-convert@2.0.1:
     dependencies:
       color-name: 1.1.4
@@ -9353,8 +9142,6 @@ snapshots:
       typescript: 5.9.3
 
   country-data-list@1.5.5: {}
-
-  crelt@1.0.6: {}
 
   cross-spawn@7.0.6:
     dependencies:
@@ -10702,8 +10489,6 @@ snapshots:
     optionalDependencies:
       "@types/node": 24.9.1
 
-  style-mod@4.1.3: {}
-
   superjson@2.2.6:
     dependencies:
       copy-anything: 4.0.5
@@ -10859,8 +10644,6 @@ snapshots:
     optionalDependencies:
       vite: rolldown-vite@7.3.1(@types/node@24.9.1)(esbuild@0.25.0)(jiti@2.6.1)(tsx@4.20.6)(yaml@2.8.1)
 
-  w3c-keyname@2.2.8: {}
-
   wait-on@9.0.4:
     dependencies:
       axios: 1.13.5
@@ -10924,13 +10707,6 @@ snapshots:
       js-yaml: 4.1.1
 
   xtend@4.0.2: {}
-
-  y-codemirror.next@0.3.5(@codemirror/state@6.5.2)(@codemirror/view@6.38.7)(yjs@13.6.27):
-    dependencies:
-      "@codemirror/state": 6.5.2
-      "@codemirror/view": 6.38.7
-      lib0: 0.2.114
-      yjs: 13.6.27
 
   y-indexeddb@9.0.12(yjs@13.6.27):
     dependencies:
