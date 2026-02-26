@@ -6,7 +6,7 @@ import {
   forwardRef,
   type HTMLAttributes
 } from "react";
-import { FilterIcon, Loader2Icon } from "lucide-react";
+import { FilterIcon } from "lucide-react";
 import FilterChips from "@/components/browse/FilterChips.tsx";
 import {
   Dialog,
@@ -148,10 +148,13 @@ export default function Browse({
               {loading && (!products || products.length === 0) ? (
                 <div
                   role="status"
-                  className="col-span-full flex aspect-square items-center justify-center"
+                  aria-label="Loading products"
+                  className="col-span-full grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3"
                 >
-                  <Loader2Icon className="h-8 w-8 animate-spin fill-slate-800 text-gray-200 dark:text-gray-600" />
-                  <span className="sr-only">Loading...</span>
+                  {Array.from({ length: 9 }).map((_, i) => (
+                    <ProductCard.Skeleton key={i} />
+                  ))}
+                  <span className="sr-only">Loading products...</span>
                 </div>
               ) : !products || products.length === 0 ? (
                 <div className="col-span-full flex aspect-2/1 items-center justify-center">

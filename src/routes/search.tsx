@@ -88,8 +88,8 @@ export const Route = createFileRoute("/search")({
     middlewares: [stripSearchParams({ ...defaultValues, dir: undefined })]
   },
   // Preload all necessary data collections when the route loads
-  loader: async () => {
-    await Promise.all([
+  loader: () => {
+    void Promise.all([
       productsCollection.preload(),
       customFieldValuesCollection.preload(),
       customFieldDefinitionsCollection.preload(),

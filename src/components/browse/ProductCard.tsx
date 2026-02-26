@@ -157,23 +157,26 @@ function ProductCardSkeleton({ className }: { className?: string }) {
       aria-hidden="true"
       aria-busy="true"
       aria-label="Loading product"
+      data-testid="product-card-skeleton"
     >
-      {/* Image Skeleton */}
-      <CardHeader className="p-0">
-        <Skeleton className="aspect-square w-full rounded-t-xl rounded-b-none" />
-      </CardHeader>
+      <div>
+        {/* Image Skeleton */}
+        <CardHeader className="p-0">
+          <Skeleton className="aspect-square w-full rounded-t-xl rounded-b-none" />
+        </CardHeader>
 
-      {/* Content Skeleton */}
-      <CardContent className="flex-grow p-4">
-        {/* Title */}
-        <Skeleton className="mb-2 h-6 w-3/4" />
+        {/* Content Skeleton */}
+        <CardContent className="flex-grow p-4">
+          {/* Title */}
+          <Skeleton className="mb-2 h-6 w-3/4" />
 
-        {/* Description (2 lines) */}
-        <div className="mt-2 space-y-2">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-5/6" />
-        </div>
-      </CardContent>
+          {/* Description (2 lines) */}
+          <div className="mt-2 space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+          </div>
+        </CardContent>
+      </div>
 
       {/* Footer Skeleton */}
       <CardFooter className="mt-auto flex items-center justify-between px-4 pb-4">
