@@ -42,7 +42,9 @@ export default defineConfig([
       "commitlint.config.js",
       "drizzle.config.ts",
       "prettier.config.ts",
-      "src/vite-plugin-caddy.ts"
+      "src/vite-plugin-caddy.ts",
+      "tests/results/**/*",
+      "public/sw.js"
     ],
     rules: {
       "@typescript-eslint/no-unused-vars": [
