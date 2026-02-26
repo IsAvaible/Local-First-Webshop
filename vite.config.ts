@@ -6,6 +6,7 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackSerwistPlugin } from "./src/vite-plugin-serwist.ts";
+import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -26,7 +27,8 @@ export default defineConfig({
       babel: {
         plugins: [["babel-plugin-react-compiler"]]
       }
-    })
+    }),
+    visualizer({ emitFile: true, filename: "vite-bundle-stats.html" })
   ],
   // shadcn specific
   resolve: {
