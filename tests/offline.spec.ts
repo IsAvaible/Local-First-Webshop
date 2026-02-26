@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import { throttledTest as test } from "./setup/test-setup";
+import { throttledTest, throttledTest as test } from "./setup/test-setup";
 import { resetDatabase, seedDatabase } from "./utils/db-helpers";
 import { SearchPage } from "./pages/SearchPage";
 import { ProductPage } from "./pages/ProductPage";
@@ -70,56 +70,60 @@ test.describe("Offline & Recovery Tests", () => {
     });
   });
 
-  test("Sync Recovery Stress Test", { tag: "@metric" }, async ({ page }) => {
-    const searchPage = new SearchPage(page);
-    const productPage = new ProductPage(page);
-    const mutationCount = 20;
+  throttledTest(
+    "Sync Recovery Stress Test",
+    { tag: "@metric" },
+    async ({ page }) => {
+      const searchPage = new SearchPage(page);
+      const productPage = new ProductPage(page);
+      const mutationCount = 20;
 
-    await test.step("Setup: Seed and navigate", async () => {
-      await seedDatabase({ categories: 1, productsPerCategory: 1 });
-      await searchPage.goto();
-    });
-
-    await test.step("Action: Go Offline and navigate to Product", async () => {
-      await page.context().setOffline(true);
-      await searchPage.productCards.first().click();
-    });
-
-    await test.step(`Action: Perform ${mutationCount} offline mutations`, async () => {
-      await productPage.addItemToCart();
-
-      // Increase quantity (since main button is now disabled)
-      for (let i = 1; i < mutationCount; i++) {
-        await productPage.increaseQtyBtn.click();
-      }
-    });
-
-    await test.step("Verification: Go Online and measure recovery", async () => {
-      const start = performance.now();
-
-      // Restore connection
-      await page.context().setOffline(false);
-
-      // Measure Recovery via UI Badge update
-      await expect(async () => {
-        await productPage.verifyCartBadgeCount(mutationCount);
-      }).toPass({ timeout: 15000 });
-
-      const duration = performance.now() - start;
-
-      console.log(
-        `Sync Recovery Time for ${mutationCount} mutations: ${duration.toFixed(2)}ms`
-      );
-
-      test.info().annotations.push({
-        type: MetricType.SYNC_RECOVERY_TIME,
-        description: JSON.stringify({
-          value: Number(duration.toFixed(2)),
-          unit: "ms"
-        })
+      await test.step("Setup: Seed and navigate", async () => {
+        await seedDatabase({ categories: 1, productsPerCategory: 1 });
+        await searchPage.goto();
       });
-    });
-  });
+
+      await test.step("Action: Go Offline and navigate to Product", async () => {
+        await page.context().setOffline(true);
+        await searchPage.productCards.first().click();
+      });
+
+      await test.step(`Action: Perform ${mutationCount} offline mutations`, async () => {
+        await productPage.addItemToCart();
+
+        // Increase quantity (since main button is now disabled)
+        for (let i = 1; i < mutationCount; i++) {
+          await productPage.increaseQtyBtn.click();
+        }
+      });
+
+      await test.step("Verification: Go Online and measure recovery", async () => {
+        const start = performance.now();
+
+        // Restore connection
+        await page.context().setOffline(false);
+
+        // Measure Recovery via UI Badge update
+        await expect(async () => {
+          await productPage.verifyCartBadgeCount(mutationCount);
+        }).toPass({ timeout: 15000 });
+
+        const duration = performance.now() - start;
+
+        console.log(
+          `Sync Recovery Time for ${mutationCount} mutations: ${duration.toFixed(2)}ms`
+        );
+
+        test.info().annotations.push({
+          type: MetricType.SYNC_RECOVERY_TIME,
+          description: JSON.stringify({
+            value: Number(duration.toFixed(2)),
+            unit: "ms"
+          })
+        });
+      });
+    }
+  );
 
   test("'Ghost Cart' Restoration", async ({ page }) => {
     const productPage = new ProductPage(page);

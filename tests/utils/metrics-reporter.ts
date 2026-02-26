@@ -28,20 +28,20 @@ export const MetricType = {
 } as const;
 
 export default class MetricsCsvReporter implements Reporter {
-  private readonly outputDir: string;
+  private readonly outputFolder: string;
   private readonly csvFilePath: string;
 
-  constructor(options: { outputDir?: string } = {}) {
-    if (!options.outputDir) {
-      throw new Error("outputDir option is required for MetricsCsvReporter");
+  constructor(options: { outputFolder?: string } = {}) {
+    if (!options.outputFolder) {
+      throw new Error("outputFolder option is required for MetricsCsvReporter");
     }
 
-    this.outputDir = options.outputDir;
-    this.csvFilePath = path.join(this.outputDir, `performance-metrics.csv`);
+    this.outputFolder = options.outputFolder;
+    this.csvFilePath = path.join(this.outputFolder, `performance-metrics.csv`);
   }
 
   onBegin() {
-    fs.mkdirSync(this.outputDir, { recursive: true });
+    fs.mkdirSync(this.outputFolder, { recursive: true });
 
     if (!fs.existsSync(this.csvFilePath)) {
       fs.writeFileSync(

@@ -101,7 +101,7 @@ test.describe("Consistency & Conflict Tests", () => {
         // Wait until the page detects offline status
         await page.waitForFunction(() => !navigator.onLine);
 
-        // Simulate a background process or another user updating the DB
+        // Simulate a background process updating the DB
         await db
           .update(schema.productsTable)
           .set({ name: NEW_PRODUCT_NAME })
