@@ -12,7 +12,7 @@ const cartUrlSchema = z.object({
 export const Route = createFileRoute("/login")({
   validateSearch: zodValidator(cartUrlSchema),
   component: Layout,
-  ssr: false
+  ssr: true
 });
 
 function Layout() {

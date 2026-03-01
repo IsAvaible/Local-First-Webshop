@@ -20,7 +20,7 @@ const cartSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/cart")({
-  ssr: false,
+  ssr: true,
   validateSearch: zodValidator(cartSearchSchema),
   loader: async () => {
     await Promise.all([

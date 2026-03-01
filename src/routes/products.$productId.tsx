@@ -16,7 +16,7 @@ import { authClient } from "@/lib/auth-client";
 import { v4 as uuidv4 } from "uuid";
 
 export const Route = createFileRoute("/products/$productId")({
-  ssr: false,
+  ssr: true,
   params: {
     parse: (params) => ({ productId: parseInt(params.productId, 10) })
   },

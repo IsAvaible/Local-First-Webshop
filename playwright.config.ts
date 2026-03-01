@@ -4,7 +4,7 @@ const profile = process.env.TEST_PROFILE;
 const isSlowNetwork = profile === "commuter" || profile === "worst-case";
 
 // Application mode, either "local-first" or "ssr" (changes when switching branches)
-process.env.APP_MODE = "local-first";
+process.env.APP_MODE = "ssr";
 
 /**
  * See https://playwright.dev/docs/test-configuration.

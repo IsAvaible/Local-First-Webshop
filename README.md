@@ -292,7 +292,7 @@ Preload in route loaders and use with `useLiveQuery`:
 ```tsx
 // In route loader
 export const Route = createFileRoute("/my-route")({
-  ssr: false,
+  ssr: true,
   loader: async () => {
     await Promise.all([categoriesCollection.preload()]);
   }

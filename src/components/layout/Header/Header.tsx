@@ -65,10 +65,6 @@ export default function Header() {
             Home
           </Link>
 
-          <ClientOnly>
-            <SearchBar />
-          </ClientOnly>
-
           <Button variant="ghost" size="icon" asChild>
             <Link
               to={"/wishlist"}
@@ -78,7 +74,7 @@ export default function Header() {
             </Link>
           </Button>
 
-          <NotificationPanel />
+          {/*<NotificationPanel />*/}
         </div>
 
         <div className="flex flex-row items-center justify-end gap-x-4">

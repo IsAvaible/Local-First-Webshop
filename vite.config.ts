@@ -14,13 +14,13 @@ export default defineConfig({
     host: true
   },
   plugins: [
-    tanstackSerwistPlugin(),
+    // tanstackSerwistPlugin(),
     devtools(),
     caddyPlugin(),
     tailwindcss(),
     tanstackStart({
       spa: {
-        enabled: true
+        enabled: false
       }
     }),
     react({

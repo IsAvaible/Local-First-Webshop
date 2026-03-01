@@ -1,9 +1,4 @@
-import {
-  HeadContent,
-  Scripts,
-  createRootRoute,
-  ClientOnly
-} from "@tanstack/react-router";
+import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import * as React from "react";
@@ -13,14 +8,14 @@ import { DefaultCatchBoundary } from "@/components/routing/DefaultCatchBoundary.
 import { NotFound } from "@/components/routing/NotFound.tsx";
 import Header from "@/components/layout/Header/Header.tsx";
 import Footer from "@/components/layout/Footer/Footer.tsx";
-import { CartProvider } from "@/contexts/CartProvider.tsx";
 import { authClient } from "@/lib/auth-client.ts";
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
-import { Serwist } from "@serwist/window";
+import { CartContext } from "@/contexts/useCartContext.ts";
+import { mockContext } from "@/contexts/CartProviderMock.tsx";
 
 export const Route = createRootRoute({
-  ssr: false,
+  ssr: true,
   head: () => ({
     meta: [
       {
@@ -69,48 +64,16 @@ export const Route = createRootRoute({
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { data: session, isPending } = authClient.useSession();
-
-  useEffect(() => {
-    // Only run if not loading and no user exists
-    if (!isPending && !session) {
-      authClient.signIn.anonymous().catch((error) => {
-        console.error("Failed to sign in anonymously:", error);
-      });
-    }
-  }, [session, isPending]);
-
-  useEffect(() => {
-    const processPendingLogout = async () => {
-      if (localStorage.getItem("pending_offline_logout") && navigator.onLine) {
-        try {
-          // Silently hit the Better Auth sign-out endpoint to clear the HttpOnly cookie
-          await authClient.signOut();
-        } finally {
-          // Clean up the flag regardless of success so we don't get stuck in a loop
-          localStorage.removeItem("pending_offline_logout");
-        }
-      }
-    };
-
-    void processPendingLogout();
-
-    // Listen for the network coming back online while the app is open
-    window.addEventListener("online", () => void processPendingLogout());
-    return () =>
-      window.removeEventListener("online", () => void processPendingLogout());
-  }, []);
-
-  useEffect(() => {
-    const registerServiceWorker = async () => {
-      if ("serviceWorker" in navigator) {
-        const serwist = new Serwist("/sw.js", { scope: "/", type: "module" });
-        await serwist.register();
-      }
-    };
-
-    registerServiceWorker().catch(console.error);
-  }, []);
+  // const { data: session, isPending } = authClient.useSession();
+  //
+  // useEffect(() => {
+  //   // Only run if not loading and no user exists
+  //   if (!isPending && !session) {
+  //     authClient.signIn.anonymous().catch((error) => {
+  //       console.error("Failed to sign in anonymously:", error);
+  //     });
+  //   }
+  // }, [session, isPending]);
 
   return (
     <html lang="en">
@@ -118,16 +81,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <ClientOnly>
+        <CartContext value={mockContext}>
           <div className="flex min-h-screen flex-col bg-gray-50 text-slate-800 dark:bg-gray-900 dark:text-slate-200">
-            <CartProvider>
-              <Header />
-              <main className="flex-grow">{children}</main>
-              <Footer />
-            </CartProvider>
+            <Header />
+            <main className="flex-grow">{children}</main>
+            <Footer />
           </div>
           <Toaster position={"bottom-center"} />
-        </ClientOnly>
+        </CartContext>
         <TanStackDevtools
           plugins={[
             {

@@ -53,7 +53,7 @@ const urlDefaultValues = {
 
 // --- Route Definition with Preloading ---
 export const Route = createFileRoute("/profile")({
-  ssr: false,
+  ssr: true,
   validateSearch: zodValidator(profileUrlSchema),
   search: {
     middlewares: [stripSearchParams(urlDefaultValues)]
