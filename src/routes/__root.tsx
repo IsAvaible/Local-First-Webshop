@@ -10,6 +10,7 @@ import Header from "@/components/layout/Header/Header.tsx";
 import Footer from "@/components/layout/Footer/Footer.tsx";
 import { authClient } from "@/lib/auth-client.ts";
 import { useEffect } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { CartContext } from "@/contexts/useCartContext.ts";
 import { mockContext } from "@/contexts/CartProviderMock.tsx";
@@ -75,20 +76,24 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   //   }
   // }, [session, isPending]);
 
+  const queryClient = new QueryClient();
+
   return (
     <html lang="en">
       <head>
         <HeadContent />
       </head>
       <body>
-        <CartContext value={mockContext}>
-          <div className="flex min-h-screen flex-col bg-gray-50 text-slate-800 dark:bg-gray-900 dark:text-slate-200">
-            <Header />
-            <main className="flex-grow">{children}</main>
-            <Footer />
-          </div>
-          <Toaster position={"bottom-center"} />
-        </CartContext>
+        <QueryClientProvider client={queryClient}>
+          <CartContext value={mockContext}>
+            <div className="flex min-h-screen flex-col bg-gray-50 text-slate-800 dark:bg-gray-900 dark:text-slate-200">
+              <Header />
+              <main className="flex-grow">{children}</main>
+              <Footer />
+            </div>
+            <Toaster position={"bottom-center"} />
+          </CartContext>
+        </QueryClientProvider>
         <TanStackDevtools
           plugins={[
             {

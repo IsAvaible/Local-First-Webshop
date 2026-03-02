@@ -19,14 +19,21 @@ import {
 } from "lucide-react";
 import * as React from "react";
 import { Link, useLocation, useSearch } from "@tanstack/react-router";
-import { useLiveQuery, Query, or, ilike, min, eq } from "@tanstack/react-db";
+import { useQuery } from "@tanstack/react-query";
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { and, asc, ilike, inArray, or } from "drizzle-orm";
+
+import { db } from "@/db/connection.ts";
 import {
-  productsCollection,
-  assetsCollection,
-  categoriesCollection,
-  companiesCollection
-} from "@/lib/collections.ts";
-import type { Asset } from "@/db/schema.ts";
+  assetsTable,
+  categoriesTable,
+  companiesTable,
+  productsTable,
+  type Asset,
+  type Company
+} from "@/db/schema.ts";
+
 import { AssetImage } from "@/components/ui/assetImage.tsx";
 import { Route } from "@/routes/search.tsx";
 
@@ -41,6 +48,82 @@ const NAV_ITEMS = [
     shortcut: "⌘S"
   }
 ];
+
+const getSearchSuggestions = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ q: z.string() }))
+  .handler(async ({ data: { q } }) => {
+    const trimmedSearch = q.trim();
+    const searchWords =
+      trimmedSearch.length >= 2 ? trimmedSearch.split(" ").filter(Boolean) : [];
+
+    if (searchWords.length === 0) {
+      return { suggestions: [], matchingCategories: [], matchingCompanies: [] };
+    }
+
+    const buildIlike = (
+      table:
+        | typeof productsTable
+        | typeof categoriesTable
+        | typeof companiesTable
+    ) => {
+      return searchWords.map(
+        (w) =>
+          or(ilike(table.name, `%${w}%`), ilike(table.description, `%${w}%`))!
+      );
+    };
+
+    const prodWhere = buildIlike(productsTable);
+    const productsRows = await db
+      .select()
+      .from(productsTable)
+      .where(and(...prodWhere))
+      .orderBy(asc(productsTable.base_price))
+      .limit(3);
+
+    const productIds = productsRows.map((p) => p.id);
+    const firstAssetByProductId = new Map<number, Asset>();
+
+    if (productIds.length > 0) {
+      const assetRows = await db
+        .select()
+        .from(assetsTable)
+        .where(inArray(assetsTable.product_id, productIds))
+        .orderBy(asc(assetsTable.id));
+
+      for (const asset of assetRows) {
+        if (!firstAssetByProductId.has(asset.product_id)) {
+          firstAssetByProductId.set(asset.product_id, asset);
+        }
+      }
+    }
+
+    const suggestions = productsRows.map((p) => ({
+      ...p,
+      asset: firstAssetByProductId.get(p.id)
+    }));
+
+    const catWhere = buildIlike(categoriesTable);
+    const matchingCategories = await db
+      .select()
+      .from(categoriesTable)
+      .where(and(...catWhere))
+      .orderBy(asc(categoriesTable.name))
+      .limit(3);
+
+    const compWhere = buildIlike(companiesTable);
+    const matchingCompanies = (await db
+      .select()
+      .from(companiesTable)
+      .where(and(...compWhere))
+      .orderBy(asc(companiesTable.name))
+      .limit(3)) as Company[];
+
+    return {
+      suggestions,
+      matchingCategories,
+      matchingCompanies
+    };
+  });
 
 export function SearchBar() {
   const navigate = Route.useNavigate();
@@ -72,9 +155,6 @@ export function SearchBar() {
   const trimmedSearch = search.trim();
   const minSearchLength = 2;
   const isSearchActive = trimmedSearch.length >= minSearchLength;
-  const searchWords = useMemo(() => {
-    return isSearchActive ? trimmedSearch.split(" ").filter(Boolean) : [];
-  }, [isSearchActive, trimmedSearch]);
 
   // Filter navigation items
   const matchingNavItems = useMemo(() => {
@@ -85,83 +165,15 @@ export function SearchBar() {
   }, [isSearchActive, trimmedSearch]);
 
   // --- Live suggestions ---
-  const { data: suggestions, isLoading: isFetchingProducts } =
-    useLiveQuery(() => {
-      if (!isSearchActive) return undefined;
+  const { data, isLoading: isSearching } = useQuery({
+    queryKey: ["search-suggestions", trimmedSearch],
+    queryFn: () => getSearchSuggestions({ data: { q: trimmedSearch } }),
+    enabled: isSearchActive
+  });
 
-      let query = new Query().from({ p: productsCollection });
-      for (const w of searchWords) {
-        query = query.where(({ p }) =>
-          or(ilike(p.name, `%${w}%`), ilike(p.description, `%${w}%`))
-        );
-      }
-
-      // Join first asset
-      const firstAssetIdSubquery = new Query()
-        .from({ a: assetsCollection })
-        .groupBy(({ a }) => a.product_id)
-        .select(({ a }) => ({
-          product_id: a.product_id,
-          first_asset_id: min(a.id)
-        }));
-
-      return query
-        .leftJoin({ fa_id: firstAssetIdSubquery }, ({ p, fa_id }) =>
-          eq(p.id, fa_id?.product_id)
-        )
-        .leftJoin({ asset: assetsCollection }, ({ asset, fa_id }) =>
-          eq(asset.id, fa_id?.first_asset_id)
-        )
-        .orderBy(({ p }) => p.base_price, {
-          direction: "asc",
-          nulls: "last"
-        })
-        .select(({ p, asset }) => ({
-          ...p,
-          asset
-        }))
-        .limit(3);
-    }, [searchWords, isSearchActive]);
-
-  // --- Live matching categories ---
-  const { data: matchingCategories, isLoading: isFetchingCategories } =
-    useLiveQuery(() => {
-      if (!isSearchActive) return undefined;
-
-      let q = new Query().from({ ca: categoriesCollection });
-      for (const w of searchWords) {
-        q = q.where(({ ca }) =>
-          or(ilike(ca.name, `%${w}%`), ilike(ca.description, `%${w}%`))
-        );
-      }
-      return q
-        .orderBy(({ ca }) => ca.name)
-        .select(({ ca }) => ({ ...ca }))
-        .limit(3);
-    }, [searchWords, isSearchActive]);
-
-  // --- Live matching companies ---
-  const { data: matchingCompanies, isLoading: isFetchingCompanies } =
-    useLiveQuery(() => {
-      if (!isSearchActive) return undefined;
-
-      let q = new Query().from({ co: companiesCollection });
-      for (const w of searchWords) {
-        q = q.where(({ co }) =>
-          or(ilike(co.name, `%${w}%`), ilike(co.description, `%${w}%`))
-        );
-      }
-      return q
-        .orderBy(({ co }) => co.name)
-        .select(({ co }) => ({ ...co }))
-        .limit(3);
-    }, [searchWords, isSearchActive]);
-
-  // --- Combined loading state ---
-  const isSearching =
-    isFetchingProducts || isFetchingCategories || isFetchingCompanies;
-
-  // --- Event Handlers ---
+  const suggestions = data?.suggestions;
+  const matchingCategories = data?.matchingCategories;
+  const matchingCompanies = data?.matchingCompanies;
 
   const clearSearch = () => {
     setSearch("");
@@ -508,8 +520,6 @@ export function SearchBar() {
     </Command>
   );
 }
-
-// --- Icon Components ---
 
 const XCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg

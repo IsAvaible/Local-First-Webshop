@@ -65,6 +65,8 @@ export default function Header() {
             Home
           </Link>
 
+          <SearchBar />
+
           <Button variant="ghost" size="icon" asChild>
             <Link
               to={"/wishlist"}
