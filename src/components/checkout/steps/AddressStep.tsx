@@ -3,14 +3,11 @@ import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
-// TanStack Start & React Query
-import { createServerFn } from "@tanstack/react-start";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
-// Drizzle ORM
-import { eq } from "drizzle-orm";
-import { db } from "@/db/connection";
-import { userAddressesTable, type UserAddress } from "@/db/schema";
+import {
+  useUserAddressesQuery,
+  useCreateUserAddressMutation
+} from "@/hooks/queries/useAddressQueries.ts";
+import { type UserAddress } from "@/db/schema";
 
 // UI & Utils
 import {
@@ -37,45 +34,6 @@ import { MapPinIcon, CheckIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
 import { CountryDropdown } from "@/components/ui/country-dropdown";
-
-// --- Server Functions ---
-
-const getUserAddresses = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ userId: z.string() }))
-  .handler(async ({ data: { userId } }) => {
-    return await db
-      .select()
-      .from(userAddressesTable)
-      .where(eq(userAddressesTable.user_id, userId));
-  });
-
-const createUserAddress = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({
-      user_id: z.string(),
-      recipient_name: z.string(),
-      company_name: z.string().nullable().optional(),
-      line1: z.string(),
-      line2: z.string().nullable().optional(),
-      city: z.string(),
-      state: z.string().nullable().optional(),
-      zip_code: z.string(),
-      country_code: z.string(),
-      phone_number: z.string().nullable().optional(),
-      email_address: z.string().nullable().optional(),
-      is_default_delivery: z.boolean().optional(),
-      is_default_billing: z.boolean().optional()
-    })
-  )
-  .handler(async ({ data }) => {
-    // The database schema uses defaultRandom() for IDs, so Drizzle handles generation
-    const [newAddress] = await db
-      .insert(userAddressesTable)
-      .values(data)
-      .returning();
-
-    return newAddress;
-  });
 
 // --- Client Validation Schema ---
 
@@ -128,7 +86,6 @@ export default function AddressStep({
   billingAddressId,
   onSelectBillingAddress
 }: AddressStepProps) {
-  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("saved");
   const [sameAsShipping, setSameAsShipping] = useState(true);
 
@@ -136,40 +93,9 @@ export default function AddressStep({
   const userId = session?.user.id;
 
   // 1. Fetch Addresses via React Query
-  const { data: addresses, isLoading } = useQuery({
-    queryKey: ["addresses", userId],
-    queryFn: () => getUserAddresses({ data: { userId: userId! } }),
-    enabled: !!userId // Only run if we actually have a logged-in user
-  });
+  const { data: addresses, isLoading } = useUserAddressesQuery(userId);
 
-  // 2. Setup Address Creation Mutation
-  const createMutation = useMutation({
-    mutationFn: (
-      newAddressData: Parameters<typeof createUserAddress>[0]["data"]
-    ) => createUserAddress({ data: newAddressData }),
-    onSuccess: async (newAddress) => {
-      // Refresh the address list immediately
-      await queryClient.invalidateQueries({ queryKey: ["addresses", userId] });
-
-      // Auto-select the newly generated address
-      onSelectAddress(newAddress.id);
-      reset();
-      setActiveTab("saved");
-    },
-    onError: (error) => {
-      console.error("Failed to save address:", error);
-    }
-  });
-
-  useEffect(() => {
-    if (billingAddressId && billingAddressId !== selectedAddressId) {
-      setSameAsShipping(false);
-    } else if (billingAddressId === null && selectedAddressId) {
-      setSameAsShipping(true);
-    }
-  }, [billingAddressId, selectedAddressId]);
-
-  // 3. Setup React Hook Form
+  // 3. Setup React Hook Form First to access reset function
   const form = useForm<UserAddressFormValues>({
     resolver: zodResolver(addressFormSchema),
     defaultValues: {
@@ -192,6 +118,22 @@ export default function AddressStep({
     formState: { errors },
     reset
   } = form;
+
+  // 2. Setup Address Creation Mutation
+  const createMutation = useCreateUserAddressMutation(userId, (newAddress) => {
+    // Auto-select the newly generated address
+    onSelectAddress(newAddress.id);
+    reset();
+    setActiveTab("saved");
+  });
+
+  useEffect(() => {
+    if (billingAddressId && billingAddressId !== selectedAddressId) {
+      setSameAsShipping(false);
+    } else if (billingAddressId === null && selectedAddressId) {
+      setSameAsShipping(true);
+    }
+  }, [billingAddressId, selectedAddressId]);
 
   // 4. Handle Form Submission
   // eslint-disable-next-line @typescript-eslint/require-await

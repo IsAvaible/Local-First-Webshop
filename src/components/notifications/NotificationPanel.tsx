@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
-import { desc, eq, inArray } from "drizzle-orm";
-
-import { db } from "@/db/connection";
-import { notificationsTable, type Notification } from "@/db/schema";
+import {
+  useNotificationsQuery,
+  useMarkNotificationsAsSeenMutation,
+  useMarkNotificationsAsReadMutation,
+  useMarkNotificationAsClickedMutation
+} from "@/hooks/queries/useNotificationQueries.ts";
+import { type Notification } from "@/db/schema";
 
 import { BellIcon, CheckCheckIcon } from "lucide-react";
 import {
@@ -21,71 +21,14 @@ import { Link } from "@tanstack/react-router";
 import { NotificationIcon } from "@/components/notifications/NotificationIcon";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
-// --- Server Functions ---
-
-const idSchema = z.uuidv4();
-
-const getNotifications = createServerFn({ method: "GET" }).handler(async () => {
-  return (await db
-    .select()
-    .from(notificationsTable)
-    .orderBy(desc(notificationsTable.updated_at))) as Notification[];
-});
-
-const markNotificationsAsSeen = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ ids: z.array(idSchema) }))
-  .handler(async ({ data: { ids } }) => {
-    if (ids.length === 0) return { success: true };
-    await db
-      .update(notificationsTable)
-      .set({ seen_at: new Date() })
-      .where(inArray(notificationsTable.id, ids));
-    return { success: true };
-  });
-
-const markNotificationsAsRead = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ ids: z.array(idSchema) }))
-  .handler(async ({ data: { ids } }) => {
-    if (ids.length === 0) return { success: true };
-    await db
-      .update(notificationsTable)
-      .set({ read_at: new Date() })
-      .where(inArray(notificationsTable.id, ids));
-    return { success: true };
-  });
-
-const markNotificationAsClicked = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({
-      id: idSchema,
-      needsSeen: z.boolean(),
-      needsRead: z.boolean()
-    })
-  )
-  .handler(async ({ data: { id, needsSeen, needsRead } }) => {
-    const updateData: Record<string, Date> = { clicked_at: new Date() };
-    if (needsSeen) updateData.seen_at = new Date();
-    if (needsRead) updateData.read_at = new Date();
-
-    await db
-      .update(notificationsTable)
-      .set(updateData)
-      .where(eq(notificationsTable.id, id));
-    return { success: true };
-  });
-
 // --- Client Component ---
 
 export function NotificationPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [parentRef, setParentRef] = useState<HTMLDivElement | null>(null);
-  const queryClient = useQueryClient();
 
   // Fetch notifications data
-  const { data: notifications = [] } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: () => getNotifications()
-  });
+  const { data: notifications = [] } = useNotificationsQuery();
 
   // Derive counts and specific IDs on the client side
   const unseenIds = useMemo(
@@ -102,30 +45,9 @@ export function NotificationPanel() {
   const unreadCount = unreadIds.length;
 
   // Mutations
-  const markSeenMutation = useMutation({
-    mutationFn: (ids: string[]) => markNotificationsAsSeen({ data: { ids } }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    }
-  });
-
-  const markReadMutation = useMutation({
-    mutationFn: (ids: string[]) => markNotificationsAsRead({ data: { ids } }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    }
-  });
-
-  const markClickedMutation = useMutation({
-    mutationFn: (data: {
-      id: string;
-      needsSeen: boolean;
-      needsRead: boolean;
-    }) => markNotificationAsClicked({ data }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    }
-  });
+  const markSeenMutation = useMarkNotificationsAsSeenMutation();
+  const markReadMutation = useMarkNotificationsAsReadMutation();
+  const markClickedMutation = useMarkNotificationAsClickedMutation();
 
   const rowVirtualizer = useVirtualizer({
     count: notifications.length,

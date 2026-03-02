@@ -19,23 +19,10 @@ import {
 } from "lucide-react";
 import * as React from "react";
 import { Link, useLocation, useSearch } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
-import { and, asc, ilike, inArray, or } from "drizzle-orm";
-
-import { db } from "@/db/connection.ts";
-import {
-  assetsTable,
-  categoriesTable,
-  companiesTable,
-  productsTable,
-  type Asset,
-  type Company
-} from "@/db/schema.ts";
-
+import type { Asset } from "@/db/schema.ts";
 import { AssetImage } from "@/components/ui/assetImage.tsx";
 import { Route } from "@/routes/search.tsx";
+import { useSearchSuggestionsQuery } from "@/hooks/queries/useSearchQueries.ts";
 
 // Static Navigation Items
 const NAV_ITEMS = [
@@ -48,82 +35,6 @@ const NAV_ITEMS = [
     shortcut: "⌘S"
   }
 ];
-
-const getSearchSuggestions = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ q: z.string() }))
-  .handler(async ({ data: { q } }) => {
-    const trimmedSearch = q.trim();
-    const searchWords =
-      trimmedSearch.length >= 2 ? trimmedSearch.split(" ").filter(Boolean) : [];
-
-    if (searchWords.length === 0) {
-      return { suggestions: [], matchingCategories: [], matchingCompanies: [] };
-    }
-
-    const buildIlike = (
-      table:
-        | typeof productsTable
-        | typeof categoriesTable
-        | typeof companiesTable
-    ) => {
-      return searchWords.map(
-        (w) =>
-          or(ilike(table.name, `%${w}%`), ilike(table.description, `%${w}%`))!
-      );
-    };
-
-    const prodWhere = buildIlike(productsTable);
-    const productsRows = await db
-      .select()
-      .from(productsTable)
-      .where(and(...prodWhere))
-      .orderBy(asc(productsTable.base_price))
-      .limit(3);
-
-    const productIds = productsRows.map((p) => p.id);
-    const firstAssetByProductId = new Map<number, Asset>();
-
-    if (productIds.length > 0) {
-      const assetRows = await db
-        .select()
-        .from(assetsTable)
-        .where(inArray(assetsTable.product_id, productIds))
-        .orderBy(asc(assetsTable.id));
-
-      for (const asset of assetRows) {
-        if (!firstAssetByProductId.has(asset.product_id)) {
-          firstAssetByProductId.set(asset.product_id, asset);
-        }
-      }
-    }
-
-    const suggestions = productsRows.map((p) => ({
-      ...p,
-      asset: firstAssetByProductId.get(p.id)
-    }));
-
-    const catWhere = buildIlike(categoriesTable);
-    const matchingCategories = await db
-      .select()
-      .from(categoriesTable)
-      .where(and(...catWhere))
-      .orderBy(asc(categoriesTable.name))
-      .limit(3);
-
-    const compWhere = buildIlike(companiesTable);
-    const matchingCompanies = (await db
-      .select()
-      .from(companiesTable)
-      .where(and(...compWhere))
-      .orderBy(asc(companiesTable.name))
-      .limit(3)) as Company[];
-
-    return {
-      suggestions,
-      matchingCategories,
-      matchingCompanies
-    };
-  });
 
 export function SearchBar() {
   const navigate = Route.useNavigate();
@@ -165,11 +76,10 @@ export function SearchBar() {
   }, [isSearchActive, trimmedSearch]);
 
   // --- Live suggestions ---
-  const { data, isLoading: isSearching } = useQuery({
-    queryKey: ["search-suggestions", trimmedSearch],
-    queryFn: () => getSearchSuggestions({ data: { q: trimmedSearch } }),
-    enabled: isSearchActive
-  });
+  const { data, isLoading: isSearching } = useSearchSuggestionsQuery(
+    trimmedSearch,
+    isSearchActive
+  );
 
   const suggestions = data?.suggestions;
   const matchingCategories = data?.matchingCategories;

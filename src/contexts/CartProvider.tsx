@@ -11,11 +11,8 @@ import { authClient } from "@/lib/auth-client";
 import { v4 as uuidv4 } from "uuid";
 import { generateKeyBetween } from "fractional-indexing";
 import type { Cart } from "@/db/schema";
-import {
-  useEnrichedTree,
-  useProductLookups
-} from "@/contexts/useCartContextUtils.ts";
-import { toast } from "sonner";
+import { useEnrichedTree } from "@/contexts/useCartContextUtils.ts";
+import { useProductLookups } from "@/hooks/queries/useProductQueries.ts";
 
 type CartSessionProps = {
   cartId: string;
@@ -174,40 +171,17 @@ function CartSession({
     });
   }, []);
 
-  const updateItemQuantity = useCallback(
-    (itemId: string, qty: number) => {
-      setNodes((prev) =>
-        prev.map((n) =>
-          n.id === itemId && n.type === "item" ? { ...n, quantity: qty } : n
-        )
-      );
-    }, []);
+  const updateItemQuantity = useCallback((itemId: string, qty: number) => {
+    setNodes((prev) =>
+      prev.map((n) =>
+        n.id === itemId && n.type === "item" ? { ...n, quantity: qty } : n
+      )
+    );
+  }, []);
 
   const getItemNotes = useCallback(
     (itemId: string) => {
       const node = nodes.find((n) => n.id === itemId && n.type === "item");
-
-      // Get stock info, excluding the current item
-      const { maxStock, currentQty: otherItemsQty } = getProductStockInfo(
-        node.product_id,
-        stock_sum,
-        itemId
-      );
-
-      let finalQty = qty;
-
-      // Clamp the requested quantity
-      if (maxStock !== undefined) {
-        const maxAllowedForThisItem = Math.max(0, maxStock - otherItemsQty);
-        finalQty = Math.min(qty, maxAllowedForThisItem);
-
-        if (qty > maxAllowedForThisItem) {
-          toast.error(
-            `Cannot set quantity to ${qty} as it exceeds available stock. Max allowed is ${maxAllowedForThisItem}.`
-          );
-        }
-      }
-
       return node?.type === "item" ? node.notes : undefined;
     },
     [nodes]

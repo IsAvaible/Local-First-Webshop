@@ -1,85 +1,21 @@
 import { Link } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
-import { inArray, asc, eq } from "drizzle-orm";
-
-import { db } from "@/db/connection";
 import {
-  wishlistTable,
-  productsTable,
-  assetsTable,
-  type Asset
-} from "@/db/schema";
+  useWishlistItemsQuery,
+  useRemoveWishlistItemMutation
+} from "@/hooks/queries/useWishlistQueries.ts";
 
 import ProductCard from "@/components/browse/ProductCard";
 import { Button } from "@/components/ui/button";
 import { HeartIcon, Search } from "lucide-react";
 
-// --- Server Functions ---
-
-const getWishlistItems = createServerFn({ method: "GET" }).handler(async () => {
-  // 1. Fetch wishlist items joined with product data
-  const wishlistRows = await db
-    .select({
-      wishlistId: wishlistTable.id,
-      price_snapshot: wishlistTable.price_snapshot,
-      product: productsTable
-    })
-    .from(wishlistTable)
-    .innerJoin(productsTable, eq(wishlistTable.product_id, productsTable.id));
-
-  // 2. Fetch the first asset for each product (matching the subquery logic)
-  const productIds = wishlistRows.map((r) => r.product.id);
-  const firstAssetByProductId = new Map<number, Asset>();
-
-  if (productIds.length > 0) {
-    const assetRows = await db
-      .select()
-      .from(assetsTable)
-      .where(inArray(assetsTable.product_id, productIds))
-      .orderBy(asc(assetsTable.id));
-
-    for (const asset of assetRows) {
-      if (!firstAssetByProductId.has(asset.product_id)) {
-        firstAssetByProductId.set(asset.product_id, asset);
-      }
-    }
-  }
-
-  // 3. Combine and return the structured data
-  return wishlistRows.map((row) => ({
-    ...row,
-    asset: firstAssetByProductId.get(row.product.id)
-  }));
-});
-
-const removeWishlistItem = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ id: z.string() }))
-  .handler(async ({ data: { id } }) => {
-    await db.delete(wishlistTable).where(eq(wishlistTable.id, id));
-    return { success: true };
-  });
-
 // --- Client Component ---
 
 export function Wishlist() {
-  const queryClient = useQueryClient();
-
   // Fetch wishlist data
-  const { data: wishlistItems, isLoading } = useQuery({
-    queryKey: ["wishlist"],
-    queryFn: () => getWishlistItems()
-  });
+  const { data: wishlistItems, isLoading } = useWishlistItemsQuery();
 
   // Handle server-side deletion
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => removeWishlistItem({ data: { id } }),
-    onSuccess: async () => {
-      // Invalidate the query to refetch the updated wishlist automatically
-      await queryClient.invalidateQueries({ queryKey: ["wishlist"] });
-    }
-  });
+  const deleteMutation = useRemoveWishlistItemMutation();
 
   if (isLoading) {
     return (

@@ -11,18 +11,13 @@ import {
   redirect,
   stripSearchParams
 } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
-import { eq, not, desc } from "drizzle-orm";
-import { db } from "@/db/connection";
-import { userSettingsTable, ordersTable, type Order } from "@/db/schema";
-import { users as usersTable } from "@/db/auth-schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
+
 import { zodValidator } from "@tanstack/zod-adapter";
 import { ProfileDashboard } from "@/components/profile/ProfileDashboard";
 import { ProfileOrders } from "@/components/profile/ProfileOrders";
@@ -30,7 +25,6 @@ import { ProfileWishlist } from "@/components/profile/ProfileWishlist";
 import { ProfilePaymentMethods } from "@/components/profile/ProfilePaymentMethods";
 import { ProfileSettings } from "@/components/profile/ProfileSettings";
 import { authClient } from "@/lib/auth-client.ts";
-import { auth } from "@/lib/auth.ts";
 
 // --- Search Params Schema ---
 const profileUrlSchema = z.object({
@@ -47,43 +41,10 @@ const urlDefaultValues = {
   tab: "dashboard" as Tab
 };
 
-// --- Server Functions ---
-const getProfileData = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ userId: z.string() }))
-  .handler(async ({ data: { userId } }) => {
-    // 1. Fetch User
-    const [user] = await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.id, userId));
-
-    // 2. Fetch User Settings
-    const [userSettings] = await db
-      .select()
-      .from(userSettingsTable)
-      .where(eq(userSettingsTable.user_id, userId));
-
-    // 3. Fetch Orders
-    const orders = (await db
-      .select()
-      .from(ordersTable)
-      .where(not(eq(ordersTable.status, "pending")))
-      .orderBy(desc(ordersTable.created_at))) as Order[];
-
-    return { user, userSettings, orders };
-  });
-
-// Create a server function to get the session securely
-const getAuthSessionFn = createServerFn({ method: "GET" }).handler(async () => {
-  const request = getRequest();
-
-  // Check the session using the server-side auth object and incoming headers
-  const session = await auth.api.getSession({
-    headers: request?.headers
-  });
-
-  return session;
-});
+import {
+  getProfileData,
+  getAuthSessionFn
+} from "@/server/functions/profile.ts";
 
 // --- Route Definition with Preloading ---
 export const Route = createFileRoute("/profile")({

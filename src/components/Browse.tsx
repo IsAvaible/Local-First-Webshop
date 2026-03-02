@@ -31,7 +31,8 @@ import BrowseSortSelect from "@/components/browse/BrowseSortSelect.tsx";
 import { cn, type JsonValue } from "@/lib/utils.ts";
 import { Link } from "@tanstack/react-router";
 import { VirtuosoGrid } from "react-virtuoso";
-import { getSearchPageData, type ProductSearch } from "@/routes/search.tsx";
+import { getSearchPageData } from "@/server/functions/search.ts";
+import type { ProductSearch } from "@/shared/search.ts";
 
 export default function Browse({
   loading,

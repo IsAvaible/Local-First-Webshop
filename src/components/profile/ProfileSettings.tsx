@@ -1,16 +1,9 @@
-import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
 import { Loader2, User, Bell } from "lucide-react";
 
-// --- New Imports for SSR/Mutation ---
-import { createServerFn } from "@tanstack/react-start";
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
-import { eq } from "drizzle-orm";
-import { db } from "@/db/connection";
-import { userSettingsTable } from "@/db/schema";
+import { type UserSettingsFormValues } from "@/server/functions/profile.ts";
+import { useUpdateProfileSettingsMutation } from "@/hooks/queries/useProfileQueries.ts";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -40,55 +33,13 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { CurrencySelect } from "@/components/ui/currency-select";
 import type { UserSettings } from "@/db/schema";
-
-// --- Zod Schema Definition ---
-const userSettingsSchema = z.object({
-  first_name: z
-    .string()
-    .trim()
-    .min(2, "First name must be at least 2 characters"),
-  last_name: z
-    .string()
-    .trim()
-    .min(2, "Last name must be at least 2 characters"),
-  phone_number: z
-    .string()
-    .trim()
-    .refine(
-      (val) => val === "" || /^[\d+\-\s()]+$/.test(val),
-      "Invalid phone number format"
-    )
-    .optional(),
-  birthday: z.string().optional(),
-  currency: z.string().min(1, "Please select a currency"),
-  language: z.string().min(1, "Please select a language"),
-  notify_order_updates: z.boolean(),
-  notify_newsletter: z.boolean(),
-  notify_price_changes: z.boolean()
-});
-
-type UserSettingsFormValues = z.infer<typeof userSettingsSchema>;
-
-// --- Server Function ---
-const updateSettingsFn = createServerFn({ method: "POST" })
-  .inputValidator(userSettingsSchema.partial().extend({ user_id: z.string() }))
-  .handler(async ({ data }) => {
-    const { user_id, ...updates } = data;
-    await db
-      .update(userSettingsTable)
-      .set(updates)
-      .where(eq(userSettingsTable.user_id, user_id));
-
-    return { success: true };
-  });
+import { userSettingsSchema } from "@/shared/profile.ts";
 
 interface ProfileSettingsProps {
   userSettings: UserSettings;
 }
 
 export function ProfileSettings({ userSettings }: ProfileSettingsProps) {
-  const router = useRouter();
-
   const form = useForm<UserSettingsFormValues>({
     resolver: zodResolver(userSettingsSchema),
     values: {
@@ -112,19 +63,7 @@ export function ProfileSettings({ userSettings }: ProfileSettingsProps) {
   } = form;
 
   // --- Mutation ---
-  const updateMutation = useMutation({
-    mutationFn: (data: Parameters<typeof updateSettingsFn>[0]["data"]) =>
-      updateSettingsFn({ data }),
-    onSuccess: async () => {
-      toast("Settings updated successfully");
-      // Invalidate the router to refetch the SSR data in the parent profile loader
-      await router.invalidate();
-    },
-    onError: (error) => {
-      console.error(error);
-      toast(`Failed to update settings: ${error.message}`);
-    }
-  });
+  const updateMutation = useUpdateProfileSettingsMutation();
 
   const isSubmitting = updateMutation.isPending;
 

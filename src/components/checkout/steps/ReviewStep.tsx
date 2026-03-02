@@ -17,29 +17,7 @@ import {
 } from "lucide-react";
 import { AssetImage } from "@/components/ui/assetImage.tsx";
 
-// TanStack Start & React Query
-import { createServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { z } from "zod";
-
-// Drizzle ORM
-import { eq } from "drizzle-orm";
-import { db } from "@/db/connection";
-import { userAddressesTable } from "@/db/schema";
-
-// --- Server Functions ---
-
-const getAddressById = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ addressId: z.string() }))
-  .handler(async ({ data: { addressId } }) => {
-    const [address] = await db
-      .select()
-      .from(userAddressesTable)
-      .where(eq(userAddressesTable.id, addressId))
-      .limit(1);
-
-    return address || null;
-  });
+import { useAddressByIdQuery } from "@/hooks/queries/useAddressQueries.ts";
 
 // --- Client Component ---
 
@@ -57,11 +35,8 @@ function ReviewStep({
   paymentMethodType: string | null;
 }) {
   // Fetch specific address details via React Query
-  const { data: address, isLoading: isAddressLoading } = useQuery({
-    queryKey: ["address", selectedAddressId],
-    queryFn: () => getAddressById({ data: { addressId: selectedAddressId! } }),
-    enabled: !!selectedAddressId // Only fetch if an address was actually selected
-  });
+  const { data: address, isLoading: isAddressLoading } =
+    useAddressByIdQuery(selectedAddressId);
 
   // Helper to make the stripe type readable
   const formatPaymentType = (type: string | null) => {
