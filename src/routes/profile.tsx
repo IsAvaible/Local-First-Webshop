@@ -4,23 +4,19 @@ import {
   CreditCard,
   Heart,
   Settings,
-  LogOut,
-  Loader2
+  LogOut
 } from "lucide-react";
 import {
   createFileRoute,
   redirect,
   stripSearchParams
 } from "@tanstack/react-router";
-import { eq, not, useLiveQuery } from "@tanstack/react-db";
-import {
-  ordersCollection,
-  userSettingsCollection,
-  usersCollection,
-  wishlistCollection,
-  productsCollection,
-  assetsCollection
-} from "@/lib/collections";
+import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
+import { eq, not, desc } from "drizzle-orm";
+import { db } from "@/db/connection";
+import { userSettingsTable, ordersTable, type Order } from "@/db/schema";
+import { users as usersTable } from "@/db/auth-schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -35,6 +31,7 @@ import { ProfilePaymentMethods } from "@/components/profile/ProfilePaymentMethod
 import { ProfileSettings } from "@/components/profile/ProfileSettings";
 import { authClient } from "@/lib/auth-client.ts";
 import { clearYjsStorage } from "@/lib/yjs-cleanup.ts";
+import { auth } from "@/lib/auth.ts";
 
 // --- Search Params Schema ---
 const profileUrlSchema = z.object({
@@ -51,6 +48,44 @@ const urlDefaultValues = {
   tab: "dashboard" as Tab
 };
 
+// --- Server Functions ---
+const getProfileData = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ userId: z.string() }))
+  .handler(async ({ data: { userId } }) => {
+    // 1. Fetch User
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, userId));
+
+    // 2. Fetch User Settings
+    const [userSettings] = await db
+      .select()
+      .from(userSettingsTable)
+      .where(eq(userSettingsTable.user_id, userId));
+
+    // 3. Fetch Orders
+    const orders = (await db
+      .select()
+      .from(ordersTable)
+      .where(not(eq(ordersTable.status, "pending")))
+      .orderBy(desc(ordersTable.created_at))) as Order[];
+
+    return { user, userSettings, orders };
+  });
+
+// Create a server function to get the session securely
+const getAuthSessionFn = createServerFn({ method: "GET" }).handler(async () => {
+  const request = getRequest();
+
+  // Check the session using the server-side auth object and incoming headers
+  const session = await auth.api.getSession({
+    headers: request?.headers
+  });
+
+  return session;
+});
+
 // --- Route Definition with Preloading ---
 export const Route = createFileRoute("/profile")({
   ssr: true,
@@ -60,8 +95,8 @@ export const Route = createFileRoute("/profile")({
   },
   // Add the Authentication Guard
   beforeLoad: async ({ location }) => {
-    // Fetch the session using the Better Auth client
-    const { data: session } = await authClient.getSession();
+    // Fetch the session using the server function instead of the client
+    const session = await getAuthSessionFn();
 
     // Check if there is no session, or if the user is an anonymous guest
     if (!session || session.user.isAnonymous) {
@@ -73,20 +108,20 @@ export const Route = createFileRoute("/profile")({
       });
     }
 
-    return { user: session.user };
+    return { authUser: session.user };
   },
   loader: async ({ context }) => {
-    await Promise.all([
-      ordersCollection.preload(),
-      userSettingsCollection.preload(),
-      usersCollection.preload(),
-      // Wishlist tab
-      wishlistCollection.preload(),
-      productsCollection.preload(),
-      assetsCollection.preload()
-    ]);
+    // Fetch all necessary data on the server
+    const data = await getProfileData({
+      data: { userId: context.authUser.id }
+    });
 
-    return { user: context.user };
+    return {
+      authUser: context.authUser,
+      user: data.user,
+      userSettings: data.userSettings,
+      orders: data.orders
+    };
   },
   component: EcommerceProfile
 });
@@ -94,7 +129,9 @@ export const Route = createFileRoute("/profile")({
 function EcommerceProfile() {
   // --- URL State Management ---
   const { tab } = Route.useSearch();
-  const { user: authUser } = Route.useLoaderData();
+
+  // Data is now readily available from SSR
+  const { user, userSettings, orders } = Route.useLoaderData();
   const navigate = Route.useNavigate();
 
   const handleTabChange = async (newTab: string) => {
@@ -105,93 +142,22 @@ function EcommerceProfile() {
   };
 
   const handleSignOut = async () => {
-    // Explicitly delete the Service Worker auth cache.
-    if ("caches" in window) {
-      try {
-        await caches.delete("auth-session-cache");
-      } catch (err) {
-        console.error("Failed to clear auth cache:", err);
-      }
-    }
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: async () => {
+          await clearYjsStorage();
 
-    await clearYjsStorage();
-
-    try {
-      await authClient.signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            // Force a hard reload to tear down the stale Electric sync stream
-            window.location.href = "/";
-
-            // Theoretically we should also clear the Electric client state here,
-            // however this will also cause all public cached state to be lost.
-            // Hence, we do not do this for now and instead hope that electric
-            // cleans itself up. (shape invalidation?)
-          },
-          onError: () => {
-            // Server reached, but returned an error (e.g., 500)
-            console.warn(
-              "Sign out network request failed, forcing local teardown."
-            );
-            window.location.href = "/";
-          }
+          window.location.href = "/";
         }
-      });
-    } catch {
-      console.warn(
-        "Sign out network request failed (offline). Queuing background logout."
-      );
-
-      // Set a flag to kill the session as soon as the network returns
-      localStorage.setItem("pending_offline_logout", "true");
-
-      window.location.href = "/";
-    }
+      }
+    });
   };
-
-  // --- Data Fetching ---
-
-  // 1. Fetch User
-  const { data: user, isLoading: isLoadingUser } = useLiveQuery((q) =>
-    q
-      .from({ u: usersCollection })
-      .where(({ u }) => eq(u.id, authUser.id))
-      .findOne()
-  );
-
-  // 2. Fetch User Settings
-  const { data: userSettings, isLoading: isLoadingSettings } = useLiveQuery(
-    (q) =>
-      q
-        .from({ u: userSettingsCollection })
-        .where(({ u }) => eq(u.user_id, authUser.id))
-        .findOne()
-  );
-
-  // 3. Fetch Orders
-  const { data: orders, isLoading: isLoadingOrders } = useLiveQuery((q) =>
-    q
-      .from({ o: ordersCollection })
-      .where(({ o }) => not(eq(o.status, "pending")))
-      .orderBy(({ o }) => o.created_at, "desc")
-  );
-
-  // Combined Loading State
-  const isLoadingProfile = isLoadingUser || isLoadingSettings;
 
   // --- Derived State ---
   const displayName =
     userSettings?.first_name && userSettings?.last_name
       ? `${userSettings.first_name} ${userSettings.last_name}`
       : user?.email;
-
-  if (isLoadingProfile || isLoadingOrders) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-      </div>
-    );
-  }
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">

@@ -3,7 +3,15 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Loader2, User, Bell } from "lucide-react";
-import { userSettingsCollection } from "@/lib/collections";
+
+// --- New Imports for SSR/Mutation ---
+import { createServerFn } from "@tanstack/react-start";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
+import { eq } from "drizzle-orm";
+import { db } from "@/db/connection";
+import { userSettingsTable } from "@/db/schema";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -61,11 +69,26 @@ const userSettingsSchema = z.object({
 
 type UserSettingsFormValues = z.infer<typeof userSettingsSchema>;
 
+// --- Server Function ---
+const updateSettingsFn = createServerFn({ method: "POST" })
+  .inputValidator(userSettingsSchema.partial().extend({ user_id: z.string() }))
+  .handler(async ({ data }) => {
+    const { user_id, ...updates } = data;
+    await db
+      .update(userSettingsTable)
+      .set(updates)
+      .where(eq(userSettingsTable.user_id, user_id));
+
+    return { success: true };
+  });
+
 interface ProfileSettingsProps {
   userSettings: UserSettings;
 }
 
 export function ProfileSettings({ userSettings }: ProfileSettingsProps) {
+  const router = useRouter();
+
   const form = useForm<UserSettingsFormValues>({
     resolver: zodResolver(userSettingsSchema),
     values: {
@@ -85,10 +108,27 @@ export function ProfileSettings({ userSettings }: ProfileSettingsProps) {
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting, dirtyFields }
+    formState: { errors, dirtyFields }
   } = form;
 
-  const onSubmit = async (data: UserSettingsFormValues) => {
+  // --- Mutation ---
+  const updateMutation = useMutation({
+    mutationFn: (data: Parameters<typeof updateSettingsFn>[0]["data"]) =>
+      updateSettingsFn({ data }),
+    onSuccess: async () => {
+      toast("Settings updated successfully");
+      // Invalidate the router to refetch the SSR data in the parent profile loader
+      await router.invalidate();
+    },
+    onError: (error) => {
+      console.error(error);
+      toast(`Failed to update settings: ${error.message}`);
+    }
+  });
+
+  const isSubmitting = updateMutation.isPending;
+
+  const onSubmit = (data: UserSettingsFormValues) => {
     if (!userSettings.user_id) return;
 
     // 1. Get keys of dirty fields only
@@ -103,21 +143,11 @@ export function ProfileSettings({ userSettings }: ProfileSettingsProps) {
       dirtyKeys.map((key) => [key, data[key]])
     );
 
-    try {
-      const tx = userSettingsCollection.update(
-        userSettings.user_id,
-        (settings) => {
-          // 3. Merges updates directly into settings
-          return Object.assign(settings, updates);
-        }
-      );
-      await tx.isPersisted.promise;
-      toast("Settings updated successfully");
-    } catch (error) {
-      const message = `Failed to update settings:${JSON.stringify(error)}`;
-      console.error(error);
-      toast(message);
-    }
+    // 3. Fire mutation to update server
+    updateMutation.mutate({
+      user_id: userSettings.user_id,
+      ...updates
+    });
   };
 
   return (
