@@ -1,19 +1,125 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { eq, useLiveQuery } from "@tanstack/react-db";
+import { createServerFn } from "@tanstack/react-start";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { eq, desc, and } from "drizzle-orm";
+import { z } from "zod";
+import { db } from "@/db/connection.ts";
 import {
-  productsCollection,
-  categoriesCollection,
-  companiesCollection,
-  assetsCollection,
-  pricingTiersCollection,
-  customFieldDefinitionsCollection,
-  customFieldValuesCollection,
-  wishlistCollection,
-  ordersCollection
-} from "@/lib/collections";
+  productsTable,
+  categoriesTable,
+  companiesTable,
+  assetsTable,
+  pricingTiersTable,
+  customFieldDefinitionsTable,
+  customFieldValuesTable,
+  wishlistTable,
+  type CustomFieldValue,
+  type Company
+} from "@/db/schema.ts";
 import Product from "@/components/Product.tsx";
 import { authClient } from "@/lib/auth-client";
 import { v4 as uuidv4 } from "uuid";
+
+const getProductPageData = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ productId: z.number() }))
+  .handler(async ({ data }) => {
+    const { productId } = data;
+
+    const productRows = await db
+      .select({
+        product: productsTable,
+        category: categoriesTable,
+        company: companiesTable
+      })
+      .from(productsTable)
+      .leftJoin(
+        categoriesTable,
+        eq(productsTable.category_id, categoriesTable.id)
+      )
+      .leftJoin(companiesTable, eq(productsTable.company_id, companiesTable.id))
+      .where(eq(productsTable.id, productId));
+
+    const productData = productRows[0] || {};
+
+    const assetsData = await db
+      .select()
+      .from(assetsTable)
+      .where(eq(assetsTable.product_id, productId));
+
+    const pricingTiersData = await db
+      .select()
+      .from(pricingTiersTable)
+      .where(eq(pricingTiersTable.product_id, productId))
+      .orderBy(desc(pricingTiersTable.min_quantity));
+
+    // Fetch custom field values and their definitions for this product
+    const customFieldRows = await db
+      .select({
+        cfv: customFieldValuesTable,
+        cfd: customFieldDefinitionsTable
+      })
+      .from(customFieldValuesTable)
+      .innerJoin(
+        customFieldDefinitionsTable,
+        eq(
+          customFieldValuesTable.field_definition_id,
+          customFieldDefinitionsTable.id
+        )
+      )
+      .where(eq(customFieldValuesTable.product_id, productId));
+
+    const customFieldData = customFieldRows.map(({ cfv, cfd }) => ({
+      ...(cfv as CustomFieldValue),
+      ...cfd
+    }));
+
+    return {
+      product: productData.product,
+      category: productData.category,
+      company: productData.company as Company,
+      assets: assetsData,
+      pricingTiers: pricingTiersData,
+      customFields: customFieldData
+    };
+  });
+
+const getProductWishlist = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ productId: z.number(), userId: z.string() }))
+  .handler(async ({ data }) => {
+    return db
+      .select()
+      .from(wishlistTable)
+      .where(
+        and(
+          eq(wishlistTable.product_id, data.productId),
+          eq(wishlistTable.user_id, data.userId)
+        )
+      );
+  });
+
+const addWishlistItem = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      id: z.string(),
+      user_id: z.string(),
+      product_id: z.number(),
+      price_snapshot: z.string()
+    })
+  )
+  .handler(async ({ data }) => {
+    await db.insert(wishlistTable).values({
+      ...data,
+      created_at: new Date()
+    });
+    return { success: true };
+  });
+
+const removeWishlistItem = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ id: z.string() }))
+  .handler(async ({ data: { id } }) => {
+    await db.delete(wishlistTable).where(eq(wishlistTable.id, id));
+    return { success: true };
+  });
 
 export const Route = createFileRoute("/products/$productId")({
   ssr: true,
@@ -21,100 +127,60 @@ export const Route = createFileRoute("/products/$productId")({
     parse: (params) => ({ productId: parseInt(params.productId, 10) })
   },
   component: ProductPageComponent,
-  loader: async () => {
-    await Promise.all([
-      productsCollection.preload(),
-      categoriesCollection.preload(),
-      companiesCollection.preload(),
-      pricingTiersCollection.preload(),
-      assetsCollection.preload(),
-      ordersCollection.preload(),
-      customFieldValuesCollection.preload(),
-      customFieldDefinitionsCollection.preload(),
-      wishlistCollection.preload()
-    ]);
-  }
+  loader: async ({ params: { productId } }) =>
+    getProductPageData({ data: { productId } })
 });
 
 function ProductPageComponent() {
   const { productId } = Route.useParams();
   const { data: session } = authClient.useSession();
+  const queryClient = useQueryClient();
 
-  const { data: productData, isLoading: isProductLoading } = useLiveQuery(
-    (q) => {
-      return q
-        .from({ product: productsCollection })
-        .where(({ product }) => eq(product.id, productId))
-        .join({ category: categoriesCollection }, ({ product, category }) =>
-          eq(product.category_id, category.id)
-        )
-        .join({ company: companiesCollection }, ({ product, company }) =>
-          eq(product.company_id, company.id)
-        );
+  const { product, category, company, assets, pricingTiers, customFields } =
+    Route.useLoaderData();
+
+  const { data: wishlistData, isLoading: isWishlistLoading } = useQuery({
+    queryKey: ["wishlist", productId, session?.user?.id],
+    queryFn: () =>
+      getProductWishlist({ data: { productId, userId: session!.user.id } }),
+    enabled: !!session?.user?.id
+  });
+
+  const addMutation = useMutation({
+    mutationFn: (data: Parameters<typeof addWishlistItem>[0]["data"]) =>
+      addWishlistItem({ data }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["wishlist", productId, session?.user?.id]
+      });
     }
-  );
+  });
 
-  const { data: assetsData, isLoading: isAssetsLoading } = useLiveQuery((q) =>
-    q
-      .from({ asset: assetsCollection })
-      .where(({ asset }) => eq(asset.product_id, productId))
-  );
+  const removeMutation = useMutation({
+    mutationFn: (id: string) => removeWishlistItem({ data: { id } }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["wishlist", productId, session?.user?.id]
+      });
+    }
+  });
 
-  const { data: pricingTiersData, isLoading: isPricingTiersLoading } =
-    useLiveQuery((q) =>
-      q
-        .from({ pricingTier: pricingTiersCollection })
-        .where(({ pricingTier }) => eq(pricingTier.product_id, productId))
-        .orderBy(({ pricingTier }) => [pricingTier.min_quantity, "desc"])
-    );
+  const isLoading = isWishlistLoading;
 
-  // Fetch custom field values and their definitions for this product
-  const { data: customFieldData, isLoading: isCustomFieldsLoading } =
-    useLiveQuery((q) =>
-      q
-        .from({ cfv: customFieldValuesCollection })
-        .innerJoin({ cfd: customFieldDefinitionsCollection }, ({ cfv, cfd }) =>
-          eq(cfv.field_definition_id, cfd.id)
-        )
-        .where(({ cfv }) => eq(cfv.product_id, productId))
-        .select(({ cfv, cfd }) => ({
-          ...cfv,
-          ...cfd
-        }))
-    );
-
-  const { data: wishlistData, isLoading: isWishlistLoading } = useLiveQuery(
-    (q) => {
-      return q
-        .from({ w: wishlistCollection })
-        .where(({ w }) => eq(w.product_id, productId));
-    },
-    [productId]
-  );
-
-  const isLoading =
-    isProductLoading ||
-    isAssetsLoading ||
-    isPricingTiersLoading ||
-    isCustomFieldsLoading ||
-    isWishlistLoading;
-
-  const { product, category, company } = productData[0] || {};
   const wishlistItem = wishlistData?.[0];
   const isInWishlist = !!wishlistItem;
 
   const handleToggleWishlist = () => {
-    if (!session || !product || !pricingTiersData.length) return;
+    if (!session || !product || !pricingTiers.length) return;
 
     if (isInWishlist) {
-      wishlistCollection.delete(wishlistItem.id);
+      removeMutation.mutate(wishlistItem.id);
     } else {
-      wishlistCollection.insert({
+      addMutation.mutate({
+        id: uuidv4(),
         user_id: session.user.id,
         product_id: product.id,
-        price_snapshot: pricingTiersData[0].price_per_unit.toString(),
-        id: uuidv4(),
-        created_at: new Date()
+        price_snapshot: pricingTiers[0].price_per_unit.toString()
       });
     }
   };
@@ -123,11 +189,11 @@ function ProductPageComponent() {
     <Product
       loading={isLoading}
       product={product}
-      category={category}
+      category={category ?? undefined}
       company={company}
-      assets={assetsData}
-      pricingTiers={pricingTiersData}
-      customFields={customFieldData}
+      assets={assets}
+      pricingTiers={pricingTiers}
+      customFields={customFields}
       isInWishlist={isInWishlist}
       onToggleWishlist={handleToggleWishlist}
     />
