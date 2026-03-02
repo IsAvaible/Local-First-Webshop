@@ -4,7 +4,8 @@ import {
   useState,
   useMemo,
   forwardRef,
-  type HTMLAttributes
+  type HTMLAttributes,
+  useCallback
 } from "react";
 import { FilterIcon } from "lucide-react";
 import FilterChips from "@/components/browse/FilterChips.tsx";
@@ -30,14 +31,18 @@ import BrowseSortSelect from "@/components/browse/BrowseSortSelect.tsx";
 import { cn, type JsonValue } from "@/lib/utils.ts";
 import { Link } from "@tanstack/react-router";
 import { VirtuosoGrid } from "react-virtuoso";
+import { getSearchPageData, type ProductSearch } from "@/routes/search.tsx";
 
 export default function Browse({
   loading,
-  products,
+  products: initialProducts,
   categories,
   companies,
   customFieldDefinitions,
-  customFieldValues
+  customFieldValues: initialCustomFieldValues,
+  hasNextPage: initialHasNextPage,
+  currentSearch,
+  totalCount
 }: {
   loading: boolean;
   products: (Product & { asset?: Asset })[] | undefined;
@@ -45,7 +50,18 @@ export default function Browse({
   companies: (Company & { count: number })[] | undefined;
   customFieldDefinitions?: CustomFieldDefinition[] | undefined;
   customFieldValues?: CustomFieldValue[] | undefined;
+  hasNextPage?: boolean;
+  currentSearch: ProductSearch;
+  totalCount: number;
 }) {
+  // State to hold the accumulated list of products
+  const [products, setProducts] = useState(initialProducts ?? []);
+  const [customFieldValues, setCustomFieldValues] = useState(
+    initialCustomFieldValues ?? []
+  );
+  const [hasNextPage, setHasNextPage] = useState(initialHasNextPage ?? false);
+  const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
+
   const [filterDialogVisible, setFilterDialogVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -62,6 +78,42 @@ export default function Browse({
     window.addEventListener("resize", handleScreenSizeChange);
     return () => window.removeEventListener("resize", handleScreenSizeChange);
   }, []);
+
+  // Reset state if the base search/filters change (URL change)
+  useEffect(() => {
+    setProducts(initialProducts ?? []);
+    setCustomFieldValues(initialCustomFieldValues ?? []);
+    setHasNextPage(initialHasNextPage ?? false);
+  }, [initialProducts, initialCustomFieldValues, initialHasNextPage]);
+
+  // The function Virtuoso will call when the user scrolls near the bottom
+  const loadMore = useCallback(async () => {
+    console.log("load", hasNextPage, isFetchingNextPage);
+    if (!hasNextPage || isFetchingNextPage) return;
+
+    setIsFetchingNextPage(true);
+    try {
+      const nextOffset = products.length;
+
+      // Call your TanStack Start server function directly
+      const nextData = await getSearchPageData({
+        data: {
+          ...currentSearch,
+          offset: nextOffset,
+          limit: 24
+        }
+      });
+
+      // Append the new data to the existing state
+      setProducts((prev) => [...prev, ...nextData.products]);
+      setCustomFieldValues((prev) => [...prev, ...nextData.customFieldValues]);
+      setHasNextPage(nextData.hasNextPage);
+    } catch (error) {
+      console.error("Failed to load more products:", error);
+    } finally {
+      setIsFetchingNextPage(false);
+    }
+  }, [hasNextPage, isFetchingNextPage, products.length, currentSearch]);
 
   const productCustomFields = useMemo(() => {
     const map = new Map<
@@ -170,7 +222,7 @@ export default function Browse({
                   {/* Hidden tracker for E2E tests to bypass virtual scrolling limitations */}
                   <span
                     data-testid="total-product-count"
-                    data-count={products.length}
+                    data-count={totalCount}
                     className="sr-only"
                   />
 
@@ -179,10 +231,11 @@ export default function Browse({
                     className="col-span-full w-full 2xl:min-w-5xl"
                     data={products}
                     overscan={500}
-                    components={{
-                      List: GridList,
-                      Item: GridItem
-                    }}
+                    endReached={
+                      hasNextPage && !isFetchingNextPage ? loadMore : undefined
+                    }
+                    components={virtuosoComponents}
+                    context={{ isFetchingNextPage }}
                     itemContent={(_index, product) => (
                       <ProductCard
                         key={product.id}
@@ -243,3 +296,23 @@ const GridItem = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
 );
 
 GridItem.displayName = "GridItem";
+
+// eslint-disable-next-line react-x/no-forward-ref
+const GridFooter = forwardRef<
+  HTMLDivElement,
+  { context?: { isFetchingNextPage: boolean } }
+>(({ context }, ref) => {
+  if (!context?.isFetchingNextPage) return null;
+  return (
+    <div ref={ref} className="p-4 text-center">
+      Loading more...
+    </div>
+  );
+});
+GridFooter.displayName = "GridFooter";
+
+const virtuosoComponents = {
+  List: GridList,
+  Item: GridItem,
+  Footer: GridFooter
+};

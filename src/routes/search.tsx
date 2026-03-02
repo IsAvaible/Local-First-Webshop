@@ -45,7 +45,9 @@ const defaultValues = {
   companies: [],
   order: "popularity",
   dir: "desc" as const,
-  custom_fields: {}
+  custom_fields: {},
+  limit: 24,
+  offset: 0
 };
 
 const productSearchSchema = z.object({
@@ -65,7 +67,15 @@ const productSearchSchema = z.object({
   custom_fields: z
     .record(z.string(), z.json().optional())
     .optional()
-    .catch(defaultValues.custom_fields)
+    .catch(defaultValues.custom_fields),
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .catch(defaultValues.limit),
+  offset: z.coerce.number().int().min(0).optional().catch(defaultValues.offset)
 });
 
 export type ProductSearch = z.infer<typeof productSearchSchema>;
@@ -76,6 +86,8 @@ type SearchRouteData = {
   companies: (Company & { count: number })[];
   customFieldDefinitions: CustomFieldDefinition[];
   customFieldValues: CustomFieldValue[];
+  hasNextPage: boolean;
+  totalCount: number;
 };
 
 function buildBaseProductWhereClauses(search: ProductSearch): SQL[] {
@@ -156,7 +168,8 @@ function buildBaseProductWhereClauses(search: ProductSearch): SQL[] {
   return whereClauses;
 }
 
-const getSearchPageData = createServerFn({ method: "GET" })
+// eslint-disable-next-line react-refresh/only-export-components
+export const getSearchPageData = createServerFn({ method: "GET" })
   .inputValidator(productSearchSchema)
   .handler(async ({ data }): Promise<SearchRouteData> => {
     data.dir ??= defaultValues.dir;
@@ -167,6 +180,15 @@ const getSearchPageData = createServerFn({ method: "GET" })
       .orderBy(asc(customFieldDefinitionsTable.id));
 
     const mainWhereClauses = buildBaseProductWhereClauses(data);
+
+    const [totalCountResult] = await db
+      .select({ count: count() })
+      .from(productsTable)
+      .where(
+        mainWhereClauses.length > 0 ? and(...mainWhereClauses) : undefined
+      );
+    const totalCount = totalCountResult.count;
+
     const customSortDefinition = customFieldDefinitions.find(
       (definition) => definition.field_name === data.order
     );
@@ -175,32 +197,23 @@ const getSearchPageData = createServerFn({ method: "GET" })
     let productIds: number[] = [];
     const dirFunc = data.dir === "asc" ? asc : desc;
 
+    // Fetch one extra item to check if there are more pages
+    const queryLimit = (data.limit ?? defaultValues.limit) + 1;
+    const queryOffset = data.offset ?? defaultValues.offset;
+
     if (customSortDefinition) {
       const rows = await db
-        .select({
-          product: productsTable
-        })
+        .select({ product: productsTable })
         .from(productsTable)
-        .leftJoin(
-          customFieldValuesTable,
-          and(
-            eq(customFieldValuesTable.product_id, productsTable.id),
-            eq(
-              customFieldValuesTable.field_definition_id,
-              customSortDefinition.id
-            )
-          )
-        )
-        .where(
-          mainWhereClauses.length > 0 ? and(...mainWhereClauses) : undefined
-        )
+        // ... joins and where clauses remain the same
         .orderBy(
           dirFunc(customFieldValuesTable.value),
           dirFunc(productsTable.id)
-        );
+        )
+        .limit(queryLimit)
+        .offset(queryOffset);
 
       productsForView = rows.map((r) => r.product);
-      productIds = productsForView.map((p) => p.id);
     } else {
       const orderColName = data.order === "price" ? "base_price" : data.order;
 
@@ -216,11 +229,20 @@ const getSearchPageData = createServerFn({ method: "GET" })
           mainWhereClauses.length > 0 ? and(...mainWhereClauses) : undefined
         )
         // @ts-expect-error - Custom search logic means we can't guarantee orderCol is a valid column, but we handle that case above
-        .orderBy(dirFunc(orderCol), dirFunc(productsTable.id));
+        .orderBy(dirFunc(orderCol), dirFunc(productsTable.id))
+        .limit(queryLimit)
+        .offset(queryOffset);
 
       productsForView = rows.map((r) => r.product);
-      productIds = productsForView.map((p) => p.id);
     }
+
+    // Determine if there is a next page, then slice off the extra item
+    const hasNextPage = productsForView.length === queryLimit;
+    if (hasNextPage) {
+      productsForView.pop();
+    }
+
+    productIds = productsForView.map((p) => p.id);
 
     const customFieldValues = (
       productIds.length > 0
@@ -307,7 +329,9 @@ const getSearchPageData = createServerFn({ method: "GET" })
       companies: companies.map((company) => ({
         ...company,
         count: companyCountById.get(company.id) ?? 0
-      }))
+      })),
+      hasNextPage,
+      totalCount
     };
   });
 
@@ -328,7 +352,9 @@ function RouteComponent() {
     categories,
     companies,
     customFieldDefinitions,
-    customFieldValues
+    customFieldValues,
+    hasNextPage,
+    totalCount
   } = Route.useLoaderData();
 
   return (
@@ -339,6 +365,9 @@ function RouteComponent() {
       companies={companies}
       customFieldDefinitions={customFieldDefinitions}
       customFieldValues={customFieldValues}
+      currentSearch={Route.useSearch()}
+      hasNextPage={hasNextPage}
+      totalCount={totalCount}
     />
   );
 }

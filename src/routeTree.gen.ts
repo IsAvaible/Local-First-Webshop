@@ -8,210 +8,210 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as WishlistRouteImport } from "./routes/wishlist";
-import { Route as SearchRouteImport } from "./routes/search";
-import { Route as ProfileRouteImport } from "./routes/profile";
-import { Route as LoginRouteImport } from "./routes/login";
-import { Route as CartRouteImport } from "./routes/cart";
-import { Route as IndexRouteImport } from "./routes/index";
-import { Route as ProductsProductIdRouteImport } from "./routes/products.$productId";
-import { Route as ApiTrpcSplatRouteImport } from "./routes/api/trpc/$";
-import { Route as ApiAuthSplatRouteImport } from "./routes/api/auth/$";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as WishlistRouteImport } from './routes/wishlist'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as CartRouteImport } from './routes/cart'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
+import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const WishlistRoute = WishlistRouteImport.update({
-  id: "/wishlist",
-  path: "/wishlist",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/wishlist',
+  path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
-  id: "/search",
-  path: "/search",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
-  id: "/profile",
-  path: "/profile",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
-  id: "/login",
-  path: "/login",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CartRoute = CartRouteImport.update({
-  id: "/cart",
-  path: "/cart",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/cart',
+  path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
-  id: "/products/$productId",
-  path: "/products/$productId",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/products/$productId',
+  path: '/products/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
-  id: "/api/trpc/$",
-  path: "/api/trpc/$",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/trpc/$',
+  path: '/api/trpc/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: "/api/auth/$",
-  path: "/api/auth/$",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/cart": typeof CartRoute;
-  "/login": typeof LoginRoute;
-  "/profile": typeof ProfileRoute;
-  "/search": typeof SearchRoute;
-  "/wishlist": typeof WishlistRoute;
-  "/products/$productId": typeof ProductsProductIdRoute;
-  "/api/auth/$": typeof ApiAuthSplatRoute;
-  "/api/trpc/$": typeof ApiTrpcSplatRoute;
+  '/': typeof IndexRoute
+  '/cart': typeof CartRoute
+  '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
+  '/wishlist': typeof WishlistRoute
+  '/products/$productId': typeof ProductsProductIdRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/cart": typeof CartRoute;
-  "/login": typeof LoginRoute;
-  "/profile": typeof ProfileRoute;
-  "/search": typeof SearchRoute;
-  "/wishlist": typeof WishlistRoute;
-  "/products/$productId": typeof ProductsProductIdRoute;
-  "/api/auth/$": typeof ApiAuthSplatRoute;
-  "/api/trpc/$": typeof ApiTrpcSplatRoute;
+  '/': typeof IndexRoute
+  '/cart': typeof CartRoute
+  '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
+  '/wishlist': typeof WishlistRoute
+  '/products/$productId': typeof ProductsProductIdRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
-  "/cart": typeof CartRoute;
-  "/login": typeof LoginRoute;
-  "/profile": typeof ProfileRoute;
-  "/search": typeof SearchRoute;
-  "/wishlist": typeof WishlistRoute;
-  "/products/$productId": typeof ProductsProductIdRoute;
-  "/api/auth/$": typeof ApiAuthSplatRoute;
-  "/api/trpc/$": typeof ApiTrpcSplatRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/cart': typeof CartRoute
+  '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
+  '/wishlist': typeof WishlistRoute
+  '/products/$productId': typeof ProductsProductIdRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
-    | "/cart"
-    | "/login"
-    | "/profile"
-    | "/search"
-    | "/wishlist"
-    | "/products/$productId"
-    | "/api/auth/$"
-    | "/api/trpc/$";
-  fileRoutesByTo: FileRoutesByTo;
+    | '/'
+    | '/cart'
+    | '/login'
+    | '/profile'
+    | '/search'
+    | '/wishlist'
+    | '/products/$productId'
+    | '/api/auth/$'
+    | '/api/trpc/$'
+  fileRoutesByTo: FileRoutesByTo
   to:
-    | "/"
-    | "/cart"
-    | "/login"
-    | "/profile"
-    | "/search"
-    | "/wishlist"
-    | "/products/$productId"
-    | "/api/auth/$"
-    | "/api/trpc/$";
+    | '/'
+    | '/cart'
+    | '/login'
+    | '/profile'
+    | '/search'
+    | '/wishlist'
+    | '/products/$productId'
+    | '/api/auth/$'
+    | '/api/trpc/$'
   id:
-    | "__root__"
-    | "/"
-    | "/cart"
-    | "/login"
-    | "/profile"
-    | "/search"
-    | "/wishlist"
-    | "/products/$productId"
-    | "/api/auth/$"
-    | "/api/trpc/$";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/'
+    | '/cart'
+    | '/login'
+    | '/profile'
+    | '/search'
+    | '/wishlist'
+    | '/products/$productId'
+    | '/api/auth/$'
+    | '/api/trpc/$'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  CartRoute: typeof CartRoute;
-  LoginRoute: typeof LoginRoute;
-  ProfileRoute: typeof ProfileRoute;
-  SearchRoute: typeof SearchRoute;
-  WishlistRoute: typeof WishlistRoute;
-  ProductsProductIdRoute: typeof ProductsProductIdRoute;
-  ApiAuthSplatRoute: typeof ApiAuthSplatRoute;
-  ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute;
+  IndexRoute: typeof IndexRoute
+  CartRoute: typeof CartRoute
+  LoginRoute: typeof LoginRoute
+  ProfileRoute: typeof ProfileRoute
+  SearchRoute: typeof SearchRoute
+  WishlistRoute: typeof WishlistRoute
+  ProductsProductIdRoute: typeof ProductsProductIdRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/wishlist": {
-      id: "/wishlist";
-      path: "/wishlist";
-      fullPath: "/wishlist";
-      preLoaderRoute: typeof WishlistRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/search": {
-      id: "/search";
-      path: "/search";
-      fullPath: "/search";
-      preLoaderRoute: typeof SearchRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/profile": {
-      id: "/profile";
-      path: "/profile";
-      fullPath: "/profile";
-      preLoaderRoute: typeof ProfileRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/login": {
-      id: "/login";
-      path: "/login";
-      fullPath: "/login";
-      preLoaderRoute: typeof LoginRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/cart": {
-      id: "/cart";
-      path: "/cart";
-      fullPath: "/cart";
-      preLoaderRoute: typeof CartRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/products/$productId": {
-      id: "/products/$productId";
-      path: "/products/$productId";
-      fullPath: "/products/$productId";
-      preLoaderRoute: typeof ProductsProductIdRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/trpc/$": {
-      id: "/api/trpc/$";
-      path: "/api/trpc/$";
-      fullPath: "/api/trpc/$";
-      preLoaderRoute: typeof ApiTrpcSplatRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/auth/$": {
-      id: "/api/auth/$";
-      path: "/api/auth/$";
-      fullPath: "/api/auth/$";
-      preLoaderRoute: typeof ApiAuthSplatRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+    '/wishlist': {
+      id: '/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof WishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cart': {
+      id: '/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/$productId': {
+      id: '/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof ProductsProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trpc/$': {
+      id: '/api/trpc/$'
+      path: '/api/trpc/$'
+      fullPath: '/api/trpc/$'
+      preLoaderRoute: typeof ApiTrpcSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -224,18 +224,18 @@ const rootRouteChildren: RootRouteChildren = {
   WishlistRoute: WishlistRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
-  ApiTrpcSplatRoute: ApiTrpcSplatRoute
-};
+  ApiTrpcSplatRoute: ApiTrpcSplatRoute,
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from "./router.tsx";
-import type { startInstance } from "./start.tsx";
-declare module "@tanstack/react-start" {
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.tsx'
+declare module '@tanstack/react-start' {
   interface Register {
-    ssr: true;
-    router: Awaited<ReturnType<typeof getRouter>>;
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>;
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }
