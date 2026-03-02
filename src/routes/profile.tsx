@@ -30,7 +30,6 @@ import { ProfileWishlist } from "@/components/profile/ProfileWishlist";
 import { ProfilePaymentMethods } from "@/components/profile/ProfilePaymentMethods";
 import { ProfileSettings } from "@/components/profile/ProfileSettings";
 import { authClient } from "@/lib/auth-client.ts";
-import { clearYjsStorage } from "@/lib/yjs-cleanup.ts";
 import { auth } from "@/lib/auth.ts";
 
 // --- Search Params Schema ---
@@ -144,9 +143,7 @@ function EcommerceProfile() {
   const handleSignOut = async () => {
     await authClient.signOut({
       fetchOptions: {
-        onSuccess: async () => {
-          await clearYjsStorage();
-
+        onSuccess: () => {
           window.location.href = "/";
         }
       }

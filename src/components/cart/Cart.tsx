@@ -25,13 +25,11 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-  Loader2,
   PlusIcon,
-  Wifi,
-  WifiOff,
   Settings,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  WifiOff
 } from "lucide-react";
 
 import { type EnrichedCartNode, useCart } from "@/contexts/useCartContext.ts";
@@ -67,7 +65,6 @@ import { Label } from "@/components/ui/label";
 import { CartShareDialog } from "@/components/cart/CartShareDialog.tsx";
 import { CartFolderComponent } from "@/components/cart/CartFolderComponent.tsx";
 import { Link } from "@tanstack/react-router";
-import { CartHistoryDialog } from "@/components/cart/CartHistory.tsx";
 import { CartDisplayContext } from "@/components/cart/CartDisplayContext.ts";
 import { toast } from "sonner";
 
@@ -232,8 +229,7 @@ export function Cart({
     deleteCart,
     canManageItems,
     cartRole,
-    collaborators,
-    connectivityStatus
+    collaborators
   } = useCart();
 
   const [activeId, setActiveId] = React.useState<string | null>(null);
@@ -465,50 +461,22 @@ export function Cart({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div
-                          aria-label={`Connection status: ${connectivityStatus}`}
+                          aria-label="Connection status: Connected"
                           className={cn(
-                            "focus-visible:ring-ring flex items-center justify-center rounded-full p-1 transition-colors focus-visible:ring-2 focus-visible:outline-none",
-                            connectivityStatus !== "disconnected"
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                              : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                            "flex items-center justify-center rounded-full bg-red-100 p-1 text-red-700 transition-colors dark:bg-red-900/30 dark:text-red-400"
                           )}
                         >
-                          {connectivityStatus === "connected" && (
-                            <Wifi className="h-4 w-4" aria-hidden="true" />
-                          )}
-                          {connectivityStatus === "connecting" && (
-                            <Loader2
-                              className="h-4 w-4 animate-spin"
-                              aria-hidden="true"
-                            />
-                          )}
-                          {connectivityStatus === "disconnected" && (
-                            <WifiOff className="h-4 w-4" aria-hidden="true" />
-                          )}
-
-                          <span className="sr-only" aria-live="polite">
-                            {connectivityStatus === "connected"
-                              ? "Online"
-                              : "Offline"}
-                          </span>
+                          <WifiOff className="h-4 w-4" />
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>
-                          {connectivityStatus === "connected"
-                            ? "Connected to sync server"
-                            : connectivityStatus === "connecting"
-                              ? "Connecting..."
-                              : "Offline. Changes will sync when reconnected."}
-                        </p>
+                        <p>Connected</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <CartHistoryDialog />
-
                   {collaborators.length > 1 && (
                     <div className="flex -space-x-2 overflow-hidden">
                       {collaborators.slice(0, 3).map((user) => (

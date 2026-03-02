@@ -1,7 +1,6 @@
 import { type CartContextType } from "@/contexts/useCartContext.ts";
 // Create mock context
 export const mockContext: CartContextType = {
-  __yDoc: undefined,
   activeCartId: null,
   cartRole: "viewer",
   carts: [],

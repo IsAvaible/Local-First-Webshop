@@ -21,9 +21,6 @@ import { z } from "zod";
 export * from "./auth-schema";
 import { users } from "./auth-schema";
 import { sql } from "drizzle-orm";
-import type { TypedMap, TypedArray } from "yjs-types";
-import type { Tag } from "@/contexts/useCartContext.ts";
-import * as Y from "yjs";
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
   createSchemaFactory({ zodInstance: z });
@@ -402,84 +399,7 @@ export const updateUserSelectedCartSchema = createUpdateSchema(
   updated_at: true
 });
 
-// --- YJS TYPES (The Document State) ---
-
-// Common fields for all nodes
-type BaseNodeShape = {
-  id: string;
-  parent_id: string | null; // null = root
-  order: string; // Fractional index key
-};
-
-// Item specific fields
-export type YCartItemShape = BaseNodeShape & {
-  type: "item";
-  product_id: number;
-  quantity: number;
-  price_snapshot: string;
-  tag_ids: string[];
-  notes: Y.Text;
-  is_selected: boolean;
-  created_at: number;
-};
-
-// Folder specific fields
-export type YCartFolderShape = BaseNodeShape & {
-  type: "folder";
-  name: string;
-};
-
-// The Union Type representing the raw JSON data
-export type YCartNodeShape = YCartItemShape | YCartFolderShape;
-
-export type YSnapshotDelta = {
-  addedCount: number;
-  removedCount: number;
-  modifiedCount: number;
-  summary: string;
-};
-
-export type YCartSnapshotShape = {
-  id: string;
-  timestamp: number;
-  snapshot: Uint8Array;
-  restoredFromId?: string;
-  meta: {
-    summary: string;
-    delta: YSnapshotDelta;
-    authors: string[];
-  };
-};
-
-// --- Yjs Specific Types ---
-// These wrap the JSON shapes into Yjs TypedMaps
-export type YCartNodeMap = TypedMap<YCartNodeShape>;
-export type YTagMap = TypedMap<Tag>;
-export type YSnapshotList = TypedArray<YCartSnapshotShape>;
-
-// Type Guards for narrowing the union
-export function isYItem(node: YCartNodeShape): node is YCartItemShape {
-  return node.type === "item";
-}
-
-export function isYFolder(node: YCartNodeShape): node is YCartFolderShape {
-  return node.type === "folder";
-}
-
-// Helper to safely check type on a Y.Map without full JSON conversion
-export function isYItemMap(map: YCartNodeMap): map is TypedMap<YCartItemShape> {
-  return map.get("type") === "item";
-}
-
-export function isYFolderMap(
-  map: YCartNodeMap
-): map is TypedMap<YCartFolderShape> {
-  return map.get("type") === "folder";
-}
-
 // --- Export Types ---
-export type YdocUpdate = z.infer<typeof updateYdocSchema>;
-export type YdocAwarenessUpdate = z.infer<typeof updateYdocAwarenessSchema>;
 export type User = z.infer<typeof selectUsersSchema>;
 export type Product = z.infer<typeof selectProductSchema>;
 export type CreateProduct = z.infer<typeof createProductSchema>;

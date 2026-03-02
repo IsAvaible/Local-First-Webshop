@@ -1,17 +1,39 @@
 import { createContext, use } from "react";
-import type { Product, Asset, CartCollaborator } from "@/db/schema";
 import type {
-  YCartItemShape,
-  YCartFolderShape,
+  Product,
+  Asset,
+  CartCollaborator,
   Cart,
-  CartRole,
-  YCartSnapshotShape
+  CartRole
 } from "@/db/schema";
-import * as Y from "yjs";
-import type { ConnectivityStatus } from "@electric-sql/y-electric";
+
+// Assuming you update your schema to replace Y.Text with string for notes
+export interface CartItemShape {
+  id: string;
+  type: "item";
+  parent_id: string | null;
+  order: string | null;
+  product_id: number;
+  quantity: number;
+  price_snapshot: string;
+  tag_ids: string[];
+  notes: string; // <-- Changed from Y.Text
+  is_selected: boolean;
+  created_at: number;
+}
+
+export interface CartFolderShape {
+  id: string;
+  type: "folder";
+  parent_id: string | null;
+  order: string | null;
+  name: string;
+}
+
+export type CartNodeShape = CartItemShape | CartFolderShape;
 
 // Enriched types for UI
-export interface EnrichedFlatCartItem extends YCartItemShape {
+export interface EnrichedFlatCartItem extends CartItemShape {
   product?: Product | null;
   asset?: Asset | null;
   price?: string | null;
@@ -20,11 +42,11 @@ export interface EnrichedFlatCartItem extends YCartItemShape {
 export type EnrichedCartItem = Omit<EnrichedFlatCartItem, "parent_id">;
 
 export interface EnrichedCartFolder
-  extends Omit<YCartFolderShape, "children" | "parent_id"> {
+  extends Omit<CartFolderShape, "children" | "parent_id"> {
   children: EnrichedCartNode[];
 }
 
-export type EnrichedFlatCartNode = EnrichedFlatCartItem | YCartFolderShape;
+export type EnrichedFlatCartNode = EnrichedFlatCartItem | CartFolderShape;
 export type EnrichedCartNode = EnrichedCartItem | EnrichedCartFolder;
 
 export const TAG_COLORS = [
@@ -45,7 +67,6 @@ export const TAG_COLORS = [
 ] as const;
 export type TagColor = (typeof TAG_COLORS)[number];
 
-// The Tag Shape
 export type Tag = {
   id: string;
   name: string;
@@ -72,16 +93,12 @@ export type CartCollaboratorWithUser = CartCollaborator & {
 export interface CartContextType {
   // --- Data ---
   cartId: string | undefined;
-  rootNodes: EnrichedCartNode[] | undefined; // The main tree
+  rootNodes: EnrichedCartNode[] | undefined;
   enrichedFlatItems: EnrichedFlatCartItem[] | undefined;
-
-  snapshots: YCartSnapshotShape[];
-
   tags: Tag[] | undefined;
 
   isLoading: boolean;
   isSynced: boolean;
-  connectivityStatus: ConnectivityStatus;
 
   // --- Cart Management ---
   carts: Cart[];
@@ -109,14 +126,14 @@ export interface CartContextType {
   addItem: (productId: number, price: string) => string | undefined;
   removeItem: (itemId: string, parentFolderId?: string | null) => void;
   updateItemQuantity: (itemId: string, newQuantity: number) => void;
-  getItemNotesYText: (itemId: string) => Y.Text | undefined;
+  getItemNotes: (itemId: string) => string | undefined;
+  updateItemNotes: (itemId: string, text: string) => void;
 
   moveNode: (
     activeId: string,
     targetFolderId: string | null,
     newIndexInFolder: number
   ) => void;
-
   createFolder: (name: string) => void;
   updateFolder: (folderId: string, name: string) => void;
 
@@ -128,9 +145,6 @@ export interface CartContextType {
   removeTagFromItem: (itemId: string, tagId: string) => void;
 
   toggleItemSelection: (itemId: string) => void;
-
-  // --- Internal Yjs Doc ---
-  __yDoc: Y.Doc;
 }
 
 export const CartContext = createContext<CartContextType | undefined>(

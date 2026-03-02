@@ -24,8 +24,8 @@ import {
   TAG_PILL_STYLES
 } from "@/lib/constants/tag-styles.ts";
 import { useCartDisplay } from "@/components/cart/CartDisplayContext.ts";
-import { useYjsText } from "@/contexts/useCartContextUtils.ts";
 import { TagManager } from "./TagManager";
+import { useState, useEffect } from "react";
 import { OutOfStockOverlay } from "@/components/browse/OutOfStockOverlay.tsx";
 
 export function CartItem({
@@ -45,13 +45,30 @@ export function CartItem({
     addTagToItem,
     removeTagFromItem,
     toggleItemSelection,
-    getItemNotesYText
+    updateItemNotes
   } = useCart();
+
   const { displayItemSelect } = useCartDisplay();
 
-  // --- YJS Notes Binding ---
-  const yNotes = getItemNotesYText(item.id);
-  const { value: notesValue, onChange: setNotesValue } = useYjsText(yNotes);
+  // --- Local Notes State ---
+  // We use local state for immediate typing feedback, and sync to context on blur/change
+  const [localNotes, setLocalNotes] = useState(item.notes || "");
+
+  // Sync down if the item notes change externally
+  // (e.g., if you implemented real-time sync later, or switched carts)
+  useEffect(() => {
+    setLocalNotes(item.notes || "");
+  }, [item.notes]);
+
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setLocalNotes(e.target.value);
+  };
+
+  const handleNotesBlur = () => {
+    if (localNotes !== item.notes) {
+      updateItemNotes(item.id, localNotes);
+    }
+  };
 
   const thisItemsTags = tags?.filter((t) => item.tag_ids.includes(t.id)) ?? [];
 
@@ -127,13 +144,14 @@ export function CartItem({
             <Textarea
               placeholder={disabled ? "No notes" : "Add a note..."}
               className="min-h-8 resize-y"
-              value={notesValue}
+              value={localNotes}
               disabled={disabled}
               aria-label={`Notes for ${productName}`}
               onKeyDownCapture={(e) => {
                 if (e.key === " " || e.key === "Enter") e.stopPropagation();
               }}
-              onChange={(e) => setNotesValue(e.target.value)}
+              onChange={handleNotesChange}
+              onBlur={handleNotesBlur}
             />
 
             {/* --- Display current tags --- */}

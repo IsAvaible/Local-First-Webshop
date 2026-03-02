@@ -1,4 +1,9 @@
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import {
+  HeadContent,
+  Scripts,
+  createRootRoute,
+  ClientOnly
+} from "@tanstack/react-router";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import * as React from "react";
@@ -12,8 +17,7 @@ import { authClient } from "@/lib/auth-client.ts";
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
-import { CartContext } from "@/contexts/useCartContext.ts";
-import { mockContext } from "@/contexts/CartProviderMock.tsx";
+import { CartProvider } from "@/contexts/CartProvider.tsx";
 
 export const Route = createRootRoute({
   ssr: true,
@@ -85,14 +89,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          <CartContext value={mockContext}>
-            <div className="flex min-h-screen flex-col bg-gray-50 text-slate-800 dark:bg-gray-900 dark:text-slate-200">
-              <Header />
-              <main className="flex-grow">{children}</main>
-              <Footer />
-            </div>
-            <Toaster position={"bottom-center"} />
-          </CartContext>
+          <ClientOnly>
+            <CartProvider>
+              <div className="flex min-h-screen flex-col bg-gray-50 text-slate-800 dark:bg-gray-900 dark:text-slate-200">
+                <Header />
+                <main className="flex-grow">{children}</main>
+                <Footer />
+              </div>
+              <Toaster position={"bottom-center"} />
+            </CartProvider>
+          </ClientOnly>
         </QueryClientProvider>
         <TanStackDevtools
           plugins={[
