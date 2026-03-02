@@ -106,30 +106,70 @@ test.describe("Performance & Resource Tests", { tag: "@metric" }, () => {
               });
             },
             afterToggleCallback: async () => {
-              expect(await searchPage.getProductCount()).toBe(
-                productsWithCategory
-              );
+              latency = await page.evaluate(async (expectedCount) => {
+                return new Promise((resolve, reject) => {
+                  const countElement = document.querySelector(
+                    '[data-testid="total-product-count"]'
+                  );
 
-              // Measure the elapsed time entirely within the browser context
-              latency = await page.evaluate(() => {
-                window.performance.mark("ui-settled");
-                const measure = window.performance.measure(
-                  "interaction-latency",
-                  "click-start",
-                  "ui-settled"
-                );
+                  if (!countElement) {
+                    return reject(new Error("Count element not found"));
+                  }
 
-                window.performance.clearMarks();
-                window.performance.clearMeasures();
+                  // Function to check the count and record the mark if it matches
+                  const checkAndMeasure = () => {
+                    const currentCount = parseInt(
+                      countElement.getAttribute("data-count") ?? "0",
+                      10
+                    );
 
-                return measure.duration;
-              });
+                    if (currentCount === expectedCount) {
+                      // Mark exactly when the DOM has the correct data
+                      window.performance.mark("ui-settled");
+                      const measure = window.performance.measure(
+                        "interaction-latency",
+                        "click-start",
+                        "ui-settled"
+                      );
+
+                      window.performance.clearMarks();
+                      window.performance.clearMeasures();
+
+                      resolve(measure.duration);
+                      return true;
+                    }
+                    return false;
+                  };
+
+                  // Check immediately in case it updated incredibly fast
+                  if (checkAndMeasure()) return;
+
+                  // If not updated yet, observe the element for changes
+                  const observer = new MutationObserver(() => {
+                    if (checkAndMeasure()) {
+                      observer.disconnect(); // Stop observing once we have our measurement
+                    }
+                  });
+
+                  observer.observe(countElement, {
+                    attributes: true,
+                    attributeFilter: ["data-count"]
+                  });
+
+                  setTimeout(() => {
+                    observer.disconnect();
+                    reject(
+                      new Error("Timeout waiting for product count to update")
+                    );
+                  }, 5000);
+                });
+              }, productsWithCategory);
+
+              if (!latency) {
+                throw new Error("Failed to measure interaction latency");
+              }
             }
           });
-
-          if (!latency) {
-            throw new Error("Failed to measure interaction latency");
-          }
         });
 
         // Assert
