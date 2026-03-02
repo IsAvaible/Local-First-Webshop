@@ -17,8 +17,11 @@ export default defineConfig({
     caddyPlugin(),
     tailwindcss(),
     tanstackStart({
-      spa: {
-        enabled: false
+      prerender: {
+        enabled: true,
+        autoStaticPathsDiscovery: true,
+        failOnError: true,
+        filter: ({ path }) => !path.startsWith("/profile")
       }
     }),
     react({
