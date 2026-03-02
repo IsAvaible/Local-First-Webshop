@@ -9,7 +9,6 @@ import {
 import { SearchBar } from "@/components/layout/Header/SearchBar.tsx";
 import { CartHeaderButton } from "@/components/cart/CartHeaderButton.tsx";
 import { NotificationPanel } from "@/components/notifications/NotificationPanel.tsx";
-import { ClientOnly } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils.ts";
 import { Button } from "@/components/ui/button.tsx";
@@ -76,7 +75,7 @@ export default function Header() {
             </Link>
           </Button>
 
-          {/*<NotificationPanel />*/}
+          <NotificationPanel />
         </div>
 
         <div className="flex flex-row items-center justify-end gap-x-4">

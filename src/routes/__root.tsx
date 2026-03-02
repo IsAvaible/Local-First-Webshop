@@ -65,16 +65,16 @@ export const Route = createRootRoute({
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  // const { data: session, isPending } = authClient.useSession();
-  //
-  // useEffect(() => {
-  //   // Only run if not loading and no user exists
-  //   if (!isPending && !session) {
-  //     authClient.signIn.anonymous().catch((error) => {
-  //       console.error("Failed to sign in anonymously:", error);
-  //     });
-  //   }
-  // }, [session, isPending]);
+  const { data: session, isPending } = authClient.useSession();
+
+  useEffect(() => {
+    // Only run if not loading and no user exists
+    if (!isPending && !session) {
+      authClient.signIn.anonymous().catch((error) => {
+        console.error("Failed to sign in anonymously:", error);
+      });
+    }
+  }, [session, isPending]);
 
   const queryClient = new QueryClient();
 
