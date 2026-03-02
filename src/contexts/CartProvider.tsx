@@ -1,11 +1,4 @@
-import {
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from "react";
+import { type ReactNode, useCallback, useMemo, useState } from "react";
 import {
   CartContext,
   type Tag,
@@ -15,11 +8,8 @@ import {
   type CartFolderShape
 } from "./useCartContext";
 import { authClient } from "@/lib/auth-client";
-import { useLiveQuery } from "@tanstack/react-db";
-import { cartsCollection, userSelectedCartCollection } from "@/lib/collections";
 import { v4 as uuidv4 } from "uuid";
 import { generateKeyBetween } from "fractional-indexing";
-import { trpc } from "@/lib/trpc-client";
 import type { Cart } from "@/db/schema";
 import {
   useEnrichedTree,
@@ -375,92 +365,67 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const { data: session } = authClient.useSession();
   const userId = session?.user.id;
 
-  const { data: carts, isLoading: isCartsLoading } = useLiveQuery(
-    (q) => {
-      if (userId === undefined) return undefined;
-      return q.from({ carts: cartsCollection });
-    },
-    [userId]
-  );
+  // Initialize with a default cart since there's no DB
+  const [carts, setCarts] = useState<Cart[]>(() => [
+    {
+      id: uuidv4(),
+      name: "Default Cart",
+      created_by_id: userId ?? null,
+      created_at: new Date(),
+      updated_at: new Date()
+    }
+  ]);
 
-  const { data } = useLiveQuery(
-    (q) => {
-      if (userId === undefined) return undefined;
-      return q.from({ usc: userSelectedCartCollection }).findOne();
-    },
-    [userId]
-  );
-  const activeCartId = data?.cart_id;
+  const [activeCartId, setActiveCartIdState] = useState<string>(carts[0].id);
 
   const activeCart = useMemo(
-    () => carts?.find((c) => c.id === activeCartId),
+    () => carts.find((c) => c.id === activeCartId),
     [carts, activeCartId]
   );
 
-  const setActiveCartId = useCallback(
-    async (id: string) => {
-      if (!userId) return undefined;
-      if (activeCartId) {
-        await userSelectedCartCollection.update(userId, (drafts) => {
-          drafts.cart_id = id;
-        }).isPersisted.promise;
-      } else {
-        await userSelectedCartCollection.insert({
-          user_id: userId,
-          cart_id: id,
-          created_at: new Date(),
-          updated_at: new Date()
-        }).isPersisted.promise;
-      }
-    },
-    [activeCartId, userId]
-  );
-
-  const isInitializing = useRef(false);
-  useEffect(() => {
-    if (
-      !isCartsLoading &&
-      carts?.length === 0 &&
-      !isInitializing.current &&
-      userId
-    ) {
-      isInitializing.current = true;
-      trpc.carts.ensureSelected.mutate().catch((e) => {
-        console.error("Failed to init cart", e);
-        isInitializing.current = false;
-      });
-    }
-  }, [isCartsLoading, carts, userId]);
+  // eslint-disable-next-line @typescript-eslint/require-await
+  const setActiveCartId = useCallback(async (id: string) => {
+    setActiveCartIdState(id);
+  }, []);
 
   const createCart = useCallback(
     (name: string) => {
-      cartsCollection.insert({
+      const newCart: Cart = {
         id: uuidv4(),
         name,
         created_by_id: userId ?? null,
         created_at: new Date(),
         updated_at: new Date()
-      });
+      };
+      setCarts((prev) => [...prev, newCart]);
     },
     [userId]
   );
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   const updateCartName = useCallback(async (cartId: string, name: string) => {
-    await cartsCollection.update(cartId, (draft) => {
-      draft.name = name;
-      draft.updated_at = new Date();
-    }).isPersisted.promise;
+    setCarts((prev) =>
+      prev.map((cart) =>
+        cart.id === cartId ? { ...cart, name, updated_at: new Date() } : cart
+      )
+    );
   }, []);
 
   const deleteCart = useCallback(
+    // eslint-disable-next-line @typescript-eslint/require-await
     async (cartId: string) => {
-      if (activeCartId === cartId && carts && carts.length > 1) {
-        const otherCart = carts.find((c) => c.id !== cartId);
-        if (otherCart) await setActiveCartId(otherCart.id);
-      }
-      await cartsCollection.delete(cartId).isPersisted.promise;
+      setCarts((prev) => {
+        const remaining = prev.filter((c) => c.id !== cartId);
+
+        // If the user deleted the currently active cart, switch to another one
+        if (activeCartId === cartId && remaining.length > 0) {
+          setActiveCartIdState(remaining[0].id);
+        }
+
+        return remaining;
+      });
     },
-    [activeCartId, carts, setActiveCartId]
+    [activeCartId]
   );
 
   if (!activeCartId) return null;
@@ -470,14 +435,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       key={activeCartId}
       cartId={activeCartId}
       userId={userId}
-      carts={carts ?? []}
+      carts={carts}
       activeCart={activeCart}
       activeCartId={activeCartId}
       setActiveCartId={setActiveCartId}
       createCart={createCart}
       updateCartName={updateCartName}
       deleteCart={deleteCart}
-      isLoadingGlobal={isCartsLoading}
+      isLoadingGlobal={false}
     >
       {children}
     </CartSession>
