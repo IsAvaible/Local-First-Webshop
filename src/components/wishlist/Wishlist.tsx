@@ -1,47 +1,84 @@
 import { Link } from "@tanstack/react-router";
-import { eq, useLiveQuery, Query, min } from "@tanstack/react-db";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { inArray, asc, eq } from "drizzle-orm";
+
+import { db } from "@/db/connection";
 import {
-  wishlistCollection,
-  productsCollection,
-  assetsCollection
-} from "@/lib/collections";
+  wishlistTable,
+  productsTable,
+  assetsTable,
+  type Asset
+} from "@/db/schema";
+
 import ProductCard from "@/components/browse/ProductCard";
 import { Button } from "@/components/ui/button";
 import { HeartIcon, Search } from "lucide-react";
 
-export function Wishlist() {
-  const { data: wishlistItems, isLoading } = useLiveQuery((q) => {
-    // Subquery: Find the ID of the first asset for each product
-    const firstAssetIdSubquery = new Query()
-      .from({ a: assetsCollection })
-      .groupBy(({ a }) => a.product_id)
-      .select(({ a }) => ({
-        product_id: a.product_id,
-        first_asset_id: min(a.id)
-      }));
+// --- Server Functions ---
 
-    // Main Query
-    return (
-      q
-        .from({ w: wishlistCollection })
-        .innerJoin({ p: productsCollection }, ({ w, p }) =>
-          eq(w.product_id, p.id)
-        )
-        // Join specific asset ID
-        .leftJoin({ fa_id: firstAssetIdSubquery }, ({ p, fa_id }) =>
-          eq(p.id, fa_id.product_id)
-        )
-        // Join actual asset data using the ID found above
-        .leftJoin({ as: assetsCollection }, ({ fa_id, as }) =>
-          eq(as.id, fa_id?.first_asset_id)
-        )
-        .select(({ w, p, as }) => ({
-          wishlistId: w.id,
-          product: p,
-          asset: as,
-          price_snapshot: w.price_snapshot
-        }))
-    );
+const getWishlistItems = createServerFn({ method: "GET" }).handler(async () => {
+  // 1. Fetch wishlist items joined with product data
+  const wishlistRows = await db
+    .select({
+      wishlistId: wishlistTable.id,
+      price_snapshot: wishlistTable.price_snapshot,
+      product: productsTable
+    })
+    .from(wishlistTable)
+    .innerJoin(productsTable, eq(wishlistTable.product_id, productsTable.id));
+
+  // 2. Fetch the first asset for each product (matching the subquery logic)
+  const productIds = wishlistRows.map((r) => r.product.id);
+  const firstAssetByProductId = new Map<number, Asset>();
+
+  if (productIds.length > 0) {
+    const assetRows = await db
+      .select()
+      .from(assetsTable)
+      .where(inArray(assetsTable.product_id, productIds))
+      .orderBy(asc(assetsTable.id));
+
+    for (const asset of assetRows) {
+      if (!firstAssetByProductId.has(asset.product_id)) {
+        firstAssetByProductId.set(asset.product_id, asset);
+      }
+    }
+  }
+
+  // 3. Combine and return the structured data
+  return wishlistRows.map((row) => ({
+    ...row,
+    asset: firstAssetByProductId.get(row.product.id)
+  }));
+});
+
+const removeWishlistItem = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ id: z.string() }))
+  .handler(async ({ data: { id } }) => {
+    await db.delete(wishlistTable).where(eq(wishlistTable.id, id));
+    return { success: true };
+  });
+
+// --- Client Component ---
+
+export function Wishlist() {
+  const queryClient = useQueryClient();
+
+  // Fetch wishlist data
+  const { data: wishlistItems, isLoading } = useQuery({
+    queryKey: ["wishlist"],
+    queryFn: () => getWishlistItems()
+  });
+
+  // Handle server-side deletion
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => removeWishlistItem({ data: { id } }),
+    onSuccess: async () => {
+      // Invalidate the query to refetch the updated wishlist automatically
+      await queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+    }
   });
 
   if (isLoading) {
@@ -92,11 +129,12 @@ export function Wishlist() {
             <Button
               variant={"outline"}
               size="icon"
-              className="absolute top-2 right-2 z-1 text-red-500 opacity-0 transition-opacity group-hover/wishlist:opacity-100 hover:text-red-600"
+              disabled={deleteMutation.isPending}
+              className="absolute top-2 right-2 z-1 text-red-500 opacity-0 transition-opacity group-hover/wishlist:opacity-100 hover:text-red-600 disabled:opacity-50"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                wishlistCollection.delete(item.wishlistId);
+                deleteMutation.mutate(item.wishlistId);
               }}
             >
               <HeartIcon className="h-4 w-4 fill-current" />
