@@ -1,11 +1,5 @@
 import { createContext, use } from "react";
-import type {
-  Product,
-  Asset,
-  CartCollaborator,
-  Cart,
-  CartRole
-} from "@/db/schema";
+import type { Product, Asset, CartCollaborator, Cart } from "@/db/schema";
 
 // Assuming you update your schema to replace Y.Text with string for notes
 export interface CartItemShape {
@@ -108,19 +102,6 @@ export interface CartContextType {
   createCart: (name: string) => void;
   updateCartName: (cartId: string, name: string) => Promise<void>;
   deleteCart: (cartId: string) => Promise<void>;
-
-  cartRole: CartRole;
-  canManageUsers: boolean;
-  canManageItems: boolean;
-
-  onlineUsers: AwarenessUser[];
-  collaborators: CartCollaboratorWithUser[];
-  addCollaborator: (email: string, role: CartRole) => Promise<void>;
-  updateCollaboratorRole: (
-    collaboratorRowId: string,
-    newRole: CartRole
-  ) => Promise<void>;
-  removeCollaborator: (collaboratorRowId: string) => Promise<void>;
 
   // --- Operations ---
   addItem: (productId: number, price: string) => string | undefined;

@@ -62,7 +62,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CartShareDialog } from "@/components/cart/CartShareDialog.tsx";
 import { CartFolderComponent } from "@/components/cart/CartFolderComponent.tsx";
 import { Link } from "@tanstack/react-router";
 import { CartDisplayContext } from "@/components/cart/CartDisplayContext.ts";
@@ -226,10 +225,7 @@ export function Cart({
     activeCart,
     createCart,
     updateCartName,
-    deleteCart,
-    canManageItems,
-    cartRole,
-    collaborators
+    deleteCart
   } = useCart();
 
   const [activeId, setActiveId] = React.useState<string | null>(null);
@@ -241,9 +237,6 @@ export function Cart({
   // Edit/Settings Cart State
   const [editingCartName, setEditingCartName] = React.useState("");
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
-
-  // Share State
-  const [isShareOpen, setIsShareOpen] = React.useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -274,14 +267,6 @@ export function Cart({
     () => rootNodes?.map((node) => node.id) ?? [],
     [rootNodes]
   );
-
-  const cartAdmins = React.useMemo(() => {
-    return collaborators.filter((c) => c.role === "admin");
-  }, [collaborators]);
-
-  // Can delete cart if user is the only admin
-  const isAdmin = cartRole === "admin";
-  const canDeleteCart = isAdmin && cartAdmins.length === 1;
 
   // Custom Collision to prioritize containers correctly
   const customCollisionDetection: CollisionDetection = React.useCallback(
@@ -317,7 +302,6 @@ export function Cart({
   );
 
   const handleDragStart = (event: DragStartEvent) => {
-    if (!canManageItems) return;
     setActiveId(String(event.active.id));
   };
 
@@ -356,7 +340,6 @@ export function Cart({
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    if (!canManageItems) return;
     setActiveId(null);
 
     const { active, over } = event;
@@ -416,7 +399,7 @@ export function Cart({
   };
 
   const handleDeleteCart = async () => {
-    if (activeCartId && canDeleteCart) {
+    if (activeCartId) {
       setIsSettingsOpen(false);
       try {
         await deleteCart(activeCartId);
@@ -475,34 +458,6 @@ export function Cart({
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-
-                <div className="flex items-center gap-3">
-                  {collaborators.length > 1 && (
-                    <div className="flex -space-x-2 overflow-hidden">
-                      {collaborators.slice(0, 3).map((user) => (
-                        <div
-                          key={user.id}
-                          className="relative inline-block rounded-full border-2 border-white"
-                        >
-                          <UserAvatar name={user.name} src={user.avatarUrl} />
-                          {user.isOnline && (
-                            <span className="absolute right-0 bottom-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white" />
-                          )}
-                        </div>
-                      ))}
-                      {collaborators.length > 3 && (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gray-100 text-[10px] font-medium text-gray-600">
-                          +{collaborators.length - 3}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <CartShareDialog
-                    open={isShareOpen}
-                    onOpenChange={setIsShareOpen}
-                  />
-                </div>
               </div>
 
               <div className="flex gap-2">
@@ -537,7 +492,7 @@ export function Cart({
                       variant="outline"
                       size="icon"
                       className="bg-gray-50"
-                      disabled={!activeCartId || !canManageItems}
+                      disabled={!activeCartId}
                       title="Cart Settings"
                     >
                       <Settings className="h-4 w-4" />
@@ -578,44 +533,30 @@ export function Cart({
                         </div>
                       </div>
 
-                      {isAdmin && (
-                        <>
-                          <div className="bg-border h-px w-full" />
+                      <div className="bg-border h-px w-full" />
 
-                          <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/20">
-                            <div className="mb-4 flex items-center gap-2 text-red-700 dark:text-red-400">
-                              <AlertTriangle className="h-5 w-5" />
-                              <h4 className="font-semibold">Danger Zone</h4>
-                            </div>
+                      <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/20">
+                        <div className="mb-4 flex items-center gap-2 text-red-700 dark:text-red-400">
+                          <AlertTriangle className="h-5 w-5" />
+                          <h4 className="font-semibold">Danger Zone</h4>
+                        </div>
 
-                            <div className="flex flex-col gap-3">
-                              {!canDeleteCart ? (
-                                <p className="text-sm font-medium text-red-700 dark:text-red-400">
-                                  You cannot delete this cart because there are
-                                  other administrators. You must be the only
-                                  admin to perform this action.
-                                </p>
-                              ) : (
-                                <p className="text-sm text-red-700 dark:text-red-400">
-                                  Deleting this cart will permanently remove it
-                                  for all collaborators. This action cannot be
-                                  undone.
-                                </p>
-                              )}
+                        <div className="flex flex-col gap-3">
+                          <p className="text-sm text-red-700 dark:text-red-400">
+                            Deleting this cart will permanently remove it for
+                            all collaborators. This action cannot be undone.
+                          </p>
 
-                              <Button
-                                variant="destructive"
-                                onClick={handleDeleteCart}
-                                disabled={!canDeleteCart}
-                                className="mt-2 w-full sm:w-auto"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete Cart
-                              </Button>
-                            </div>
-                          </div>
-                        </>
-                      )}
+                          <Button
+                            variant="destructive"
+                            onClick={handleDeleteCart}
+                            className="mt-2 w-full sm:w-auto"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Cart
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -687,11 +628,7 @@ export function Cart({
                 strategy={verticalListSortingStrategy}
               >
                 {rootNodes.map((node) => (
-                  <SortableNode
-                    key={node.id}
-                    node={node}
-                    disabled={!canManageItems}
-                  />
+                  <SortableNode key={node.id} node={node} />
                 ))}
               </SortableContext>
             )}
@@ -705,22 +642,15 @@ export function Cart({
                   onClick={() => createFolder("New Folder")}
                   variant="outline"
                   className="flex-1"
-                  disabled={!canManageItems}
                 >
                   <PlusIcon className="mr-2 h-4 w-4" /> Add Folder
                 </Button>
-                <TagManager disabled={!canManageItems} />
+                <TagManager />
               </div>
 
               {displayCheckoutButton !== false && (
-                <Link
-                  disabled={!canManageItems || !rootNodes?.length}
-                  to={"/checkout"}
-                >
-                  <Button
-                    className="mt-4 w-full"
-                    disabled={!canManageItems || !rootNodes?.length}
-                  >
+                <Link disabled={!rootNodes?.length} to={"/checkout"}>
+                  <Button className="mt-4 w-full" disabled={!rootNodes?.length}>
                     Checkout
                   </Button>
                 </Link>
@@ -733,10 +663,7 @@ export function Cart({
           {activeNode ? (
             <div className="cursor-grabbing opacity-90">
               {activeNode.type === "folder" ? (
-                <CartFolderComponent
-                  folder={activeNode}
-                  disabled={!canManageItems}
-                />
+                <CartFolderComponent folder={activeNode} />
               ) : (
                 <CartItem item={activeNode} />
               )}

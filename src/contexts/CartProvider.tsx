@@ -7,8 +7,6 @@ import {
   useState
 } from "react";
 import {
-  type AwarenessUser,
-  type CartCollaboratorWithUser,
   CartContext,
   type Tag,
   type TagColor,
@@ -17,39 +15,17 @@ import {
   type CartFolderShape
 } from "./useCartContext";
 import { authClient } from "@/lib/auth-client";
-import { eq, inArray, useLiveQuery } from "@tanstack/react-db";
-import {
-  cartCollaboratorsCollection,
-  cartsCollection,
-  usersCollection,
-  userSelectedCartCollection
-} from "@/lib/collections";
+import { useLiveQuery } from "@tanstack/react-db";
+import { cartsCollection, userSelectedCartCollection } from "@/lib/collections";
 import { v4 as uuidv4 } from "uuid";
 import { generateKeyBetween } from "fractional-indexing";
 import { trpc } from "@/lib/trpc-client";
-import type { Cart, CartRole } from "@/db/schema";
+import type { Cart } from "@/db/schema";
 import {
   useEnrichedTree,
   useProductLookups
 } from "@/contexts/useCartContextUtils.ts";
 import { toast } from "sonner";
-
-const COLORS = [
-  "#f87171",
-  "#fb923c",
-  "#facc15",
-  "#4ade80",
-  "#60a5fa",
-  "#a78bfa",
-  "#f472b6"
-];
-const stringToColor = (str: string) => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return COLORS[Math.abs(hash % COLORS.length)];
-};
 
 type CartSessionProps = {
   cartId: string;
@@ -61,14 +37,12 @@ type CartSessionProps = {
   createCart: (name: string) => void;
   updateCartName: (cartId: string, name: string) => Promise<void>;
   deleteCart: (cartId: string) => Promise<void>;
-  addCollaborator: (email: string, role: CartRole) => Promise<void>;
   isLoadingGlobal: boolean;
   children: ReactNode;
 };
 
 function CartSession({
   cartId,
-  userId,
   carts,
   activeCart,
   activeCartId,
@@ -76,7 +50,6 @@ function CartSession({
   createCart,
   updateCartName,
   deleteCart,
-  addCollaborator,
   isLoadingGlobal,
   children
 }: CartSessionProps) {
@@ -84,82 +57,10 @@ function CartSession({
   const [nodes, setNodes] = useState<CartNodeShape[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
 
-  const isSynced = true; // Always synced in memory
+  // Hardcoded for UI compatibility, since everything is client-only now
+  const isSynced = true;
   const connectivityStatus = "connected";
-  const [onlineUsers, setOnlineUsers] = useState<AwarenessUser[]>([]);
-
-  // --- Mock Awareness (Current User Only) ---
-  useEffect(() => {
-    if (userId) {
-      setOnlineUsers([
-        {
-          clientId: 1,
-          user: {
-            id: userId,
-            name: "You",
-            color: stringToColor(userId)
-          }
-        }
-      ]);
-    } else {
-      setOnlineUsers([]);
-    }
-  }, [userId]);
-
-  // --- Data Fetching: Collaborators & Users (Kept Intact) ---
-  const { data: collaboratorLinks } = useLiveQuery((q) =>
-    q
-      .from({ collaborator: cartCollaboratorsCollection })
-      .where(({ collaborator }) => eq(collaborator.cart_id, cartId))
-  );
-
-  const currentCart = carts.find((c) => c.id === cartId);
-
-  const relevantUserIds = useMemo(() => {
-    const ids = new Set<string>();
-    if (currentCart?.created_by_id) ids.add(currentCart.created_by_id);
-    collaboratorLinks?.forEach((l) => ids.add(l.user_id));
-    return Array.from(ids);
-  }, [currentCart, collaboratorLinks]);
-
-  const { data: usersData } = useLiveQuery(
-    (q) => {
-      if (relevantUserIds.length === 0) return undefined;
-      return q
-        .from({ user: usersCollection })
-        .where(({ user }) => inArray(user.id, relevantUserIds));
-    },
-    [relevantUserIds]
-  );
-
-  const collaborators: CartCollaboratorWithUser[] = useMemo(() => {
-    if (!usersData || !currentCart) return [];
-    return usersData.flatMap((user) => {
-      const link = collaboratorLinks?.find((l) => l.user_id === user.id);
-      if (!link) return [];
-      return [
-        {
-          name: user.name ?? "Unknown User",
-          email: user.email ?? "",
-          avatarUrl: user.image ?? undefined,
-          isOnline: user.id === userId,
-          ...link,
-          role: link.role ?? "viewer"
-        }
-      ];
-    });
-  }, [userId, usersData, currentCart, collaboratorLinks]);
-
-  const cartRole: CartRole = useMemo(() => {
-    if (userId) {
-      const myCollab = collaborators.find((c) => c.user_id === userId);
-      if (myCollab) return myCollab.role;
-    }
-    return "viewer";
-  }, [collaborators, userId]);
-
-  const canManageUsers = cartRole === "admin";
-  const canManageItems = cartRole !== "viewer";
+  const canManageItems = true;
 
   // --- Data Fetching: Products & Assets ---
   const uniqueProductIds = useMemo(() => {
@@ -402,30 +303,12 @@ function CartSession({
     );
   }, []);
 
-  // --- Collaborator Management Actions (Kept Intact) ---
-  const updateCollaboratorRole = async (
-    collaboratorRowId: string,
-    newRole: CartRole
-  ) => {
-    await cartCollaboratorsCollection.update(collaboratorRowId, (draft) => {
-      draft.role = newRole;
-    }).isPersisted.promise;
-  };
-
-  const removeCollaborator = async (collaboratorRowId: string) => {
-    await cartCollaboratorsCollection.delete(collaboratorRowId).isPersisted
-      .promise;
-  };
-
   const value = useMemo(
     () => ({
       cartId,
       rootNodes: enrichedTree,
       enrichedFlatItems,
       tags,
-      collaborators,
-      cartRole,
-      canManageUsers,
       canManageItems,
       isLoading: isLoadingData,
       isSynced,
@@ -437,14 +320,10 @@ function CartSession({
       createCart,
       updateCartName,
       deleteCart,
-      onlineUsers,
-      addCollaborator,
-      updateCollaboratorRole,
-      removeCollaborator,
       addItem,
       removeItem,
       updateItemQuantity,
-      getItemNotes, // See point 3 below about this
+      getItemNotes,
       updateItemNotes,
       moveNode,
       createFolder,
@@ -461,9 +340,6 @@ function CartSession({
       enrichedTree,
       enrichedFlatItems,
       tags,
-      collaborators,
-      cartRole,
-      canManageUsers,
       canManageItems,
       isLoadingData,
       isSynced,
@@ -475,8 +351,6 @@ function CartSession({
       createCart,
       updateCartName,
       deleteCart,
-      onlineUsers,
-      addCollaborator,
       addItem,
       removeItem,
       updateItemQuantity,
@@ -589,18 +463,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [activeCartId, carts, setActiveCartId]
   );
 
-  const addCollaborator = useCallback(
-    async (email: string, role: CartRole) => {
-      if (!activeCartId) return;
-      await trpc.cartCollaborators.invite.mutate({
-        cart_id: activeCartId,
-        email,
-        role
-      });
-    },
-    [activeCartId]
-  );
-
   if (!activeCartId) return null;
 
   return (
@@ -615,7 +477,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       createCart={createCart}
       updateCartName={updateCartName}
       deleteCart={deleteCart}
-      addCollaborator={addCollaborator}
       isLoadingGlobal={isCartsLoading}
     >
       {children}
