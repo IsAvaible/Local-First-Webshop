@@ -9,10 +9,39 @@ import {
 import { Separator } from "@/components/ui/separator";
 import type { ShippingMethod } from "@/lib/checkout/types";
 import { formatCurrency } from "@/lib/checkout/utils";
-import { PackageIcon, ShieldCheckIcon, CreditCardIcon } from "lucide-react";
-import { useLiveQuery, eq } from "@tanstack/react-db";
-import { userAddressesCollection } from "@/lib/collections";
+import {
+  PackageIcon,
+  ShieldCheckIcon,
+  CreditCardIcon,
+  Loader2
+} from "lucide-react";
 import { AssetImage } from "@/components/ui/assetImage.tsx";
+
+// TanStack Start & React Query
+import { createServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
+import { z } from "zod";
+
+// Drizzle ORM
+import { eq } from "drizzle-orm";
+import { db } from "@/db/connection";
+import { userAddressesTable } from "@/db/schema";
+
+// --- Server Functions ---
+
+const getAddressById = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ addressId: z.string() }))
+  .handler(async ({ data: { addressId } }) => {
+    const [address] = await db
+      .select()
+      .from(userAddressesTable)
+      .where(eq(userAddressesTable.id, addressId))
+      .limit(1);
+
+    return address || null;
+  });
+
+// --- Client Component ---
 
 function ReviewStep({
   cartItems,
@@ -27,13 +56,12 @@ function ReviewStep({
   selectedAddressId: string | null;
   paymentMethodType: string | null;
 }) {
-  const { data: addresses } = useLiveQuery((q) =>
-    q
-      .from({ a: userAddressesCollection })
-      .where(({ a }) => eq(a.id, selectedAddressId ?? ""))
-  );
-
-  const address = addresses?.[0];
+  // Fetch specific address details via React Query
+  const { data: address, isLoading: isAddressLoading } = useQuery({
+    queryKey: ["address", selectedAddressId],
+    queryFn: () => getAddressById({ data: { addressId: selectedAddressId! } }),
+    enabled: !!selectedAddressId // Only fetch if an address was actually selected
+  });
 
   // Helper to make the stripe type readable
   const formatPaymentType = (type: string | null) => {
@@ -58,7 +86,12 @@ function ReviewStep({
             <span className="text-muted-foreground font-medium">
               Shipping To:
             </span>
-            {address ? (
+            {isAddressLoading ? (
+              <div className="text-muted-foreground flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Loading address...</span>
+              </div>
+            ) : address ? (
               <p>
                 {address.recipient_name}
                 <br />

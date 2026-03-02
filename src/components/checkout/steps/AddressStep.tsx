@@ -1,10 +1,18 @@
 import { useState, useEffect } from "react";
-import { useLiveQuery } from "@tanstack/react-db";
-import { userAddressesCollection } from "@/lib/collections";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
+// TanStack Start & React Query
+import { createServerFn } from "@tanstack/react-start";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+// Drizzle ORM
+import { eq } from "drizzle-orm";
+import { db } from "@/db/connection";
+import { userAddressesTable, type UserAddress } from "@/db/schema";
+
+// UI & Utils
 import {
   Card,
   CardContent,
@@ -27,55 +35,83 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { MapPinIcon, CheckIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { authClient } from "@/lib/auth-client.ts";
-import { v4 as uuidv4 } from "uuid";
-import { CountryDropdown } from "@/components/ui/country-dropdown.tsx";
-import type { UserAddress } from "@/db/schema.ts";
+import { authClient } from "@/lib/auth-client";
+import { CountryDropdown } from "@/components/ui/country-dropdown";
 
-const createUserAddressSchema = z.object({
+// --- Server Functions ---
+
+const getUserAddresses = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ userId: z.string() }))
+  .handler(async ({ data: { userId } }) => {
+    return await db
+      .select()
+      .from(userAddressesTable)
+      .where(eq(userAddressesTable.user_id, userId));
+  });
+
+const createUserAddress = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      user_id: z.string(),
+      recipient_name: z.string(),
+      company_name: z.string().nullable().optional(),
+      line1: z.string(),
+      line2: z.string().nullable().optional(),
+      city: z.string(),
+      state: z.string().nullable().optional(),
+      zip_code: z.string(),
+      country_code: z.string(),
+      phone_number: z.string().nullable().optional(),
+      email_address: z.string().nullable().optional(),
+      is_default_delivery: z.boolean().optional(),
+      is_default_billing: z.boolean().optional()
+    })
+  )
+  .handler(async ({ data }) => {
+    // The database schema uses defaultRandom() for IDs, so Drizzle handles generation
+    const [newAddress] = await db
+      .insert(userAddressesTable)
+      .values(data)
+      .returning();
+
+    return newAddress;
+  });
+
+// --- Client Validation Schema ---
+
+const addressFormSchema = z.object({
   recipient_name: z
     .string()
     .trim()
     .min(2, "Name must be at least 2 characters")
     .max(100, "Name is too long"),
-
   company_name: z.string().trim().optional(),
-
   line1: z.string().trim().min(5, "Address must be at least 5 characters"),
-
   line2: z.string().trim().optional(),
-
   city: z.string().trim().min(2, "City name is too short"),
-
   state: z.string().trim().optional(),
-
   zip_code: z
     .string()
     .trim()
     .min(3, "Zip code must be at least 3 characters")
     .max(20, "Zip code is too long"),
-
   country_code: z
     .string()
     .trim()
     .length(2, "Please use a 2-letter Country Code (e.g., DE, US)")
     .transform((val) => val.toUpperCase()),
-
   phone_number: z
     .string()
     .trim()
-    // Allow empty string OR valid phone regex (digits, +, -, space, parens)
     .refine(
       (val) => val === "" || /^[\d+\-\s()]+$/.test(val),
       "Invalid phone number format"
     )
     .optional(),
-
   email_address: z.email().optional()
 });
 
-// Helper type for the form values
-type UserAddressFormValues = z.infer<typeof createUserAddressSchema>;
+type UserAddressFormValues = z.infer<typeof addressFormSchema>;
 
 interface AddressStepProps {
   selectedAddressId: string | null;
@@ -84,23 +120,46 @@ interface AddressStepProps {
   onSelectBillingAddress: (id: string | null) => void;
 }
 
-function AddressStep({
+// --- Client Component ---
+
+export default function AddressStep({
   selectedAddressId,
   onSelectAddress,
   billingAddressId,
   onSelectBillingAddress
 }: AddressStepProps) {
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("saved");
-  // Default to true, but let the Hydration Effect below correct it immediately
   const [sameAsShipping, setSameAsShipping] = useState(true);
 
   const { data: session } = authClient.useSession();
   const userId = session?.user.id;
 
-  // 1. Query addresses
-  const { data: addresses, isLoading } = useLiveQuery((q) =>
-    q.from({ address: userAddressesCollection })
-  );
+  // 1. Fetch Addresses via React Query
+  const { data: addresses, isLoading } = useQuery({
+    queryKey: ["addresses", userId],
+    queryFn: () => getUserAddresses({ data: { userId: userId! } }),
+    enabled: !!userId // Only run if we actually have a logged-in user
+  });
+
+  // 2. Setup Address Creation Mutation
+  const createMutation = useMutation({
+    mutationFn: (
+      newAddressData: Parameters<typeof createUserAddress>[0]["data"]
+    ) => createUserAddress({ data: newAddressData }),
+    onSuccess: async (newAddress) => {
+      // Refresh the address list immediately
+      await queryClient.invalidateQueries({ queryKey: ["addresses", userId] });
+
+      // Auto-select the newly generated address
+      onSelectAddress(newAddress.id);
+      reset();
+      setActiveTab("saved");
+    },
+    onError: (error) => {
+      console.error("Failed to save address:", error);
+    }
+  });
 
   useEffect(() => {
     if (billingAddressId && billingAddressId !== selectedAddressId) {
@@ -110,9 +169,9 @@ function AddressStep({
     }
   }, [billingAddressId, selectedAddressId]);
 
-  // 2. Setup React Hook Form
+  // 3. Setup React Hook Form
   const form = useForm<UserAddressFormValues>({
-    resolver: zodResolver(createUserAddressSchema),
+    resolver: zodResolver(addressFormSchema),
     defaultValues: {
       recipient_name: "",
       company_name: "",
@@ -130,53 +189,39 @@ function AddressStep({
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     reset
   } = form;
 
-  // 3. Handle Form Submission
+  // 4. Handle Form Submission
+  // eslint-disable-next-line @typescript-eslint/require-await
   const onSubmit: SubmitHandler<UserAddressFormValues> = async (data) => {
-    try {
-      if (userId === undefined) {
-        console.error("User not found / not logged in");
-        return;
-      }
-
-      const newId = uuidv4();
-      const isFirstAddress = !addresses || addresses.length === 0;
-
-      // Helper to convert empty strings to null for DB consistency
-      const toNull = (val?: string | null) =>
-        val && val.trim() !== "" ? val : null;
-
-      const tx = userAddressesCollection.insert({
-        ...data,
-        // Apply helper to optional fields
-        company_name: toNull(data.company_name),
-        line2: toNull(data.line2),
-        state: toNull(data.state),
-        phone_number: toNull(data.phone_number),
-        email_address: toNull(data.email_address),
-
-        is_default_delivery: isFirstAddress,
-        is_default_billing: isFirstAddress,
-
-        id: newId,
-        user_id: userId,
-        created_at: new Date(),
-        updated_at: new Date()
-      });
-
-      await tx.isPersisted.promise;
-
-      onSelectAddress(newId);
-
-      reset();
-      setActiveTab("saved");
-    } catch (error) {
-      console.error("Failed to save address:", error);
+    if (!userId) {
+      console.error("User not found / not logged in");
+      return;
     }
+
+    const isFirstAddress = !addresses || addresses.length === 0;
+
+    // Helper to convert empty strings to null for DB consistency
+    const toNull = (val?: string | null) =>
+      val && val.trim() !== "" ? val : null;
+
+    // Fire the serverFn mutation
+    createMutation.mutate({
+      ...data,
+      user_id: userId,
+      company_name: toNull(data.company_name),
+      line2: toNull(data.line2),
+      state: toNull(data.state),
+      phone_number: toNull(data.phone_number),
+      email_address: toNull(data.email_address),
+      is_default_delivery: isFirstAddress,
+      is_default_billing: isFirstAddress
+    });
   };
+
+  const isSubmitting = createMutation.isPending;
 
   return (
     <Card>
@@ -279,7 +324,7 @@ function AddressStep({
             )}
           </TabsContent>
 
-          {/* --- NEW ADDRESS TAB (Using Field Components) --- */}
+          {/* --- NEW ADDRESS TAB --- */}
           <TabsContent value="new-address" className="mt-4">
             <form
               onSubmit={handleSubmit(onSubmit, (errors) =>
@@ -454,6 +499,8 @@ function AddressStep({
   );
 }
 
+// --- Subcomponents ---
+
 interface AddressCardProps {
   addr: UserAddress;
   isSelected: boolean;
@@ -514,5 +561,3 @@ const AddressCard = ({ addr, isSelected, onClick }: AddressCardProps) => {
     </div>
   );
 };
-
-export default AddressStep;

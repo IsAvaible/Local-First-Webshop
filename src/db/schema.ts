@@ -510,6 +510,7 @@ export const selectUserAddressSchema = createSelectSchema(userAddressesTable);
 export const createUserAddressSchema = createInsertSchema(
   userAddressesTable
 ).omit({
+  id: true,
   created_at: true,
   updated_at: true
 });
