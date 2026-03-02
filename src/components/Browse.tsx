@@ -47,16 +47,18 @@ export default function Browse({
   customFieldValues?: CustomFieldValue[] | undefined;
 }) {
   const [filterDialogVisible, setFilterDialogVisible] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 1536);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    // Safely read `window` on the client immediately after mount
+    setIsMobile(window.innerWidth <= 1536);
+
     const handleScreenSizeChange = () => {
       const mobile = window.innerWidth <= 1536;
       setIsMobile(mobile);
-      if (!mobile) {
-        setFilterDialogVisible(false);
-      }
+      if (!mobile) setFilterDialogVisible(false);
     };
+
     window.addEventListener("resize", handleScreenSizeChange);
     return () => window.removeEventListener("resize", handleScreenSizeChange);
   }, []);
