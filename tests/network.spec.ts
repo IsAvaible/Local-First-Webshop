@@ -101,6 +101,11 @@ test.describe("Network Efficiency Tests", { tag: "@metric" }, () => {
     });
 
     await test.step("Trigger Server-Side DB Update & Catch HTTP Payload", async () => {
+      test.skip(
+        process.env.APP_MODE === "ssr",
+        "SSR does not support automatic delta syncs; requires manual reload."
+      );
+
       console.log("Triggering server-side update...");
       const [product] = await db.select().from(schema.productsTable).limit(1);
 
