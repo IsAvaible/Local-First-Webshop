@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const profile = process.env.TEST_PROFILE;
+const isSlowNetwork = profile === "commuter" || profile === "worst-case";
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
@@ -33,8 +36,9 @@ export default defineConfig({
   },
   globalSetup: "./tests/setup/global-setup.ts",
 
+  timeout: isSlowNetwork ? 90000 : 30000,
   expect: {
-    timeout: 7500
+    timeout: isSlowNetwork ? 45000 : 7500
   },
 
   /* Configure projects for major browsers */
