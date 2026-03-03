@@ -75,6 +75,11 @@ test.describe("Consistency & Conflict Tests", () => {
   // });
 
   throttledTest("Time to Consistency", { tag: "@metric" }, async ({ page }) => {
+    test.skip(
+      process.env.APP_MODE === "ssr",
+      "SSR does not support automatic syncs; requires manual reload."
+    );
+
     const MAX_CONSISTENCY_DELAY_MS = 3000;
     const NEW_PRODUCT_NAME = `Synced Name Verify - ${Date.now()}`;
 

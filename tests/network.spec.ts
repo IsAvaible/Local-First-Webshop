@@ -77,6 +77,11 @@ test.describe("Network Efficiency Tests", { tag: "@metric" }, () => {
   });
 
   test("Delta Update Payload", async ({ page }) => {
+    test.skip(
+      process.env.APP_MODE === "ssr",
+      "SSR does not support automatic delta syncs; requires manual reload."
+    );
+
     const searchPage = new SearchPage(page);
     const updatedName = "Updated Product Name For Delta Test";
 

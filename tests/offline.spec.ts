@@ -74,6 +74,11 @@ test.describe("Offline & Recovery Tests", () => {
     "Sync Recovery Stress Test",
     { tag: "@metric" },
     async ({ page }) => {
+      test.skip(
+        process.env.APP_MODE === "ssr",
+        "SSR does not support automatic offline work and re-syncs."
+      );
+
       const searchPage = new SearchPage(page);
       const productPage = new ProductPage(page);
       const mutationCount = 20;

@@ -38,7 +38,7 @@ export default class MetricsCsvReporter implements Reporter {
 
     this.outputFolder = options.outputFolder;
 
-    const variantName = "local-first";
+    const variantName = process.env.APP_MODE;
     const profileName = process.env.TEST_PROFILE ?? "baseline";
 
     this.csvFilePath = path.join(

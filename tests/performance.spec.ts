@@ -224,7 +224,9 @@ test.describe("Performance & Resource Tests", { tag: "@metric" }, () => {
               description: JSON.stringify({ value: usageMB, unit: "MB" })
             });
 
-            expect(estimate.usage).toBeGreaterThan(0);
+            if (process.env.APP_MODE !== "ssr") {
+              expect(estimate.usage).toBeGreaterThan(0);
+            }
           } else {
             console.log("Storage API not available");
             test.info().annotations.push({
