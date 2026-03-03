@@ -4,12 +4,6 @@ import "dotenv/config";
 const TARGET_BENCHMARK_MS = 500;
 
 async function globalSetup(_config: FullConfig) {
-  // Skip if not running in CI
-  if (!process.env.CI) {
-    process.env.DYNAMIC_CPU_RATE = "1";
-    return;
-  }
-
   console.log(`[Global CPU Calibration] Running baseline benchmark...`);
 
   // Launch a browser instance strictly for the calibration

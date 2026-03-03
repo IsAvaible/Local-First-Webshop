@@ -37,7 +37,14 @@ export default class MetricsCsvReporter implements Reporter {
     }
 
     this.outputFolder = options.outputFolder;
-    this.csvFilePath = path.join(this.outputFolder, `performance-metrics.csv`);
+
+    const variantName = "local-first";
+    const profileName = process.env.TEST_PROFILE ?? "baseline";
+
+    this.csvFilePath = path.join(
+      this.outputFolder,
+      `performance-metrics-${variantName}-${profileName}.csv`
+    );
   }
 
   onBegin() {

@@ -16,6 +16,10 @@
     "preview": "docker compose up -d && concurrently -n vite,wake -c blue,gray \"vite preview\" \"pnpm wake-tunnel\"",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:e2e:baseline": "cross-env TEST_PROFILE=baseline playwright test",
+    "test:e2e:commuter": "cross-env TEST_PROFILE=commuter playwright test",
+    "test:e2e:budget": "cross-env TEST_PROFILE=budget playwright test",
+    "test:e2e:worst": "cross-env TEST_PROFILE=worst-case playwright test",
     "prepare": "husky"
   },
   "dependencies": {
@@ -114,6 +118,7 @@
     "babel-plugin-react-compiler": "19.1.0-rc.3",
     "baseline-browser-mapping": "^2.9.11",
     "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.9",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
