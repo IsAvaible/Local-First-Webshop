@@ -1,14 +1,29 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import type { CartRole } from "@/db/schema.ts";
 
 export class CartPage {
   readonly page: Page;
   readonly checkoutBtn: Locator;
   readonly emptyCartMsg: Locator;
+  readonly addFolderBtn: Locator;
+
+  readonly shareBtn: Locator;
+  readonly shareEmailInput: Locator;
+  readonly shareSendBtn: Locator;
+  readonly shareRoleTrigger: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.checkoutBtn = page.getByRole("button", { name: "Checkout" });
-    this.emptyCartMsg = page.getByText("Your cart is empty");
+    this.emptyCartMsg = page.getByText("Your cart is empty.");
+    this.addFolderBtn = page.getByRole("button", { name: "Add Folder" });
+
+    this.shareBtn = page.getByRole("button", { name: "Share" });
+    this.shareEmailInput = page.getByPlaceholder("Add people via email");
+    this.shareSendBtn = page.getByRole("button", { name: "Send" });
+    this.shareRoleTrigger = page.getByRole("combobox", {
+      name: "Role for new collaborator"
+    });
   }
 
   async goto() {
@@ -29,7 +44,6 @@ export class CartPage {
 
   async setItemQuantity(itemName: string, quantity: string) {
     const itemRow = this.getItemRow(itemName);
-
     const input = itemRow.getByLabel(`Quantity of ${itemName}`);
 
     await input.fill(quantity);
@@ -39,9 +53,159 @@ export class CartPage {
 
   async removeItem(itemName: string) {
     const itemRow = this.getItemRow(itemName);
-
     await itemRow
       .getByRole("button", { name: `Remove ${itemName} from cart` })
       .click();
+  }
+
+  async addFolder() {
+    await this.addFolderBtn.click();
+  }
+
+  getFolderLocator(folderName: string): Locator {
+    // Assumes the folder text is visible on the screen
+    return this.page.getByText(folderName, { exact: true });
+  }
+
+  async deleteFolder(folderName: string) {
+    await this.page
+      .getByRole("button", { name: `Delete ${folderName} folder`, exact: true })
+      .click();
+  }
+
+  /**
+   * Manually dispatches mouse events to satisfy dnd-kit's sensor requirements.
+   */
+  async dragItemToFolder(itemName: string, folderName: string) {
+    const dragHandle = this.page.getByRole("button", {
+      name: `Reorder ${itemName}`
+    });
+    const targetFolder = this.getFolderLocator(folderName);
+
+    // Hover over the drag handle
+    await dragHandle.hover();
+    await this.page.mouse.down();
+
+    // Move slightly to trigger dnd-kit's PointerSensor activation constraint (distance: 8)
+    const handleBox = await dragHandle.boundingBox();
+    if (handleBox) {
+      await this.page.mouse.move(handleBox.x + 10, handleBox.y + 10);
+    }
+
+    // Move to the target folder and drop
+    await targetFolder.hover();
+    await this.page.mouse.up();
+  }
+
+  /**
+   * Retrieves the email address of the current logged-in user
+   * from the "People with access" list in the Share Dialog.
+   */
+  async getCurrentUserEmail(): Promise<string> {
+    // Open the dialog if it's not already visible
+    if (!(await this.shareEmailInput.isVisible())) {
+      await this.shareBtn.click();
+    }
+
+    // Locate the container holding the current user's info.
+    const currentUserRow = this.page
+      .locator("div")
+      .filter({
+        hasText: /\(you\)/
+      })
+      .last();
+
+    // Extract the email
+    const emailText = await currentUserRow
+      .locator("span", { hasText: "Email:" })
+      .first()
+      .textContent();
+
+    if (emailText === null) {
+      throw new Error("Current user's email not found in Share Dialog.");
+    }
+
+    const email = emailText?.replace("Email:", "").trim();
+
+    await this.page.keyboard.press("Escape");
+
+    return email;
+  }
+
+  /**
+   * Invites a user to the cart via the Share Dialog.
+   */
+  async shareWithEmail(email: string, role: CartRole) {
+    await this.shareBtn.click();
+    await this.shareEmailInput.fill(email);
+
+    await this.shareRoleTrigger.click();
+    const roleName = role.charAt(0).toUpperCase() + role.slice(1);
+    await this.page.getByRole("option", { name: roleName }).click();
+
+    await this.shareSendBtn.click();
+
+    await this.page.keyboard.press("Escape");
+    await expect(this.shareEmailInput).toBeHidden();
+  }
+
+  /**
+   * Locates a collaborator's email within the Share Dialog.
+   */
+  async getCollaboratorEmailLocator(email: string) {
+    await this.shareBtn.click();
+
+    const mail = this.page
+      .getByRole("dialog")
+      .getByText(email, { exact: true });
+
+    await this.page.keyboard.press("Escape");
+
+    return mail;
+  }
+
+  /**
+   * Renames a folder.
+   */
+  async renameFolder(oldName: string, newName: string) {
+    const folder = this.getFolderLocator(oldName);
+
+    // Trigger edit mode
+    await folder.click();
+
+    // Locate the input that appears
+    const renameInput = this.page.getByRole("textbox", {
+      name: `Rename folder ${oldName}`
+    });
+    await renameInput.fill(newName);
+    await renameInput.press("Enter");
+
+    await expect(this.getFolderLocator(newName)).toBeVisible();
+  }
+
+  /**
+   * Hovers over the sync indicator and waits for the specific tooltip.
+   */
+  async waitForSync() {
+    // We target the tooltip trigger container which houses the Wifi icon.
+    const syncIndicator = this.page.locator(".lucide-wifi").first();
+
+    // Radix Tooltips require hover/focus to attach to the DOM
+    await syncIndicator.hover();
+
+    const tooltip = this.page.getByRole("tooltip", {
+      name: /Connected to sync server/i
+    });
+    await expect(tooltip).toBeAttached({ timeout: 10000 });
+
+    // Move mouse away to dismiss tooltip so it doesn't block future interactions
+    await this.page.mouse.move(0, 0);
+  }
+
+  /**
+   * Asserts the cart is entirely empty.
+   */
+  async assertEmpty() {
+    await expect(this.emptyCartMsg).toBeVisible();
   }
 }

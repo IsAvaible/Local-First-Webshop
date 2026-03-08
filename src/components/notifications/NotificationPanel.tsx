@@ -102,30 +102,54 @@ export function NotificationPanel() {
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="group relative">
-          <BellIcon className="size-6! transition-transform group-hover:scale-110" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="group relative"
+          aria-label={`Notifications, ${unreadCount} unread`}
+        >
+          <BellIcon
+            className="size-6! transition-transform group-hover:scale-110"
+            aria-hidden="true"
+          />
           {unseenCount > 0 && (
             <Badge
               className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs"
               variant="destructive"
+              // Live region so screen readers announce updates
+              aria-live="polite"
+              aria-atomic="true"
             >
               {unseenCount}
             </Badge>
           )}
-          <span className="sr-only">Notifications</span>
+          <span className="sr-only">
+            {unseenCount > 0
+              ? `${unseenCount} new notifications`
+              : "No new notifications"}
+          </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
+
+      <PopoverContent
+        className="w-80 p-0"
+        align="end"
+        role="dialog"
+        aria-label="Notifications Panel"
+      >
         <div className="flex items-center justify-between border-b p-4">
-          <h4 className="leading-none font-semibold">Notifications</h4>
+          <h4 id="notifications-heading" className="leading-none font-semibold">
+            Notifications
+          </h4>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
               className="text-muted-foreground hover:text-foreground h-auto px-2 py-1 text-xs"
               onClick={handleMarkAllAsRead}
+              aria-label="Mark all notifications as read"
             >
-              <CheckCheckIcon className="mr-1 h-3 w-3" />
+              <CheckCheckIcon className="mr-1 h-3 w-3" aria-hidden="true" />
               Mark all read
             </Button>
           )}
@@ -133,10 +157,16 @@ export function NotificationPanel() {
 
         <div
           ref={setParentRef}
-          className="max-h-[400px] w-full overflow-y-auto"
+          className="max-h-[400px] w-full overflow-y-auto outline-hidden"
+          role="list"
+          aria-labelledby="notifications-heading"
+          tabIndex={0}
         >
           {notifications.length === 0 ? (
-            <div className="text-muted-foreground p-4 text-center text-sm">
+            <div
+              className="text-muted-foreground p-4 text-center text-sm"
+              role="listitem"
+            >
               No notifications
             </div>
           ) : (
@@ -149,6 +179,7 @@ export function NotificationPanel() {
             >
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                 const notification = notifications[virtualRow.index];
+                const isUnread = !notification.read_at;
 
                 return (
                   <Link
@@ -157,10 +188,9 @@ export function NotificationPanel() {
                     params={notification.route_params ?? undefined}
                     // @ts-expect-error search_params is JSON type
                     search={notification.search_params ?? undefined}
-                    role={"button"}
                     key={virtualRow.key}
                     ref={rowVirtualizer.measureElement}
-                    data-index={virtualRow.index}
+                    role="listitem"
                     onClick={() => handleNotificationClick(notification)}
                     style={{
                       position: "absolute",
@@ -180,17 +210,24 @@ export function NotificationPanel() {
                         <NotificationIcon
                           type={notification.type}
                           className="h-3 w-3"
+                          aria-hidden="true"
                         />
                         <span className="font-semibold">
+                          {isUnread && (
+                            <span className="sr-only">Unread: </span>
+                          )}
                           {notification.title}
                         </span>
                       </div>
-                      <span className="text-muted-foreground shrink-0 text-xs">
+                      <time
+                        className="text-muted-foreground shrink-0 text-xs"
+                        dateTime={notification.created_at?.toISOString()}
+                      >
                         {notification.created_at &&
                           formatDistanceToNow(notification.created_at, {
                             addSuffix: true
                           })}
-                      </span>
+                      </time>
                     </div>
                     <p className="text-muted-foreground">{notification.body}</p>
                   </Link>

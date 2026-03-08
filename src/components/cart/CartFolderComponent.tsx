@@ -17,13 +17,14 @@ export const CartFolderComponent = ({
   folder: EnrichedCartFolder;
   disabled?: boolean;
 }) => {
-  // Destructure updateFolder from context
   const { removeItem, updateFolder } = useCart();
 
   // Local state for editing
   const [isEditing, setIsEditing] = React.useState(false);
   const [tempName, setTempName] = React.useState(folder.name);
+
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const editTriggerRef = React.useRef<HTMLButtonElement>(null);
 
   const isOver = false;
 
@@ -49,6 +50,12 @@ export const CartFolderComponent = ({
       setTempName(folder.name); // Revert if empty
     }
     setIsEditing(false);
+
+    // Restore focus to the edit button after closing the input
+    // using setTimeout to ensure the button has remounted first
+    setTimeout(() => {
+      editTriggerRef.current?.focus();
+    }, 0);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -63,6 +70,7 @@ export const CartFolderComponent = ({
     if (e.key === "Escape") {
       setTempName(folder.name);
       setIsEditing(false);
+      setTimeout(() => editTriggerRef.current?.focus(), 0);
     }
   };
 
@@ -75,7 +83,7 @@ export const CartFolderComponent = ({
     >
       <div className="mb-2 flex items-center justify-between">
         <div className="flex flex-1 items-center overflow-hidden font-semibold text-gray-700">
-          <FolderIcon className="mr-2 h-5 w-5 shrink-0" />
+          <FolderIcon className="mr-2 h-5 w-5 shrink-0" aria-hidden="true" />
 
           {isEditing && !disabled ? (
             <Input
@@ -88,9 +96,13 @@ export const CartFolderComponent = ({
               // the click/focus as a drag start event on the parent SortableNode
               onPointerDown={(e) => e.stopPropagation()}
               className="m-1 h-6"
+              aria-label={`Rename folder ${folder.name}`}
             />
           ) : (
-            <span
+            <button
+              ref={editTriggerRef}
+              type="button"
+              disabled={disabled}
               onClick={(e) => {
                 if (!disabled) {
                   e.stopPropagation();
@@ -98,13 +110,15 @@ export const CartFolderComponent = ({
                 }
               }}
               className={cn(
-                "truncate rounded px-1 py-0.5 transition-colors",
-                !disabled && "cursor-text hover:bg-gray-200/50"
+                "truncate rounded px-1 py-0.5 text-left transition-colors",
+                !disabled &&
+                  "focus-visible:ring-ring cursor-text hover:bg-gray-200/50 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none"
               )}
               title="Click to rename"
+              aria-label={`Folder: ${folder.name}, click to rename`}
             >
               {folder.name}
-            </span>
+            </button>
           )}
         </div>
 
@@ -114,10 +128,12 @@ export const CartFolderComponent = ({
           disabled={disabled}
           onPointerDown={(e) => e.stopPropagation()}
           onClick={() => removeItem(folder.id)}
+          aria-label={`Delete ${folder.name} folder`}
         >
-          <TrashIcon />
+          <TrashIcon aria-hidden="true" />
         </Button>
       </div>
+
       <div className="flex min-h-[3rem] flex-col gap-2">
         <SortableContext
           items={folder.children.map((c) => c.id)}

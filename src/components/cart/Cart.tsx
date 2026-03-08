@@ -460,26 +460,37 @@ export function Cart({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <h2 className="text-lg font-semibold tracking-tight">Cart</h2>
+
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div
+                          aria-label={`Connection status: ${connectivityStatus}`}
                           className={cn(
-                            "flex items-center justify-center rounded-full p-1 transition-colors",
-                            connectivityStatus != "disconnected"
+                            "focus-visible:ring-ring flex items-center justify-center rounded-full p-1 transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                            connectivityStatus !== "disconnected"
                               ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                               : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                           )}
                         >
                           {connectivityStatus === "connected" && (
-                            <Wifi className="h-4 w-4" />
+                            <Wifi className="h-4 w-4" aria-hidden="true" />
                           )}
                           {connectivityStatus === "connecting" && (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <Loader2
+                              className="h-4 w-4 animate-spin"
+                              aria-hidden="true"
+                            />
                           )}
                           {connectivityStatus === "disconnected" && (
-                            <WifiOff className="h-4 w-4" />
+                            <WifiOff className="h-4 w-4" aria-hidden="true" />
                           )}
+
+                          <span className="sr-only" aria-live="polite">
+                            {connectivityStatus === "connected"
+                              ? "Online"
+                              : "Offline"}
+                          </span>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>

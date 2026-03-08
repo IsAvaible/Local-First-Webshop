@@ -22,7 +22,7 @@ test.describe("Network Efficiency Tests", { tag: "@metric" }, () => {
     const productPage = new ProductPage(page);
 
     await test.step("Setup: Seed DB and Start Network Monitor", async () => {
-      await seedDatabase({ categories: 5, productsPerCategory: 10 });
+      await seedDatabase({ categories: 10, productsPerCategory: 2000 });
 
       page.on("requestfinished", async (request) => {
         const sizes = await request.sizes();

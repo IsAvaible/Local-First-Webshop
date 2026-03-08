@@ -154,7 +154,7 @@ test.describe("Offline & Recovery Tests", () => {
     await test.step("Verification: Reload and verify Cart Restoration from Server", async () => {
       await page.reload();
 
-      // Verify restoration using the POM badge check
+      // Verify restoration
       await productPage.verifyCartBadgeCount(1, { timeout: 10000 });
     });
   });

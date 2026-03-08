@@ -12,6 +12,7 @@ import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "@/routes/api/trpc/$.ts";
 import type { TrpcRequestEnvelope, TrpcResponseEnvelope } from "@/lib/utils.ts";
 import { MetricType } from "./utils/metrics-reporter.ts";
+import { NotificationPanelPage } from "./pages/NotificationPanelPage.ts";
 
 test.describe("Consistency & Conflict Tests", () => {
   test.beforeEach(async () => {
@@ -73,6 +74,87 @@ test.describe("Consistency & Conflict Tests", () => {
   //   await contextA.close();
   //   await contextB.close();
   // });
+
+  test("Conflict Scenario: Structural Concurrency (Move vs Delete)", async ({
+    browser
+  }) => {
+    test.skip(process.env.APP_MODE === "ssr", "SSR has no cart collaboration.");
+
+    await test.step("Seed database and prepare test data", async () => {
+      await seedDatabase({ categories: 1, productsPerCategory: 1 });
+    });
+
+    const targetProduct = await db.query.productsTable.findFirst();
+    if (!targetProduct) {
+      throw new Error("No products found in the database.");
+    }
+
+    // Setup two independent, isolated browser contexts
+    const contextA = await browser.newContext();
+    const contextB = await browser.newContext();
+    const pageA = await contextA.newPage();
+    const pageB = await contextB.newPage();
+
+    const cartA = new CartPage(pageA);
+    const cartB = new CartPage(pageB);
+    const productPageA = new ProductPage(pageA);
+    const searchPageB = new SearchPage(pageB);
+    const notificationPanelB = new NotificationPanelPage(pageB);
+
+    await test.step("Setup shared cart session", async () => {
+      await searchPageB.goto();
+      await cartB.goto();
+      const emailB = await cartB.getCurrentUserEmail();
+
+      // User A adds a product and shares
+      await productPageA.goto(targetProduct.id);
+      await productPageA.addItemToCart();
+      await cartA.goto();
+      await cartA.shareWithEmail(emailB, "contributor");
+
+      // User B joins
+      await notificationPanelB.waitForUnreadCount(1);
+      await notificationPanelB.open();
+      await notificationPanelB.clickNotification("Shared Cart Invitation");
+    });
+
+    const FOLDER_NAME = "Shared Cart Folder";
+
+    await test.step("Create initial folder structure", async () => {
+      await cartA.addFolder();
+      await cartA.renameFolder("New Folder", FOLDER_NAME);
+
+      // Verify sync before disconnecting
+      await expect(cartB.getFolderLocator(FOLDER_NAME)).toBeVisible();
+      await cartB.verifyItemVisible(targetProduct.name);
+    });
+
+    await test.step("Simulate network partition (Offline mode)", async () => {
+      await contextA.setOffline(true);
+      await contextB.setOffline(true);
+    });
+
+    await test.step("Perform concurrent conflicting actions", async () => {
+      // User A: Moves the item into the folder (Move)
+      await cartA.dragItemToFolder(targetProduct.name, FOLDER_NAME);
+
+      // User B: Deletes the target folder (Delete)
+      await cartB.deleteFolder(FOLDER_NAME);
+    });
+
+    await test.step("Restore connection and synchronize", async () => {
+      await contextA.setOffline(false);
+      await contextB.setOffline(false);
+
+      await cartA.waitForSync();
+      await cartB.waitForSync();
+    });
+
+    await test.step("Assert Eventual Consistency (Delete wins over Move)", async () => {
+      await cartA.assertEmpty();
+      await cartB.assertEmpty();
+    });
+  });
 
   throttledTest("Time to Consistency", { tag: "@metric" }, async ({ page }) => {
     test.skip(
