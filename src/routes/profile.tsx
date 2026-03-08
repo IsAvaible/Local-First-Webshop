@@ -105,21 +105,48 @@ function EcommerceProfile() {
   };
 
   const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: async () => {
-          await clearYjsStorage();
-
-          // Force a hard reload to tear down the stale Electric sync stream
-          window.location.href = "/";
-
-          // Theoretically we should also clear the Electric client state here,
-          // however this will also cause all public cached state to be lost.
-          // Hence, we do not do this for now and instead hope that electric
-          // cleans itself up. (shape invalidation?)
-        }
+    // Explicitly delete the Service Worker auth cache.
+    if ("caches" in window) {
+      try {
+        await caches.delete("auth-session-cache");
+      } catch (err) {
+        console.error("Failed to clear auth cache:", err);
       }
-    });
+    }
+
+    await clearYjsStorage();
+
+    try {
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            // Force a hard reload to tear down the stale Electric sync stream
+            window.location.href = "/";
+
+            // Theoretically we should also clear the Electric client state here,
+            // however this will also cause all public cached state to be lost.
+            // Hence, we do not do this for now and instead hope that electric
+            // cleans itself up. (shape invalidation?)
+          },
+          onError: () => {
+            // Server reached, but returned an error (e.g., 500)
+            console.warn(
+              "Sign out network request failed, forcing local teardown."
+            );
+            window.location.href = "/";
+          }
+        }
+      });
+    } catch {
+      console.warn(
+        "Sign out network request failed (offline). Queuing background logout."
+      );
+
+      // Set a flag to kill the session as soon as the network returns
+      localStorage.setItem("pending_offline_logout", "true");
+
+      window.location.href = "/";
+    }
   };
 
   // --- Data Fetching ---

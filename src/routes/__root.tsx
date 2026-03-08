@@ -81,6 +81,27 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   }, [session, isPending]);
 
   useEffect(() => {
+    const processPendingLogout = async () => {
+      if (localStorage.getItem("pending_offline_logout") && navigator.onLine) {
+        try {
+          // Silently hit the Better Auth sign-out endpoint to clear the HttpOnly cookie
+          await authClient.signOut();
+        } finally {
+          // Clean up the flag regardless of success so we don't get stuck in a loop
+          localStorage.removeItem("pending_offline_logout");
+        }
+      }
+    };
+
+    void processPendingLogout();
+
+    // Listen for the network coming back online while the app is open
+    window.addEventListener("online", () => void processPendingLogout());
+    return () =>
+      window.removeEventListener("online", () => void processPendingLogout());
+  }, []);
+
+  useEffect(() => {
     const registerServiceWorker = async () => {
       if ("serviceWorker" in navigator) {
         const serwist = new Serwist("/sw.js", { scope: "/", type: "module" });
