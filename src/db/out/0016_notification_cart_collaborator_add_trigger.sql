@@ -18,15 +18,15 @@ BEGIN
                                    title,
                                    body,
                                    route,
-                                   route_params,
+                                   search_params,
                                    created_at)
         VALUES (NEW.user_id,
                 'social',
                 'cart_collaborator_add',
                 'Shared Cart Invitation',
                 'You have been added to the cart "' || cart_name_val || '"',
-                '/cart?id=$cartId',
-                jsonb_build_object('cartId', NEW.cart_id),
+                '/cart',
+                jsonb_build_object('id', NEW.cart_id),
                 NOW());
     END IF;
 
