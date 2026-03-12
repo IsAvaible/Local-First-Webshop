@@ -444,7 +444,7 @@ export function Cart({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div
-                          aria-label="Connection status: Connected"
+                          aria-label="Connection status: Disconnected"
                           className={cn(
                             "flex items-center justify-center rounded-full bg-red-100 p-1 text-red-700 transition-colors dark:bg-red-900/30 dark:text-red-400"
                           )}
@@ -453,7 +453,7 @@ export function Cart({
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Connected</p>
+                        <p>Disconnected</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>

@@ -13,6 +13,7 @@ import { generateKeyBetween } from "fractional-indexing";
 import type { Cart } from "@/db/schema";
 import { useEnrichedTree } from "@/contexts/useCartContextUtils.ts";
 import { useProductLookups } from "@/hooks/queries/useProductQueries.ts";
+import { toast } from "sonner";
 
 type CartSessionProps = {
   cartId: string;
@@ -68,34 +69,80 @@ function CartSession({
     isLoadingData
   );
 
+  // --- Operations (Inner) ---
+
+  const getProductStockInfo = useCallback(
+    (productId: number, providedStock?: number, excludeItemId?: string) => {
+      // Resolve max available stock
+      let maxStock = providedStock;
+      if (maxStock === undefined) {
+        const enriched = enrichedFlatItems.find(
+          (n) => n.product_id === productId
+        );
+        maxStock = enriched?.product?.stock_sum;
+      }
+
+      // Calculate current quantity in the cart
+      let currentQty = 0;
+      nodes.forEach((n) => {
+        if (
+          n.type === "item" &&
+          n.product_id === productId &&
+          n.id !== excludeItemId
+        ) {
+          currentQty += n.quantity ?? 0;
+        }
+      });
+
+      return { maxStock, currentQty };
+    },
+    [enrichedFlatItems, nodes]
+  );
+
   // --- State Operations ---
-  const addItem = useCallback((productId: number, price: string) => {
-    const id = uuidv4();
-    setNodes((prev) => {
-      const lastRootNode = prev
-        .filter((n) => n.parent_id === null)
-        .sort((a, b) => ((a.order ?? "") < (b.order ?? "") ? -1 : 1))
-        .pop();
+  const addItem = useCallback(
+    (productId: number, price: string, stock_sum?: number) => {
+      const { maxStock, currentQty } = getProductStockInfo(
+        productId,
+        stock_sum
+      );
 
-      const newOrder = generateKeyBetween(lastRootNode?.order ?? null, null);
+      // Guard against exceeding stock
+      if (maxStock !== undefined && currentQty >= maxStock) {
+        toast.error(
+          `Cannot add product, as the stock limit of ${maxStock} was already reached.`
+        );
+        return;
+      }
 
-      const newItem: CartItemShape = {
-        id,
-        type: "item",
-        parent_id: null,
-        order: newOrder,
-        product_id: productId,
-        quantity: 1,
-        price_snapshot: price,
-        tag_ids: [],
-        notes: "",
-        is_selected: true,
-        created_at: Date.now()
-      };
-      return [...prev, newItem];
-    });
-    return id;
-  }, []);
+      const id = uuidv4();
+      setNodes((prev) => {
+        const lastRootNode = prev
+          .filter((n) => n.parent_id === null)
+          .sort((a, b) => ((a.order ?? "") < (b.order ?? "") ? -1 : 1))
+          .pop();
+
+        const newOrder = generateKeyBetween(lastRootNode?.order ?? null, null);
+
+        const newItem: CartItemShape = {
+          id,
+          type: "item",
+          parent_id: null,
+          order: newOrder,
+          product_id: productId,
+          quantity: 1,
+          price_snapshot: price,
+          tag_ids: [],
+          notes: "",
+          is_selected: true,
+          created_at: Date.now()
+        };
+        return [...prev, newItem];
+      });
+      return id;
+    },
+    [getProductStockInfo]
+  );
 
   const createFolder = useCallback((name: string) => {
     setNodes((prev) => {
@@ -171,13 +218,44 @@ function CartSession({
     });
   }, []);
 
-  const updateItemQuantity = useCallback((itemId: string, qty: number) => {
-    setNodes((prev) =>
-      prev.map((n) =>
-        n.id === itemId && n.type === "item" ? { ...n, quantity: qty } : n
-      )
-    );
-  }, []);
+  const updateItemQuantity = useCallback(
+    (itemId: string, qty: number, stock_sum?: number) => {
+      const item = nodes.find((n) => n.id === itemId && n.type === "item");
+      if (item?.type !== "item") return;
+
+      const productId = item.product_id;
+
+      // Get stock info, excluding the current item
+      const { maxStock, currentQty: otherItemsQty } = getProductStockInfo(
+        productId,
+        stock_sum,
+        itemId
+      );
+
+      let finalQty = qty;
+
+      // Clamp the requested quantity
+      if (maxStock !== undefined) {
+        const maxAllowedForThisItem = Math.max(0, maxStock - otherItemsQty);
+        finalQty = Math.min(qty, maxAllowedForThisItem);
+
+        if (qty > maxAllowedForThisItem) {
+          toast.error(
+            `Cannot set quantity to ${qty} as it exceeds available stock. Max allowed is ${maxAllowedForThisItem}.`
+          );
+        }
+      }
+
+      setNodes((prev) =>
+        prev.map((n) =>
+          n.id === itemId && n.type === "item"
+            ? { ...n, quantity: finalQty }
+            : n
+        )
+      );
+    },
+    [nodes, getProductStockInfo]
+  );
 
   const getItemNotes = useCallback(
     (itemId: string) => {
