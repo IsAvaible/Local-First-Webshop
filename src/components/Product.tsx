@@ -77,6 +77,7 @@ export default function Product({
             images={assets.filter((asset) =>
               asset.mime_type.startsWith("image/")
             )}
+            // isOutOfStock={product.stock_sum === 0}
           />
         </div>
         <div>

@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { DrizzleQueryError } from "drizzle-orm/errors";
+import type { TRPCErrorShape } from "@trpc/server";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -110,5 +111,11 @@ export interface TrpcResponseEnvelope<T> {
     data: {
       json: T;
     };
+  };
+}
+
+export interface TrpcErrorResponseEnvelope<T = TRPCErrorShape> {
+  error: {
+    json: T;
   };
 }

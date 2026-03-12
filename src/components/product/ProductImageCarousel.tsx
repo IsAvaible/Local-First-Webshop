@@ -12,6 +12,7 @@ import {
 import type { Asset } from "@/db/schema";
 import { AssetImage } from "@/components/ui/assetImage.tsx";
 import { ImageOff } from "lucide-react";
+import { OutOfStockOverlay } from "@/components/browse/OutOfStockOverlay.tsx";
 
 // A simple and reusable hook to check for a media query
 const useMediaQuery = (query: string) => {
@@ -30,7 +31,13 @@ const useMediaQuery = (query: string) => {
   return matches;
 };
 
-export default function ProductImageCarousel({ images }: { images: Asset[] }) {
+export default function ProductImageCarousel({
+  images,
+  isOutOfStock
+}: {
+  images: Asset[];
+  isOutOfStock?: boolean;
+}) {
   const [api, setApi] = useState<CarouselApi>();
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -129,10 +136,16 @@ export default function ProductImageCarousel({ images }: { images: Asset[] }) {
         <Card className="overflow-hidden py-0">
           <CardContent className="flex aspect-3/4 items-center justify-center p-0">
             {images[selectedIndex] && (
-              <AssetImage
-                asset={images[selectedIndex]}
-                containerClassName="h-full w-full"
-              />
+              <OutOfStockOverlay
+                isOutOfStock={isOutOfStock}
+                applyGrayscale={false}
+                className={"h-full"}
+              >
+                <AssetImage
+                  asset={images[selectedIndex]}
+                  containerClassName={"h-full w-full"}
+                />
+              </OutOfStockOverlay>
             )}
           </CardContent>
         </Card>

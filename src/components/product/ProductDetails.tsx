@@ -14,6 +14,7 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { Input } from "@/components/ui/input";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge.tsx";
+import { toast } from "sonner";
 
 export default function ProductDetails({
   product,
@@ -36,6 +37,10 @@ export default function ProductDetails({
     updateItemQuantity,
     removeItem
   } = useCart();
+
+  // Stock logic
+  const stock = product.stock_sum || 0;
+  const isOutOfStock = stock <= 0;
 
   // Local state for quantity when item is NOT in cart yet
   const [localQuantity, setLocalQuantity] = useState(1);
@@ -72,6 +77,11 @@ export default function ProductDetails({
     : 0;
 
   const handleAddToCart = () => {
+    if (isOutOfStock) {
+      toast.error("This product is currently out of stock.");
+      return;
+    }
+
     const price = activeTier?.price_per_unit.toString() ?? "0";
 
     if (cartItem) {
@@ -87,6 +97,11 @@ export default function ProductDetails({
   };
 
   const handleIncrement = () => {
+    if (currentQuantity >= stock) {
+      toast.error(`Only ${stock} items available in stock.`);
+      return; // Prevent exceeding stock
+    }
+
     if (cartItem) {
       updateItemQuantity(cartItem.id, currentQuantity + 1);
     } else {
@@ -105,6 +120,11 @@ export default function ProductDetails({
   };
 
   const handleTierClick = (minQty: number) => {
+    if (minQty > stock) {
+      toast.error(`Not enough stock for this tier. Only ${stock} available.`);
+      return;
+    }
+
     if (cartItem) {
       updateItemQuantity(cartItem.id, minQty);
     } else {
@@ -113,8 +133,13 @@ export default function ProductDetails({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseInt(e.target.value, 10);
+    let val = parseInt(e.target.value, 10);
     if (!isNaN(val) && val > 0) {
+      if (val > stock) {
+        val = stock;
+        toast.error(`You cannot add more. Only ${stock} in stock.`);
+      }
+
       if (cartItem) {
         updateItemQuantity(cartItem.id, val);
       } else {
@@ -162,7 +187,7 @@ export default function ProductDetails({
               return (
                 <li
                   key={customField.field_name}
-                  className="rounded bg-gray-100 px-2 py-1 text-xs font-medium"
+                  className="rounded bg-gray-100 px-2 py-1 text-xs font-medium dark:bg-slate-800 dark:text-slate-300"
                   title={humanized}
                   aria-label={`${customField.field_name}: ${humanized}`}
                 >
@@ -173,7 +198,11 @@ export default function ProductDetails({
           </ul>
         )}
 
-        <div className="mt-6" aria-live="polite" aria-atomic="true">
+        <div
+          className="mt-6 flex items-center gap-4"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           <p
             className="text-3xl font-bold text-gray-900 dark:text-slate-100"
             id="price-id"
@@ -183,6 +212,18 @@ export default function ProductDetails({
               <span className="sr-only">per</span> unit
             </span>
           </p>
+
+          {/* Stock Display Badge */}
+          <Badge
+            variant="outline"
+            className={`px-2.5 py-1 text-xs font-semibold ${
+              isOutOfStock
+                ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400"
+                : "border-green-200 bg-green-50 text-green-700 dark:border-green-900/50 dark:bg-green-900/20 dark:text-green-400"
+            }`}
+          >
+            {isOutOfStock ? "Out of Stock" : `${stock} in stock`}
+          </Badge>
         </div>
 
         <div className="mt-6 grid gap-3">
@@ -193,6 +234,7 @@ export default function ProductDetails({
             {displayTiers.map((tier) => {
               const isCurrent = activeTier.id === tier.id;
               const price = Number(tier.price_per_unit);
+              const isExceedingStock = tier.min_quantity > stock;
 
               // Calculate discount percentage relative to base price
               const discountPercent =
@@ -206,11 +248,16 @@ export default function ProductDetails({
                   key={tier.id}
                   onClick={() => handleTierClick(tier.min_quantity)}
                   aria-pressed={isCurrent}
+                  disabled={isExceedingStock || isOutOfStock}
                   className={`relative flex w-full cursor-pointer items-center justify-between rounded-lg border p-3 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 ${
                     isCurrent
                       ? "border-gray-600 bg-gray-50 dark:border-gray-400 dark:bg-gray-950/30"
                       : "border-gray-200 bg-white hover:border-gray-300 dark:border-slate-700 dark:bg-slate-900"
-                  } `}
+                  } ${
+                    isExceedingStock || isOutOfStock
+                      ? "cursor-not-allowed! opacity-50"
+                      : ""
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
@@ -273,16 +320,22 @@ export default function ProductDetails({
           className="flex-1"
           onClick={handleAddToCart}
           aria-label={
-            cartItem
-              ? `Add another ${product.name} to cart`
-              : `Add ${product.name} to cart`
+            isOutOfStock
+              ? `${product.name} is out of stock`
+              : cartItem
+                ? `Add another ${product.name} to cart`
+                : `Add ${product.name} to cart`
           }
-          disabled={!!cartItem}
+          disabled={!!cartItem || isOutOfStock}
           aria-describedby="price-id"
           data-testid="main-add-to-cart"
         >
           <ShoppingCart className="mr-2 h-5 w-5" aria-hidden="true" />
-          {cartItem ? "Already in " : "Add to "}Cart
+          {isOutOfStock
+            ? "Out of Stock"
+            : cartItem
+              ? "Already in Cart"
+              : "Add to Cart"}
         </Button>
 
         <div className="flex-1">
@@ -292,16 +345,19 @@ export default function ProductDetails({
               variant="outline"
               className="h-full w-12 shrink-0"
               onClick={handleDecrement}
+              disabled={isOutOfStock || currentQuantity <= 1}
               aria-label="Decrease quantity"
             >
               <Minus className="h-4 w-4" aria-hidden="true" />
             </Button>
             <Input
               type="number"
-              className="h-full rounded-none bg-white text-center focus-visible:ring-0"
+              className="h-full rounded-none bg-white text-center focus-visible:ring-0 disabled:opacity-50"
               value={currentQuantity}
               onChange={handleInputChange}
               min={1}
+              max={stock}
+              disabled={isOutOfStock}
               aria-label={`Quantity for ${product.name}`}
             />
             <Button
@@ -309,6 +365,7 @@ export default function ProductDetails({
               size="icon"
               className="h-full w-12 shrink-0"
               onClick={handleIncrement}
+              disabled={isOutOfStock || currentQuantity >= stock}
               aria-label="Increase quantity"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />

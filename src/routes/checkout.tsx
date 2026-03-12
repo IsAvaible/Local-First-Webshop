@@ -19,10 +19,11 @@ import CheckoutLoadingView from "@/components/checkout/views/CheckoutLoadingView
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
-import { trpc } from "@/lib/trpc-client";
+import { trpc, type TRPCErrorData } from "@/lib/trpc-client";
 import { deepEqual } from "fast-equals";
 import type { UserAddress } from "@/db/schema.ts";
 import { toast } from "sonner";
+import { TRPCClientError } from "@trpc/client";
 
 if (!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) {
   throw Error("Stripe Secret missing or not configured");
@@ -221,6 +222,32 @@ function CheckoutPage() {
           })
           .catch((error) => {
             console.error(`Stripe Error (Attempt ${attemptCount + 1}):`, error);
+
+            let isConflict = false;
+            let errorMessage =
+              "An inventory or pricing conflict occurred. Please try again.";
+
+            if (error instanceof TRPCClientError) {
+              const errData = error.data as unknown as
+                | TRPCErrorData
+                | undefined;
+
+              isConflict =
+                errData?.httpStatus === 409 || errData?.code === "CONFLICT";
+
+              if (error.message) errorMessage = error.message;
+            } else if (error instanceof Error) {
+              // Fallback for standard JS errors
+              isConflict = error.message.includes("409");
+              if (error.message) errorMessage = error.message;
+            }
+
+            if (isConflict) {
+              // Display the error immediately and stop retrying
+              setIntentError(errorMessage);
+              setPaymentIntentPending(false);
+              return; // Exit early to bypass the retry logic
+            }
 
             if (attemptCount < MAX_RETRIES) {
               // Calculate delay: 1s, 2s, 4s...

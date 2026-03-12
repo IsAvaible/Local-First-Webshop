@@ -10,70 +10,83 @@ import { CheckoutPage } from "./pages/CheckoutPage";
 import { SearchPage } from "./pages/SearchPage.ts";
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "@/routes/api/trpc/$.ts";
-import type { TrpcRequestEnvelope, TrpcResponseEnvelope } from "@/lib/utils.ts";
+import type {
+  TrpcErrorResponseEnvelope,
+  TrpcRequestEnvelope,
+  TrpcResponseEnvelope
+} from "@/lib/utils.ts";
 import { MetricType } from "./utils/metrics-reporter.ts";
 import { NotificationPanelPage } from "./pages/NotificationPanelPage.ts";
+import type { TRPCClientError } from "@trpc/client";
+import { ordersRouter } from "@/lib/trpc/orders.ts";
 
 test.describe("Consistency & Conflict Tests", () => {
   test.beforeEach(async () => {
     await resetDatabase();
   });
 
-  // test("The 'Inventory Race': Offline vs Online User", async ({ browser }) => {
-  //   await seedDatabase({ categories: 1, productsPerCategory: 1 });
-  //   const products = await db.query.productsTable.findMany();
-  //   const targetProduct = products[0];
-  //
-  //   const contextA = await browser.newContext(); // Offline user
-  //   const contextB = await browser.newContext(); // Online user
-  //
-  //   const pageA = await contextA.newPage();
-  //   const pageB = await contextB.newPage();
-  //
-  //   const productPageA = new ProductPage(pageA);
-  //   const productPageB = new ProductPage(pageB);
-  //   const cartPageA = new CartPage(pageA);
-  //   const cartPageB = new CartPage(pageB);
-  //   const checkoutPageA = new CheckoutPage(pageA);
-  //   const checkoutPageB = new CheckoutPage(pageB);
-  //
-  //   // 1. Both users view the product
-  //   await Promise.all([
-  //     productPageA.goto(targetProduct.id),
-  //     productPageB.goto(targetProduct.id)
-  //   ]);
-  //
-  //   // 2. User A goes offline and adds to cart
-  //   await contextA.setOffline(true);
-  //   await productPageA.addToCartBtn.click();
-  //
-  //   // Verify via POM or direct expectation if POM doesn't have cart badge helper
-  //   // Assuming CartPage might have a way to check header badge or we just check text
-  //   // ProductPage doesn't have badge check.
-  //   await expect(pageA.getByText("1", { exact: true })).toBeVisible();
-  //
-  //   // 3. User B (Online) buys the item
-  //   await productPageB.addToCartBtn.click();
-  //   await cartPageB.goto();
-  //   await cartPageB.checkoutBtn.click();
-  //
-  //   // Simulate "Sold Out" by deleting item
-  //   await db
-  //     .delete(schema.productsTable)
-  //     .where(eq(schema.productsTable.id, targetProduct.id));
-  //
-  //   // 4. User A comes back online and tries to check out
-  //   await contextA.setOffline(false);
-  //   await cartPageA.goto();
-  //
-  //   await expect(async () => {
-  //     await cartPageA.checkoutBtn.click();
-  //     await checkoutPageA.expectErrorMessage();
-  //   }).toPass();
-  //
-  //   await contextA.close();
-  //   await contextB.close();
-  // });
+  test("The 'Inventory Race': Offline vs Online User", async ({ browser }) => {
+    test.skip(
+      process.env.APP_MODE === "ssr",
+      "SSR does not support offline mode."
+    );
+
+    await seedDatabase({
+      categories: 1,
+      productsPerCategory: 1,
+      inventoryPerProduct: 1
+    });
+    const products = await db.query.productsTable.findMany();
+    const targetProduct = products[0];
+
+    const contextA = await browser.newContext(); // Offline user
+    const contextB = await browser.newContext(); // Online user
+
+    const pageA = await contextA.newPage();
+    const pageB = await contextB.newPage();
+
+    const productPageA = new ProductPage(pageA);
+    const productPageB = new ProductPage(pageB);
+    const cartPageA = new CartPage(pageA);
+    const cartPageB = new CartPage(pageB);
+    const checkoutPageA = new CheckoutPage(pageA);
+
+    // Both users view the product
+    await Promise.all([
+      productPageA.goto(targetProduct.id),
+      productPageB.goto(targetProduct.id)
+    ]);
+
+    // User A goes offline and adds to cart
+    await contextA.setOffline(true);
+    await productPageA.addToCartBtn.click();
+
+    await cartPageA.goto();
+    await cartPageA.verifyItemVisible(targetProduct.name);
+
+    // User B (Online) buys the item
+    await productPageB.addToCartBtn.click();
+    await cartPageB.goto();
+    await cartPageB.verifyItemVisible(targetProduct.name);
+    await cartPageB.checkoutBtn.click();
+
+    // Simulate "Sold Out" by deleting ledger entry
+    await db
+      .delete(schema.inventoryLedgerTable)
+      .where(eq(schema.inventoryLedgerTable.product_id, targetProduct.id));
+
+    // User A comes back online and tries to check out
+    await contextA.setOffline(false);
+    await cartPageA.goto();
+
+    await expect(async () => {
+      await cartPageA.checkoutBtn.click();
+      await checkoutPageA.expectErrorMessage();
+    }).toPass();
+
+    await contextA.close();
+    await contextB.close();
+  });
 
   test("Conflict Scenario: Structural Concurrency (Move vs Delete)", async ({
     browser
@@ -231,7 +244,7 @@ test.describe("Consistency & Conflict Tests", () => {
     });
   });
 
-  test("Server Gatekeeper: Reject Malicious Payload Interception", async ({
+  test("Server Gatekeeper: Reject Malicious Payload Interception (Price)", async ({
     page
   }) => {
     type OrderUpsertInput = inferRouterInputs<AppRouter>["orders"]["upsert"];
@@ -262,16 +275,21 @@ test.describe("Consistency & Conflict Tests", () => {
 
     await test.step("Attempt Malicious Checkout (Network Interception)", async () => {
       // Set up a route handler to intercept the checkout POST request.
-      await page.route("**/api/trpc/orders.upsert", async (route) => {
-        const postData = route
-          .request()
-          .postDataJSON() as TrpcRequestEnvelope<OrderUpsertInput>;
+      await page.route("**/api/trpc/orders.upsert*", async (route) => {
+        const postData = route.request().postDataJSON() as Record<
+          string,
+          TrpcRequestEnvelope<OrderUpsertInput>
+        >;
+
+        const batchedData = postData["0"];
 
         // Attempt to force price to 0
-        if (postData.json.items && postData.json.items.length > 0) {
+        if (batchedData.json.items && batchedData.json.items.length > 0) {
           // @ts-expect-error The Client can't actually send price, but we're simulating a malicious client that tries to
-          postData.json.items[0].price = 0;
+          batchedData.json.items[0].price = 0;
         }
+
+        postData["0"] = batchedData;
 
         // Continue the request with the modified (malicious) data
         await route.continue({ postData });
@@ -309,6 +327,87 @@ test.describe("Consistency & Conflict Tests", () => {
       });
 
       expect(Number(responseSubtotal)).not.toBe(0);
+    });
+  });
+
+  test("Server Gatekeeper: Reject Malicious Payload Interception (Quantity)", async ({
+    page
+  }) => {
+    type OrderUpsertInput = inferRouterInputs<AppRouter>["orders"]["upsert"];
+
+    await seedDatabase({
+      categories: 1,
+      productsPerCategory: 1,
+      inventoryPerProduct: 1
+    });
+    const products = await db.query.productsTable.findMany();
+    const targetProduct = products[0];
+
+    const productPage = new ProductPage(page);
+    const cartPage = new CartPage(page);
+    const checkoutPage = new CheckoutPage(page);
+
+    await test.step("Add valid item to cart", async () => {
+      await productPage.goto(targetProduct.id);
+      await productPage.addItemToCart();
+    });
+
+    await test.step("Navigate to checkout", async () => {
+      await cartPage.goto();
+      await cartPage.verifyItemVisible(targetProduct.name);
+      await cartPage.checkoutBtn.click();
+    });
+
+    let orderResponsePayload:
+      | TrpcErrorResponseEnvelope<TRPCClientError<typeof ordersRouter>>
+      | undefined;
+
+    await test.step("Attempt Malicious Checkout (Network Interception)", async () => {
+      // Set up a route handler to intercept the checkout POST request.
+      await page.route("**/api/trpc/orders.upsert*", async (route) => {
+        const postData = route.request().postDataJSON() as Record<
+          string,
+          TrpcRequestEnvelope<OrderUpsertInput>
+        >;
+
+        const batchedData = postData["0"];
+
+        // Attempt to force quantity to 100, bypassing frontend stock/cart limits
+        if (batchedData?.json?.items && batchedData.json.items.length > 0) {
+          batchedData.json.items[0].quantity = 100;
+        }
+
+        console.log(
+          "Intercepted and modified postData:",
+          JSON.stringify(postData, null, 2)
+        );
+
+        // Continue the request with the modified (malicious) data
+        await route.continue({ postData });
+      });
+
+      const [response] = await Promise.all([
+        page.waitForResponse((res) =>
+          res.url().includes("/api/trpc/orders.upsert")
+        ),
+        checkoutPage.enterCheckoutFlow()
+      ]);
+
+      orderResponsePayload = (
+        (await response.json()) as (typeof orderResponsePayload)[]
+      )[0];
+    });
+
+    await test.step("Verify Server Rejects Order", () => {
+      expect(orderResponsePayload).toBeDefined();
+
+      if (!orderResponsePayload) return;
+
+      expect(orderResponsePayload.error).toBeDefined();
+
+      console.log(orderResponsePayload.error?.json?.message);
+
+      expect(orderResponsePayload.error?.json?.data?.code).toBe("CONFLICT");
     });
   });
 });

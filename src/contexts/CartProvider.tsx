@@ -54,6 +54,7 @@ import {
   useEnrichedTree,
   useProductLookups
 } from "@/contexts/useCartContextUtils.ts";
+import { toast } from "sonner";
 
 // --- 1. Type Definitions ---
 
@@ -508,8 +509,49 @@ function CartSession({
 
   // --- Operations (Inner) ---
 
+  const getProductStockInfo = useCallback(
+    (productId: number, providedStock?: number, excludeItemId?: string) => {
+      // Resolve max available stock
+      let maxStock = providedStock;
+      if (maxStock === undefined) {
+        const enriched = enrichedFlatItems.find(
+          (n) => n.product_id === productId
+        );
+        maxStock = enriched?.product?.stock_sum;
+      }
+
+      // Calculate current quantity in the cart
+      let currentQty = 0;
+      nodesMap.forEach((n) => {
+        if (
+          isYItemMap(n) &&
+          n.get("product_id") === productId &&
+          n.get("id") !== excludeItemId
+        ) {
+          currentQty += n.get("quantity") ?? 0;
+        }
+      });
+
+      return { maxStock, currentQty };
+    },
+    [enrichedFlatItems, nodesMap]
+  );
+
   const addItem = useCallback(
-    (productId: number, price: string) => {
+    (productId: number, price: string, stock_sum?: number) => {
+      const { maxStock, currentQty } = getProductStockInfo(
+        productId,
+        stock_sum
+      );
+
+      // Guard against exceeding stock
+      if (maxStock !== undefined && currentQty >= maxStock) {
+        toast.error(
+          `Cannot add product, as the stock limit of ${maxStock} was already reached.`
+        );
+        return;
+      }
+
       return ydoc
         .transact(() => {
           const lastRootNode = currentNodesRef.current
@@ -542,7 +584,7 @@ function CartSession({
         })
         .get("id");
     },
-    [ydoc, nodesMap]
+    [ydoc, nodesMap, currentNodesRef, getProductStockInfo]
   );
 
   const createFolder = useCallback(
@@ -644,15 +686,42 @@ function CartSession({
   );
 
   const updateItemQuantity = useCallback(
-    (itemId: string, qty: number) => {
+    (itemId: string, qty: number, stock_sum?: number) => {
       ydoc.transact(() => {
         const item = nodesMap.get(itemId);
+
         if (item && isYItemMap(item)) {
-          item.set("quantity", qty);
+          const productId = item.get("product_id");
+          if (productId === undefined) {
+            return;
+          }
+
+          // Get stock info, excluding the current item
+          const { maxStock, currentQty: otherItemsQty } = getProductStockInfo(
+            productId,
+            stock_sum,
+            itemId
+          );
+
+          let finalQty = qty;
+
+          // Clamp the requested quantity
+          if (maxStock !== undefined) {
+            const maxAllowedForThisItem = Math.max(0, maxStock - otherItemsQty);
+            finalQty = Math.min(qty, maxAllowedForThisItem);
+
+            if (qty > maxAllowedForThisItem) {
+              toast.error(
+                `Cannot set quantity to ${qty} as it exceeds available stock. Max allowed is ${maxAllowedForThisItem}.`
+              );
+            }
+          }
+
+          item.set("quantity", finalQty);
         }
       });
     },
-    [ydoc, nodesMap]
+    [ydoc, nodesMap, getProductStockInfo]
   );
 
   const getItemNotesYText = useCallback(

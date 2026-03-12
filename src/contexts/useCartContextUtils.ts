@@ -14,6 +14,7 @@ import {
 } from "@/db/schema.ts";
 import type {
   EnrichedCartNode,
+  EnrichedFlatCartItem,
   EnrichedFlatCartNode
 } from "@/contexts/useCartContext.ts";
 import * as Y from "yjs";
@@ -117,7 +118,7 @@ export function useEnrichedTree(
   const enrichedFlatItems = useMemo(
     () => enrichedFlatNodes.filter(isYItem),
     [enrichedFlatNodes]
-  );
+  ) as EnrichedFlatCartItem[];
 
   // 2. Build Tree
   const rootNodes: EnrichedCartNode[] = useMemo(() => {

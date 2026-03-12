@@ -20,6 +20,7 @@ import { useCart } from "@/contexts/useCartContext";
 import { cn, humanizeCustomFieldValue, type JsonValue } from "@/lib/utils";
 import type { Asset, Product } from "@/db/schema";
 import { toast } from "sonner";
+import { OutOfStockOverlay } from "@/components/browse/OutOfStockOverlay.tsx";
 
 interface ProductCardProps {
   product: Product;
@@ -52,8 +53,16 @@ function ProductCardInternal({
     [enrichedFlatItems, product.id]
   );
 
+  // Check if the product is out of stock
+  const isOutOfStock = product.stock_sum === 0;
+
+  // Combine disabled conditions
+  const isActionDisabled = !canManageItems || isOutOfStock;
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (isActionDisabled) return;
+
     if (product.base_price) {
       addItem(product.id, product.base_price);
     } else {
@@ -81,12 +90,14 @@ function ProductCardInternal({
         aria-label={`View details for ${product.name}`}
       >
         <CardHeader className="relative p-0">
-          <AssetImage
-            asset={asset}
-            alt={product.name}
-            containerClassName="aspect-square w-full rounded-t-xl"
-            loading={lazy ? "lazy" : "eager"}
-          />
+          <OutOfStockOverlay isOutOfStock={isOutOfStock}>
+            <AssetImage
+              asset={asset}
+              alt={product.name}
+              containerClassName="aspect-square w-full rounded-t-xl"
+              loading={lazy ? "lazy" : "eager"}
+            />
+          </OutOfStockOverlay>
         </CardHeader>
         <CardContent className="flex-grow p-4">
           <CardTitle className="line-clamp-1 h-6">{product.name}</CardTitle>
@@ -126,7 +137,7 @@ function ProductCardInternal({
           <Button
             size="icon"
             onClick={handleAddToCart}
-            disabled={!canManageItems}
+            disabled={isActionDisabled}
             className="size-9 shrink-0 transition-transform active:scale-95"
             aria-label={`Add ${product.name} to cart`}
           >
@@ -138,7 +149,7 @@ function ProductCardInternal({
             quantity={cartItem.quantity ?? 0}
             onUpdate={updateItemQuantity}
             onRemove={removeItem}
-            disabled={!canManageItems}
+            disabled={isActionDisabled}
             productName={product.name}
           />
         )}
@@ -317,7 +328,7 @@ function CartQuantitySelector({
           )}
         >
           <ShoppingCartIcon className="h-4 w-4" />
-          <Badge className="absolute -top-0.5 -right-0 flex size-4 items-center justify-center bg-transparent p-0">
+          <Badge className="absolute -top-0.5 -right-0 flex h-4 min-w-4 items-center justify-center bg-transparent px-0.5 text-[10px] tracking-tight">
             {quantity}
           </Badge>
         </div>

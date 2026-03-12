@@ -117,6 +117,7 @@ export const productsTable = pgTable(
       precision: 10,
       scale: 2
     }),
+    stock_sum: integer().notNull().default(0),
     company_id: integer()
       .notNull()
       .references(() => companiesTable.id, { onDelete: "restrict" }),
@@ -146,6 +147,42 @@ export const createProductSchema = createInsertSchema(productsTable).omit({
 export const updateProductSchema = createUpdateSchema(productsTable).omit({
   created_at: true,
   base_price: true
+});
+
+export const inventoryLedgerChangeReason = pgEnum("inventory_change_reason", [
+  "restock",
+  "sale",
+  "return",
+  "shrinkage",
+  "adjustment",
+  "other"
+]);
+
+// --- INVENTORY LEDGER ---
+export const inventoryLedgerTable = pgTable(
+  "inventory_ledger",
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    product_id: integer()
+      .notNull()
+      .references(() => productsTable.id, { onDelete: "cascade" }),
+    // Positive for restocks/returns, Negative for sales/shrinkage
+    quantity_change: integer("quantity_change").notNull(),
+    reason: inventoryLedgerChangeReason("reason").notNull(),
+    order_id: uuid().references(() => ordersTable.id, {
+      onDelete: "cascade"
+    }),
+    created_at: timestamp({ withTimezone: true }).notNull().defaultNow()
+  },
+  (table) => ({
+    productIdIdx: index("ledger_product_id_idx").on(table.product_id)
+  })
+);
+
+export const createInventoryLedgerSchema = createInsertSchema(
+  inventoryLedgerTable
+).omit({
+  created_at: true
 });
 
 // --- TIERED PRICING SCHEMA ---
@@ -443,6 +480,9 @@ export type YdocAwarenessUpdate = z.infer<typeof updateYdocAwarenessSchema>;
 export type User = z.infer<typeof selectUsersSchema>;
 export type Product = z.infer<typeof selectProductSchema>;
 export type CreateProduct = z.infer<typeof createProductSchema>;
+export type CreateInventoryLedgerEntry = z.infer<
+  typeof createInventoryLedgerSchema
+>;
 export type Category = z.infer<typeof selectCategorySchema>;
 export type Company = z.infer<typeof selectCompanySchema>;
 export type PricingTier = z.infer<typeof selectPricingTierSchema>;

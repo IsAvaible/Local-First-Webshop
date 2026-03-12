@@ -15,3 +15,8 @@ export const trpc = createTRPCProxyClient<AppRouter>({
     })
   ]
 });
+
+export interface TRPCErrorData {
+  httpStatus?: number;
+  code?: string;
+}

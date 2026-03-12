@@ -5,7 +5,7 @@ import { reset } from "drizzle-seed";
 import { faker } from "@faker-js/faker";
 import sharp from "sharp";
 import { encode } from "blurhash";
-import type { CreateProduct } from "./schema";
+import type { CreateInventoryLedgerEntry, CreateProduct } from "./schema";
 
 // --- Configuration ---
 const COMPANIES_TO_CREATE = 5;
@@ -128,6 +128,7 @@ async function main() {
     const insertedProducts = [];
     const customValueData = [];
     const pricingTierData = [];
+    const inventoryLedgerData: CreateInventoryLedgerEntry[] = [];
 
     // Store "pending" assets here to process them in a batch later
     const pendingAssets: {
@@ -184,6 +185,33 @@ async function main() {
 
         insertedProducts.push(product);
         if (!isVariant) lastBaseProductId = product.id;
+
+        // --- Inventory Ledger Entries ---
+        const isOutOfStock = Math.random() < 0.05;
+
+        if (!isOutOfStock) {
+          // Initial Restock
+          inventoryLedgerData.push({
+            product_id: product.id,
+            quantity_change: faker.number.int({ min: 20, max: 500 }),
+            reason: "restock"
+          });
+
+          // Occasional random change (sale, shrinkage, etc.)
+          if (Math.random() > 0.6) {
+            inventoryLedgerData.push({
+              product_id: product.id,
+              quantity_change: faker.number.int({ min: -10, max: -1 }),
+              reason: faker.helpers.arrayElement([
+                "sale",
+                "shrinkage",
+                "adjustment"
+              ])
+            });
+          }
+        } else {
+          console.log(`Leaving ${product.name} out of stock.`);
+        }
 
         // Pricing Tiers
         const numTiers = faker.number.int({ min: 1, max: 3 });
@@ -254,7 +282,7 @@ async function main() {
     }
     console.log("\nAsset processing complete.");
 
-    // Bulk Insert
+    // Bulk Inserts
     if (pricingTierData.length > 0) {
       await tx.insert(schema.pricingTiersTable).values(pricingTierData);
     }
@@ -265,6 +293,10 @@ async function main() {
 
     if (customValueData.length > 0) {
       await tx.insert(schema.customFieldValuesTable).values(customValueData);
+    }
+
+    if (inventoryLedgerData.length > 0) {
+      await tx.insert(schema.inventoryLedgerTable).values(inventoryLedgerData);
     }
   });
 

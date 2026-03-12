@@ -26,6 +26,7 @@ import {
 import { useCartDisplay } from "@/components/cart/CartDisplayContext.ts";
 import { useYjsText } from "@/contexts/useCartContextUtils.ts";
 import { TagManager } from "./TagManager";
+import { OutOfStockOverlay } from "@/components/browse/OutOfStockOverlay.tsx";
 
 export function CartItem({
   item,
@@ -64,6 +65,7 @@ export function CartItem({
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQuantity = parseInt(e.target.value, 10);
+
     if (newQuantity > 0) {
       updateItemQuantity(item.id, newQuantity);
     }
@@ -95,11 +97,20 @@ export function CartItem({
             aria-label={`Select ${productName} for checkout`}
           />
         )}
-        <AssetImage
-          asset={asset}
-          alt={productName}
-          containerClassName="my-auto aspect-3/4 w-20 rounded-md object-cover @max-[16rem]:hidden @sm:w-28"
-        />
+
+        <OutOfStockOverlay
+          isOutOfStock={item.product?.stock_sum === 0}
+          className={
+            "my-auto aspect-3/4 w-20 rounded-md @max-[16rem]:hidden @sm:w-28"
+          }
+          overlayClassName="rounded-md"
+        >
+          <AssetImage
+            asset={asset}
+            alt={productName}
+            containerClassName="aspect-3/4 rounded-md object-cover"
+          />
+        </OutOfStockOverlay>
 
         <div className="flex flex-1 justify-between gap-3">
           <div className="flex flex-1 flex-col justify-between gap-y-2">
@@ -164,6 +175,7 @@ export function CartItem({
                 value={item.quantity}
                 className="h-8 w-20 px-2 @[16rem]:w-12"
                 min={1}
+                max={item.product?.stock_sum}
                 disabled={disabled}
                 onChange={handleQuantityChange}
                 aria-label={`Quantity of ${productName}`}

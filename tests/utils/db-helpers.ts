@@ -26,11 +26,13 @@ export async function seedDatabase(
     companies?: number;
     categories?: number;
     productsPerCategory?: number;
+    inventoryPerProduct?: number; // Added inventory parameter
   } = {}
 ) {
   const COMPANIES_TO_CREATE = options.companies ?? 2;
   const CATEGORIES_TO_CREATE = options.categories ?? 2;
   const PRODUCTS_PER_CATEGORY = options.productsPerCategory ?? 5;
+  const INVENTORY_PER_PRODUCT = options.inventoryPerProduct ?? 1000; // Defaulting to 1000
 
   // Deterministic seeding for easier debugging
   faker.seed(123);
@@ -83,17 +85,35 @@ export async function seedDatabase(
       insertedProducts.push(...insertedChunk);
     }
 
-    // Generate Pricing Tier Data in Memory using inserted Product IDs
-    const allPricingTiers = insertedProducts.map((product) => ({
-      product_id: product.id,
-      min_quantity: 1,
-      price_per_unit: faker.commerce.price({ min: 10, max: 200 })
-    }));
+    const allPricingTiers = [];
+    const allInventoryLedgerData = [];
+
+    for (const product of insertedProducts) {
+      allPricingTiers.push({
+        product_id: product.id,
+        min_quantity: 1,
+        price_per_unit: faker.commerce.price({ min: 10, max: 200 })
+      });
+
+      allInventoryLedgerData.push({
+        product_id: product.id,
+        quantity_change: INVENTORY_PER_PRODUCT,
+        reason: "restock" as const
+      });
+    }
 
     // Bulk Insert Pricing Tiers in Chunks
     const pricingChunks = chunkArray(allPricingTiers, CHUNK_SIZE);
     for (const chunk of pricingChunks) {
       await tx.insert(schema.pricingTiersTable).values(chunk);
+    }
+
+    // Bulk Insert Inventory Ledger in Chunks
+    if (allInventoryLedgerData.length > 0) {
+      const inventoryChunks = chunkArray(allInventoryLedgerData, CHUNK_SIZE);
+      for (const chunk of inventoryChunks) {
+        await tx.insert(schema.inventoryLedgerTable).values(chunk);
+      }
     }
   });
 

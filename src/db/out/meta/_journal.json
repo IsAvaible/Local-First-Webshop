@@ -176,6 +176,20 @@
       "when": 1772024269610,
       "tag": "0024_special_prism",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1773224452236,
+      "tag": "0025_great_chronomancer",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1773226228532,
+      "tag": "0026_product_stock_update",
+      "breakpoints": true
     }
   ]
 }

@@ -61,11 +61,20 @@ export const ordersRouter = router({
 
         const productIds = items.map((item) => item.productId);
 
+        const requestedQuantities = items.reduce(
+          (acc, item) => {
+            acc[item.productId] = (acc[item.productId] || 0) + item.quantity;
+            return acc;
+          },
+          {} as Record<number, number>
+        );
+
         // Fetch Pricing Product Names
         const allProductData = await ctx.db
           .select({
             productId: productsTable.id,
             name: productsTable.name,
+            stockSum: productsTable.stock_sum,
             price: pricingTiersTable.price_per_unit,
             minQuantity: pricingTiersTable.min_quantity
           })
@@ -75,6 +84,21 @@ export const ordersRouter = router({
             eq(productsTable.id, pricingTiersTable.product_id)
           )
           .where(inArray(productsTable.id, productIds));
+
+        // Validate no item exceeds available stock
+        for (const [productIdStr, totalRequestedQty] of Object.entries(
+          requestedQuantities
+        )) {
+          const pId = Number(productIdStr);
+          const productData = allProductData.find((p) => p.productId === pId);
+
+          if (productData && totalRequestedQty > productData.stockSum) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: `Insufficient stock for ${productData.name}. You requested ${totalRequestedQty}, but only ${productData.stockSum} are available.`
+            });
+          }
+        }
 
         // Map inputs to the correct price based on quantity
         const lineItems = items.map((item) => {
