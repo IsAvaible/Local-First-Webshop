@@ -21,6 +21,8 @@ export const MetricType = {
 
   // Offline
   SYNC_RECOVERY_TIME: "metric:sync-recovery-time",
+  MAIN_THREAD_BLOCKING_TIME: "metric:main-thread-blocking-time",
+  DROPPED_FRAMES: "metric:dropped-frames",
 
   // Consistency
   TIME_TO_CONSISTENCY: "metric:time-to-consistency",

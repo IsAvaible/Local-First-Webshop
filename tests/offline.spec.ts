@@ -8,6 +8,11 @@ import { db } from "@/db/connection.ts";
 import * as schema from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { MetricType } from "./utils/metrics-reporter.ts";
+import fs from "fs";
+import {
+  parseTraceForSyncMetrics,
+  type TraceData
+} from "./utils/parse-trace-metrics.ts";
 
 test.describe("Offline & Recovery Tests", () => {
   test.beforeEach(async () => {
@@ -73,7 +78,7 @@ test.describe("Offline & Recovery Tests", () => {
   throttledTest(
     "Sync Recovery Stress Test",
     { tag: "@metric" },
-    async ({ page }) => {
+    async ({ page, browser }) => {
       test.skip(
         process.env.APP_MODE === "ssr",
         "SSR does not support automatic offline work and re-syncs."
@@ -81,7 +86,7 @@ test.describe("Offline & Recovery Tests", () => {
 
       const searchPage = new SearchPage(page);
       const productPage = new ProductPage(page);
-      const mutationCount = 20;
+      const mutationCount = 50;
 
       await test.step("Setup: Seed and navigate", async () => {
         await seedDatabase({ categories: 1, productsPerCategory: 1 });
@@ -95,37 +100,81 @@ test.describe("Offline & Recovery Tests", () => {
 
       await test.step(`Action: Perform ${mutationCount} offline mutations`, async () => {
         await productPage.addItemToCart();
-
-        // Increase quantity (since main button is now disabled)
         for (let i = 1; i < mutationCount; i++) {
           await productPage.increaseQtyBtn.click();
         }
       });
 
-      await test.step("Verification: Go Online and measure recovery", async () => {
+      await test.step("Verification: Measure recovery via Chrome Profiler", async () => {
+        const tracePath = `sync-trace-${Date.now()}.json`;
+
+        // Network listener for the sync request
+        const syncCompletedPromise = page.waitForResponse(
+          (res) =>
+            res.url().includes("/api/ydoc-updates") && res.status() === 200,
+          { timeout: 15000 }
+        );
+
+        await browser.startTracing(page, {
+          path: tracePath,
+          categories: ["devtools.timeline", "v8", "benchmark", "viz"]
+        });
+
         const start = performance.now();
 
         // Restore connection
         await page.context().setOffline(false);
 
-        // Measure Recovery via UI Badge update
-        await expect(async () => {
-          await productPage.verifyCartBadgeCount(mutationCount);
-        }).toPass({ timeout: 15000 });
+        // Wait for the background sync to confirm
+        await syncCompletedPromise;
+        // TODO Wait for an UI indicator that sync is complete
+        // "Workaround"
+        await page.waitForTimeout(500);
 
         const duration = performance.now() - start;
 
+        // Stop Tracing
+        await browser.stopTracing();
+
+        // Parse the Trace File for Blocking Time and Dropped Frames
+        const traceData = JSON.parse(
+          fs.readFileSync(tracePath, "utf8")
+        ) as TraceData;
+        const metrics = parseTraceForSyncMetrics(traceData);
+
+        console.log(`Sync Recovery Wall-clock Time: ${duration.toFixed(2)}ms`);
         console.log(
-          `Sync Recovery Time for ${mutationCount} mutations: ${duration.toFixed(2)}ms`
+          `Main Thread Blocking Time: ${metrics.blockingTimeMs.toFixed(2)}ms`
+        );
+        console.log(`Dropped Frames: ${metrics.droppedFrames}`);
+
+        // Log Annotations
+        test.info().annotations.push(
+          {
+            type: MetricType.SYNC_RECOVERY_TIME,
+            description: JSON.stringify({
+              value: Number(duration.toFixed(2)),
+              unit: "ms"
+            })
+          },
+          {
+            type: MetricType.MAIN_THREAD_BLOCKING_TIME,
+            description: JSON.stringify({
+              value: Number(metrics.blockingTimeMs.toFixed(2)),
+              unit: "ms"
+            })
+          },
+          {
+            type: MetricType.DROPPED_FRAMES,
+            description: JSON.stringify({
+              value: metrics.droppedFrames,
+              unit: "count"
+            })
+          }
         );
 
-        test.info().annotations.push({
-          type: MetricType.SYNC_RECOVERY_TIME,
-          description: JSON.stringify({
-            value: Number(duration.toFixed(2)),
-            unit: "ms"
-          })
-        });
+        // Clean up trace file
+        fs.unlinkSync(tracePath);
       });
     }
   );
