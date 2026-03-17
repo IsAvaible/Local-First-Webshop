@@ -18,6 +18,8 @@ import { authClient } from "@/lib/auth-client.ts";
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { Serwist } from "@serwist/window";
+import { RouteChunkPreloader } from "@/components/routing/RouteChunkPreloader.tsx";
+import { DatabasePreloader } from "@/components/routing/DatabasePreloader.tsx";
 
 export const Route = createRootRoute({
   ssr: false,
@@ -127,6 +129,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             </CartProvider>
           </div>
           <Toaster position={"bottom-center"} />
+          <RouteChunkPreloader />
+          <DatabasePreloader />
         </ClientOnly>
         <TanStackDevtools
           plugins={[
