@@ -153,14 +153,14 @@ test.describe("Offline & Recovery Tests", () => {
           {
             type: MetricType.SYNC_RECOVERY_TIME,
             description: JSON.stringify({
-              value: Number(duration.toFixed(2)),
+              value: duration,
               unit: "ms"
             })
           },
           {
             type: MetricType.MAIN_THREAD_BLOCKING_TIME,
             description: JSON.stringify({
-              value: Number(metrics.blockingTimeMs.toFixed(2)),
+              value: metrics.blockingTimeMs,
               unit: "ms"
             })
           },

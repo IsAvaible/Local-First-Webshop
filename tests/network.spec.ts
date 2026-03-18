@@ -39,11 +39,11 @@ test.describe("Network Efficiency Tests", { tag: "@metric" }, () => {
         page.getByRole("heading", { name: "Partslist" })
       ).toBeVisible();
 
-      const homeKb = (totalBytes / 1024).toFixed(2);
-      console.log(`Bandwidth after Home Load: ${homeKb} KB`);
+      const homeKb = totalBytes / 1024;
+      console.log(`Bandwidth after Home Load: ${homeKb.toFixed(2)} KB`);
       test.info().annotations.push({
         type: MetricType.BANDWIDTH_HOME_LOAD,
-        description: JSON.stringify({ value: Number(homeKb), unit: "KB" })
+        description: JSON.stringify({ value: homeKb, unit: "KB" })
       });
     });
 
@@ -52,11 +52,11 @@ test.describe("Network Efficiency Tests", { tag: "@metric" }, () => {
 
       await searchPage.goto();
 
-      const searchKb = ((totalBytes - initialBytesBeforeNav) / 1024).toFixed(2);
-      console.log(`Bandwidth for Search Navigation: ${searchKb} KB`);
+      const searchKb = (totalBytes - initialBytesBeforeNav) / 1024;
+      console.log(`Bandwidth for Search Navigation: ${searchKb.toFixed(2)} KB`);
       test.info().annotations.push({
         type: MetricType.BANDWIDTH_SEARCH_NAV,
-        description: JSON.stringify({ value: Number(searchKb), unit: "KB" })
+        description: JSON.stringify({ value: searchKb, unit: "KB" })
       });
     });
 
@@ -67,11 +67,13 @@ test.describe("Network Efficiency Tests", { tag: "@metric" }, () => {
       await expect(page).toHaveURL(/product/);
       await expect(productPage.addToCartBtn).toBeVisible();
 
-      const productKb = ((totalBytes - productBytesStart) / 1024).toFixed(2);
-      console.log(`Bandwidth for Product Navigation: ${productKb} KB`);
+      const productKb = (totalBytes - productBytesStart) / 1024;
+      console.log(
+        `Bandwidth for Product Navigation: ${productKb.toFixed(2)} KB`
+      );
       test.info().annotations.push({
         type: MetricType.BANDWIDTH_PRODUCT_NAV,
-        description: JSON.stringify({ value: Number(productKb), unit: "KB" })
+        description: JSON.stringify({ value: productKb, unit: "KB" })
       });
     });
   });

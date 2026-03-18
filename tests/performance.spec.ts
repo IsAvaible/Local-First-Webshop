@@ -50,7 +50,7 @@ test.describe("Performance & Resource Tests", { tag: "@metric" }, () => {
           test.info().annotations.push({
             type: MetricType.INITIAL_SYNC_TIME,
             description: JSON.stringify({
-              value: Number(duration.toFixed(2)),
+              value: duration,
               unit: "ms"
             })
           });
@@ -181,7 +181,7 @@ test.describe("Performance & Resource Tests", { tag: "@metric" }, () => {
           test.info().annotations.push({
             type: MetricType.INTERACTION_LATENCY,
             description: JSON.stringify({
-              value: Number(latency.toFixed(2)),
+              value: latency,
               unit: "ms"
             })
           });
@@ -288,7 +288,7 @@ test.describe("Performance & Resource Tests", { tag: "@metric" }, () => {
             test.info().annotations.push({
               type: MetricType.JS_HEAP_USED,
               description: JSON.stringify({
-                value: Number(heapUsedMB.toFixed(2)),
+                value: heapUsedMB,
                 unit: "MB"
               })
             });
@@ -350,14 +350,14 @@ test.describe("Performance & Resource Tests", { tag: "@metric" }, () => {
         {
           type: MetricType.INITIAL_LOAD_TIME,
           description: JSON.stringify({
-            value: Number(initialDuration.toFixed(2)),
+            value: initialDuration,
             unit: "ms"
           })
         },
         {
           type: MetricType.CACHED_LOAD_TIME,
           description: JSON.stringify({
-            value: Number(cachedDuration.toFixed(2)),
+            value: cachedDuration,
             unit: "ms"
           })
         }
@@ -425,7 +425,7 @@ test.describe("Performance & Resource Tests", { tag: "@metric" }, () => {
       });
 
       console.log(
-        `Scroll Performance: ${metrics.longTasks} lag spikes, ${metrics.totalLag.toFixed(0)}ms total lag.`
+        `Scroll Performance: ${metrics.longTasks} lag spikes, ${metrics.totalLag.toFixed(2)}ms total lag.`
       );
 
       test.info().annotations.push(
@@ -439,7 +439,7 @@ test.describe("Performance & Resource Tests", { tag: "@metric" }, () => {
         {
           type: MetricType.TOTAL_SCROLL_LAG,
           description: JSON.stringify({
-            value: Number(metrics.totalLag.toFixed(0)),
+            value: metrics.totalLag,
             unit: "ms"
           })
         }

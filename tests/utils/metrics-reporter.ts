@@ -26,7 +26,8 @@ export const MetricType = {
 
   // Consistency
   TIME_TO_CONSISTENCY: "metric:time-to-consistency",
-  SERVER_VALIDATED_SUBTOTAL: "metric:server-validated-subtotal"
+  SERVER_VALIDATED_SUBTOTAL: "metric:server-validated-subtotal",
+  TIME_TO_RESTORATION: "metric:time-to-restoration"
 } as const;
 
 export default class MetricsCsvReporter implements Reporter {

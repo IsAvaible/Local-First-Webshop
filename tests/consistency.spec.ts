@@ -235,7 +235,7 @@ test.describe("Consistency & Conflict Tests", () => {
       test.info().annotations.push({
         type: MetricType.TIME_TO_CONSISTENCY,
         description: JSON.stringify({
-          value: Number(duration.toFixed(2)),
+          value: duration,
           unit: "ms"
         })
       });
