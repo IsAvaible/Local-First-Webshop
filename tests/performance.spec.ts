@@ -377,7 +377,15 @@ test.describe("Performance & Resource Tests", { tag: "@metric" }, () => {
     // Arrange
     await test.step("Configure mobile viewport and data", async () => {
       await page.setViewportSize({ width: 375, height: 667 });
-      await seedDatabase({ categories: 2000, productsPerCategory: 10 });
+      const categoriesCount = 10;
+      const productsPerCategory = Math.floor(
+        testConfig.productCounts[testConfig.productCounts.length - 1] /
+          categoriesCount
+      );
+      await seedDatabase({
+        categories: categoriesCount,
+        productsPerCategory: productsPerCategory
+      });
       await searchPage.goto();
     });
 

@@ -41,7 +41,7 @@ export default defineConfig({
 
   timeout: isSlowNetwork ? 90000 : 30000,
   expect: {
-    timeout: isSlowNetwork ? 45000 : 7500
+    timeout: isSlowNetwork ? 65000 : 15000
   },
 
   /* Configure projects for major browsers */

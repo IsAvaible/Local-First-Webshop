@@ -7,6 +7,7 @@ import { SearchPage } from "./pages/SearchPage";
 import { ProductPage } from "./pages/ProductPage";
 import { eq } from "drizzle-orm";
 import { MetricType } from "./utils/metrics-reporter.ts";
+import { testConfig } from "./test-config.ts";
 
 test.describe("Network Efficiency Tests", { tag: "@metric" }, () => {
   test.beforeEach(async () => {
@@ -22,7 +23,15 @@ test.describe("Network Efficiency Tests", { tag: "@metric" }, () => {
     const productPage = new ProductPage(page);
 
     await test.step("Setup: Seed DB and Start Network Monitor", async () => {
-      await seedDatabase({ categories: 10, productsPerCategory: 2000 });
+      const categoriesCount = 10;
+      const productsPerCategory = Math.floor(
+        testConfig.productCounts[testConfig.productCounts.length - 1] /
+          categoriesCount
+      );
+      await seedDatabase({
+        categories: categoriesCount,
+        productsPerCategory: productsPerCategory
+      });
 
       page.on("requestfinished", async (request) => {
         const sizes = await request.sizes();
