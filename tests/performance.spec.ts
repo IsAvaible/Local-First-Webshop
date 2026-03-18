@@ -202,19 +202,28 @@ test.describe("Performance & Resource Tests", { tag: "@metric" }, () => {
 
         // Act
         const estimate =
-          await test.step("Retrieve storage estimate", async () => {
-            return await page.evaluate(async () => {
-              if ("storage" in navigator && navigator.storage?.estimate) {
-                return await navigator.storage.estimate();
-              }
+          await test.step("Retrieve storage estimate via CDP", async () => {
+            const client = await page.context().newCDPSession(page);
+
+            const origin = await page.evaluate(() => window.location.origin);
+
+            try {
+              // Request the usage and quota data from Chromium
+              return await client.send("Storage.getUsageAndQuota", {
+                origin
+              });
+            } catch (error) {
+              console.error("CDP Storage API error:", error);
               return null;
-            });
+            } finally {
+              await client.detach();
+            }
           });
 
         // Assert
         await test.step("Validate storage usage", () => {
           if (estimate) {
-            const usageMB = (estimate.usage! / 1024 / 1024).toFixed(2);
+            const usageMB = estimate.usage / 1024 / 1024;
             console.log(
               `[${totalProducts} items] Storage Usage: ${usageMB} MB`
             );
@@ -228,7 +237,7 @@ test.describe("Performance & Resource Tests", { tag: "@metric" }, () => {
               expect(estimate.usage).toBeGreaterThan(0);
             }
           } else {
-            console.log("Storage API not available");
+            console.log("Storage API not available or returned invalid data");
             test.info().annotations.push({
               type: MetricType.STORAGE_USAGE,
               description: JSON.stringify({
