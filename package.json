@@ -21,6 +21,7 @@
     "test:e2e:budget": "cross-env TEST_PROFILE=budget playwright test",
     "test:e2e:worst": "cross-env TEST_PROFILE=worst-case playwright test",
     "test:e2e:merge-results": "tsx tests/scripts/merge-results.ts",
+    "test:e2e:run-suite": "tsx tests/scripts/run-test-suite.ts",
     "prepare": "husky"
   },
   "dependencies": {
