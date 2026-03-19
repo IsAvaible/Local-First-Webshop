@@ -26,13 +26,13 @@ export async function seedDatabase(
     companies?: number;
     categories?: number;
     productsPerCategory?: number;
-    inventoryPerProduct?: number; // Added inventory parameter
+    inventoryPerProduct?: number;
   } = {}
 ) {
   const COMPANIES_TO_CREATE = options.companies ?? 2;
   const CATEGORIES_TO_CREATE = options.categories ?? 2;
   const PRODUCTS_PER_CATEGORY = options.productsPerCategory ?? 5;
-  const INVENTORY_PER_PRODUCT = options.inventoryPerProduct ?? 1000; // Defaulting to 1000
+  const INVENTORY_PER_PRODUCT = options.inventoryPerProduct ?? 1000;
 
   // Deterministic seeding for easier debugging
   faker.seed(123);
@@ -88,18 +88,23 @@ export async function seedDatabase(
     const allPricingTiers = [];
     const allInventoryLedgerData = [];
 
-    for (const product of insertedProducts) {
-      allPricingTiers.push({
-        product_id: product.id,
+    allPricingTiers.length = insertedProducts.length;
+    allInventoryLedgerData.length = insertedProducts.length;
+
+    for (let i = 0; i < insertedProducts.length; i++) {
+      const productId = insertedProducts[i].id;
+
+      allPricingTiers[i] = {
+        product_id: productId,
         min_quantity: 1,
         price_per_unit: faker.commerce.price({ min: 10, max: 200 })
-      });
+      };
 
-      allInventoryLedgerData.push({
-        product_id: product.id,
+      allInventoryLedgerData[i] = {
+        product_id: productId,
         quantity_change: INVENTORY_PER_PRODUCT,
         reason: "restock" as const
-      });
+      };
     }
 
     // Bulk Insert Pricing Tiers in Chunks

@@ -201,7 +201,10 @@ export const pricingTiersTable = pgTable(
   },
   (table) => {
     return {
-      minQuantityIdx: index("min_quantity_idx").on(table.min_quantity)
+      productMinQuantityIdx: index("product_min_quantity_idx").on(
+        table.product_id,
+        table.min_quantity
+      )
     };
   }
 );
