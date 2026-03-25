@@ -88,19 +88,20 @@ test.describe("Consistency & Conflict Tests", () => {
     await contextB.close();
   });
 
-  test("Conflict Scenario: Structural Concurrency (Move vs Delete)", async ({
+  test("Conflict Scenario: Structural Concurrency (Orphaned Item)", async ({
     browser
   }) => {
     test.skip(process.env.APP_MODE === "ssr", "SSR has no cart collaboration.");
 
     await test.step("Seed database and prepare test data", async () => {
-      await seedDatabase({ categories: 1, productsPerCategory: 1 });
+      await seedDatabase({ categories: 1, productsPerCategory: 2 });
     });
 
-    const targetProduct = await db.query.productsTable.findFirst();
-    if (!targetProduct) {
-      throw new Error("No products found in the database.");
+    const products = await db.query.productsTable.findMany({ limit: 2 });
+    if (products.length < 2) {
+      throw new Error("Not enough products found in the database.");
     }
+    const [product1, product2] = products;
 
     // Setup two independent, isolated browser contexts
     const contextA = await browser.newContext();
@@ -119,9 +120,13 @@ test.describe("Consistency & Conflict Tests", () => {
       await cartB.goto();
       const emailB = await cartB.getCurrentUserEmail();
 
-      // User A adds a product and shares
-      await productPageA.goto(targetProduct.id);
+      // User A adds both products and shares
+      await productPageA.goto(product1.id);
       await productPageA.addItemToCart();
+
+      await productPageA.goto(product2.id);
+      await productPageA.addItemToCart();
+
       await cartA.goto();
       await cartA.shareWithEmail(emailB, "contributor");
 
@@ -137,9 +142,13 @@ test.describe("Consistency & Conflict Tests", () => {
       await cartA.addFolder();
       await cartA.renameFolder("New Folder", FOLDER_NAME);
 
+      // Put product1 inside the folder. product2 remains at the root.
+      await cartA.dragItemToFolder(product1.name, FOLDER_NAME);
+
       // Verify sync before disconnecting
       await expect(cartB.getFolderLocator(FOLDER_NAME)).toBeVisible();
-      await cartB.verifyItemVisible(targetProduct.name);
+      await cartB.verifyItemVisible(product1.name);
+      await cartB.verifyItemVisible(product2.name);
     });
 
     await test.step("Simulate network partition (Offline mode)", async () => {
@@ -148,10 +157,10 @@ test.describe("Consistency & Conflict Tests", () => {
     });
 
     await test.step("Perform concurrent conflicting actions", async () => {
-      // User A: Moves the item into the folder (Move)
-      await cartA.dragItemToFolder(targetProduct.name, FOLDER_NAME);
+      // User A: Adds the second item into the folder while offline
+      await cartA.dragItemToFolder(product2.name, FOLDER_NAME);
 
-      // User B: Deletes the target folder (Delete)
+      // User B: Deletes the target folder
       await cartB.deleteFolder(FOLDER_NAME);
     });
 
@@ -163,9 +172,22 @@ test.describe("Consistency & Conflict Tests", () => {
       await cartB.waitForSync();
     });
 
-    await test.step("Assert Eventual Consistency (Delete wins over Move)", async () => {
-      await cartA.assertEmpty();
-      await cartB.assertEmpty();
+    await test.step("Assert Eventual Consistency (Item orphaned, not deleted)", async () => {
+      // The folder should be gone
+      await expect(cartA.getFolderLocator(FOLDER_NAME)).toBeHidden();
+      await expect(cartB.getFolderLocator(FOLDER_NAME)).toBeHidden();
+
+      // product1 should be deleted
+      await expect(
+        pageA.getByRole("group", { name: `Cart item: ${product1.name}` })
+      ).toBeHidden();
+      await expect(
+        pageB.getByRole("group", { name: `Cart item: ${product1.name}` })
+      ).toBeHidden();
+
+      // product2 should be orphaned to the root of the cart
+      await cartA.verifyItemVisible(product2.name);
+      await cartB.verifyItemVisible(product2.name);
     });
   });
 

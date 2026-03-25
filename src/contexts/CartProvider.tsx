@@ -180,6 +180,30 @@ function CartSession({
     };
   }, [nodesMap, tagsMap, snapshotsArray]);
 
+  useEffect(() => {
+    if (flatNodes.length === 0) return;
+
+    // Create a Set of all valid, existing node IDs
+    const existingNodeIds = new Set(flatNodes.map((n) => n.id));
+
+    // Identify nodes whose parent_id points to a non-existent node
+    const orphans = flatNodes.filter(
+      (node) => node.parent_id !== null && !existingNodeIds.has(node.parent_id)
+    );
+
+    // If we find orphans, issue a transaction to move them to the root
+    if (orphans.length > 0) {
+      ydoc.transact(() => {
+        orphans.forEach((orphan) => {
+          const yNode = nodesMap.get(orphan.id);
+          if (yNode) {
+            yNode.set("parent_id", null);
+          }
+        });
+      }, "self-heal-orphans");
+    }
+  }, [flatNodes, ydoc, nodesMap]);
+
   // Depending functions on a ref instead of flatNodes will prevent function recreation
   const currentNodesRef = useRef(flatNodes);
 

@@ -72,28 +72,59 @@ export class CartPage {
       .getByRole("button", { name: `Delete ${folderName} folder`, exact: true })
       .click();
   }
-
   /**
    * Manually dispatches mouse events to satisfy dnd-kit's sensor requirements.
+   * Homing sequence: recalculates target position during the move to account for dynamic layout shifts.
    */
   async dragItemToFolder(itemName: string, folderName: string) {
     const dragHandle = this.page.getByRole("button", {
       name: `Reorder ${itemName}`
     });
-    const targetFolder = this.getFolderLocator(folderName);
 
-    // Hover over the drag handle
+    const targetFolderTitle = this.getFolderLocator(folderName);
+
+    // Hover over the drag handle and grab it
     await dragHandle.hover();
     await this.page.mouse.down();
 
-    // Move slightly to trigger dnd-kit's PointerSensor activation constraint (distance: 8)
+    // Trigger dnd-kit's PointerSensor activation constraint
     const handleBox = await dragHandle.boundingBox();
-    if (handleBox) {
-      await this.page.mouse.move(handleBox.x + 10, handleBox.y + 10);
+    if (!handleBox) throw new Error(`Drag handle for ${itemName} not visible.`);
+
+    let currentX = handleBox.x + handleBox.width / 2;
+    let currentY = handleBox.y + handleBox.height / 2;
+
+    // Initial nudge to activate the dnd-kit drag state
+    currentX += 10;
+    currentY += 10;
+    await this.page.mouse.move(currentX, currentY);
+
+    // Briefly wait for dnd-kit to mount the DragOverlay and trigger initial layout shifts
+    await this.page.waitForTimeout(100);
+
+    // Homing sequence: move in segments, recalculating the moving target each time
+    const segments = 5;
+    for (let i = 1; i <= segments; i++) {
+      // Recalculate target position (with offset to drop below the folder title)
+      const titleBox = await targetFolderTitle.boundingBox();
+      if (!titleBox)
+        throw new Error(`Target folder ${folderName} not visible during drag.`);
+      const targetX = titleBox.x + titleBox.width / 2;
+      const targetY = titleBox.y + titleBox.height + 20;
+
+      // Calculate fraction of remaining distance to travel
+      const progress = 1 / (segments - i + 1);
+      currentX = currentX + (targetX - currentX) * progress;
+      currentY = currentY + (targetY - currentY) * progress;
+
+      // Move to the waypoint
+      await this.page.mouse.move(currentX, currentY, { steps: 5 });
+
+      // Wait for layout to stabilize before the next segment
+      await this.page.waitForTimeout(50);
     }
 
-    // Move to the target folder and drop
-    await targetFolder.hover();
+    // Drop the item
     await this.page.mouse.up();
   }
 
