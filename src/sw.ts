@@ -3,7 +3,7 @@ import {
   type PrecacheEntry,
   type SerwistGlobalConfig
 } from "serwist";
-import { Serwist } from "serwist";
+import { Serwist, type SerwistPlugin } from "serwist";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -17,6 +17,41 @@ const manifestInjectionPoint = self.__SW_MANIFEST;
 
 const hasPrecacheManifest =
   Array.isArray(manifestInjectionPoint) && manifestInjectionPoint.length > 0;
+
+const cacheOnlyFullSnapshotsPlugin: SerwistPlugin = {
+  cacheWillUpdate: async ({ response }) => {
+    // Only process successful responses
+    if (!response?.ok) {
+      return null;
+    }
+
+    try {
+      const clonedResponse = response.clone();
+      const data = (await clonedResponse.json()) as {
+        headers?: {
+          control?: string;
+        };
+      }[];
+
+      // Ensure it's an array and check the last item for the snapshot-end marker
+      if (Array.isArray(data) && data.length > 0) {
+        const lastItem = data[data.length - 1];
+
+        if (lastItem?.headers?.control === "snapshot-end") {
+          // Full snapshot. Return the response so Serwist caches it.
+          return response;
+        }
+      }
+
+      // Incremental update. Return null to skip caching.
+      return null;
+    } catch (error) {
+      // If parsing fails (e.g., not JSON), do not cache.
+      console.error("Failed to parse shape response for caching:", error);
+      return null;
+    }
+  }
+};
 
 const serwist = new Serwist({
   precacheEntries: manifestInjectionPoint,
@@ -36,6 +71,19 @@ const serwist = new Serwist({
         networkTimeoutSeconds: 5,
         matchOptions: {
           ignoreVary: true,
+          ignoreSearch: true
+        }
+      })
+    },
+    {
+      // Cache Electric full shape snapshots for offline use, but skip incremental updates.
+      matcher: ({ url, request }) =>
+        url.pathname.startsWith("/api/") && request.method === "GET",
+      handler: new NetworkFirst({
+        cacheName: "electric-full-shapes-cache",
+        networkTimeoutSeconds: 3,
+        plugins: [cacheOnlyFullSnapshotsPlugin],
+        matchOptions: {
           ignoreSearch: true
         }
       })
