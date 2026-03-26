@@ -6,7 +6,6 @@ import { performance } from "perf_hooks";
  */
 
 // Change directory and set environment variables
-process.chdir("../..");
 process.env.CI = "true";
 process.env.METRICS_ONLY = "true";
 

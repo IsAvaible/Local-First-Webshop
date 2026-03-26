@@ -62,6 +62,11 @@ export default class MetricsCsvReporter implements Reporter {
   }
 
   onTestEnd(test: TestCase, result: TestResult) {
+    // Only process tests that have metric annotations when METRICS_ONLY is true
+    if (process.env.METRICS_ONLY !== "true") {
+      return;
+    }
+
     const annotations = test.annotations.filter((a) =>
       (Object.values(MetricType) as string[]).includes(a.type)
     );

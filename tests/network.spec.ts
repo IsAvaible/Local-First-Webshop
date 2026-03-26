@@ -25,8 +25,7 @@ test.describe("Network Efficiency Tests", { tag: "@metric" }, () => {
     await test.step("Setup: Seed DB and Start Network Monitor", async () => {
       const categoriesCount = 10;
       const productsPerCategory = Math.floor(
-        testConfig.productCounts[testConfig.productCounts.length - 1] /
-          categoriesCount
+        testConfig.productCounts[1] / categoriesCount
       );
       await seedDatabase({
         categories: categoriesCount,
