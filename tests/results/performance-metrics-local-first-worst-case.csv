@@ -1,0 +1,631 @@
+Timestamp,File,Suite Context,Test Name,Metric Name,Value,Unit,Status
+2026-03-18T23:06:51.041Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","127.0086999999985","ms",passed
+2026-03-18T23:08:28.710Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-18T23:08:55.691Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26285.21680000001","ms",passed
+2026-03-18T23:09:23.699Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","85.59999999962747","ms",passed
+2026-03-18T23:10:19.292Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","12.099658966064453","MB",passed
+2026-03-18T23:10:48.425Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27376.799800000008","ms",passed
+2026-03-18T23:11:19.160Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","205.79999999981374","ms",passed
+2026-03-18T23:12:17.159Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.1474609375","MB",passed
+2026-03-18T23:13:17.713Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","54174.15909999999","ms",passed
+2026-03-18T23:14:19.502Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","661.5","ms",passed
+2026-03-18T23:16:20.514Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","103.96976852416992","MB",passed
+2026-03-18T23:16:47.897Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26271.760800000047","ms",passed
+2026-03-18T23:16:47.897Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","207.27909999992698","ms",passed
+2026-03-18T23:17:50.249Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","5","count",passed
+2026-03-18T23:17:50.249Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3299","ms",passed
+2026-03-18T23:35:17.148Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","127.1150000000016","ms",passed
+2026-03-18T23:36:53.782Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-18T23:37:20.746Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26268.944900000002","ms",passed
+2026-03-18T23:37:49.357Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","83.90000000037253","ms",passed
+2026-03-18T23:38:45.628Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.907882690429688","MB",passed
+2026-03-18T23:39:14.504Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27118.583500000008","ms",passed
+2026-03-18T23:39:45.257Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","210.69999999925494","ms",passed
+2026-03-18T23:40:44.414Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.666584014892578","MB",passed
+2026-03-18T23:41:44.546Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","53972.9939","ms",passed
+2026-03-18T23:42:46.153Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","683.0999999996275","ms",passed
+2026-03-18T23:44:46.813Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","92.75138854980469","MB",passed
+2026-03-18T23:45:14.143Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26274.369400000083","ms",passed
+2026-03-18T23:45:14.143Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","210.07089999993332","ms",passed
+2026-03-18T23:46:15.992Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-18T23:46:15.992Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3161","ms",passed
+2026-03-19T00:03:40.168Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","119.76790000000256","ms",passed
+2026-03-19T00:05:16.574Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T00:05:43.507Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26238.864","ms",passed
+2026-03-19T00:06:11.233Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","75.3999999994412","ms",passed
+2026-03-19T00:07:05.095Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.510528564453125","MB",passed
+2026-03-19T00:07:34.194Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27323.16590000002","ms",passed
+2026-03-19T00:08:04.869Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","174.8999999994412","ms",passed
+2026-03-19T00:09:04.328Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.51910400390625","MB",passed
+2026-03-19T00:10:04.236Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","53781.27720000001","ms",passed
+2026-03-19T00:11:05.482Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","620.0999999996275","ms",passed
+2026-03-19T00:13:05.382Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","73.8996467590332","MB",passed
+2026-03-19T00:13:32.699Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26277.29310000001","ms",passed
+2026-03-19T00:13:32.699Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","200.20689999999013","ms",passed
+2026-03-19T00:14:34.616Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T00:14:34.616Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","2992","ms",passed
+2026-03-19T00:32:55.705Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","134.61109999999826","ms",passed
+2026-03-19T00:34:32.305Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T00:35:00.081Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27087.0824","ms",passed
+2026-03-19T00:35:28.802Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","75.89999999850988","ms",passed
+2026-03-19T00:36:22.718Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.5032958984375","MB",passed
+2026-03-19T00:36:52.411Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27947.049899999984","ms",passed
+2026-03-19T00:37:22.475Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","196.2999999988824","ms",passed
+2026-03-19T00:38:22.334Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.468002319335938","MB",passed
+2026-03-19T00:39:22.314Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","53618.81330000004","ms",passed
+2026-03-19T00:40:23.286Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","601.4000000003725","ms",passed
+2026-03-19T00:42:23.105Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","52.345794677734375","MB",passed
+2026-03-19T00:42:50.427Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26271.373499999987","ms",passed
+2026-03-19T00:42:50.427Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","195.69209999998566","ms",passed
+2026-03-19T00:43:51.707Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T00:43:51.707Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","2765","ms",passed
+2026-03-19T01:01:58.452Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","131.70770000000266","ms",passed
+2026-03-19T01:03:35.136Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T01:04:02.109Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26287.684600000008","ms",passed
+2026-03-19T01:04:29.907Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","84.19999999925494","ms",passed
+2026-03-19T01:05:24.788Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.903266906738281","MB",passed
+2026-03-19T01:05:53.918Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27386.5257","ms",passed
+2026-03-19T01:06:24.661Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","190.7999999988824","ms",passed
+2026-03-19T01:07:23.459Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.559772491455078","MB",passed
+2026-03-19T01:08:23.753Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","53928.177599999995","ms",passed
+2026-03-19T01:09:25.253Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","646.7999999988824","ms",passed
+2026-03-19T01:11:25.947Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","68.68341445922852","MB",passed
+2026-03-19T01:11:53.285Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26262.815100000007","ms",passed
+2026-03-19T01:11:53.285Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","197.37569999997504","ms",passed
+2026-03-19T01:12:54.908Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T01:12:54.908Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3058","ms",passed
+2026-03-19T01:30:18.459Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","127.77980000000025","ms",passed
+2026-03-19T01:31:55.297Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T01:32:23.513Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27519.2022","ms",passed
+2026-03-19T01:32:51.208Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","83.89999999850988","ms",passed
+2026-03-19T01:33:46.215Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","18.69776153564453","MB",passed
+2026-03-19T01:34:16.029Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28028.51549999998","ms",passed
+2026-03-19T01:34:46.685Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","200","ms",passed
+2026-03-19T01:35:46.399Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.657302856445312","MB",passed
+2026-03-19T01:36:46.571Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","54086.00059999997","ms",passed
+2026-03-19T01:37:48.029Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","641.2999999988824","ms",passed
+2026-03-19T01:39:48.441Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","68.90161895751953","MB",passed
+2026-03-19T01:40:16.659Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","27158.282700000098","ms",passed
+2026-03-19T01:40:16.659Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","211.30480000004172","ms",passed
+2026-03-19T01:41:18.465Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T01:41:18.465Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3130","ms",passed
+2026-03-19T01:58:45.174Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","123.70899999999892","ms",passed
+2026-03-19T02:00:22.140Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T02:00:49.920Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27087.084199999998","ms",passed
+2026-03-19T02:01:18.662Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","84.69999999925494","ms",passed
+2026-03-19T02:02:12.617Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.512367248535156","MB",passed
+2026-03-19T02:02:42.505Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28139.717199999985","ms",passed
+2026-03-19T02:03:12.478Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","216.5","ms",passed
+2026-03-19T02:04:12.717Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","20.14136505126953","MB",passed
+2026-03-19T02:05:12.797Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","53871.38329999999","ms",passed
+2026-03-19T02:06:14.353Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","657.1000000014901","ms",passed
+2026-03-19T02:08:14.804Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","80.64146041870117","MB",passed
+2026-03-19T02:08:43.175Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","27313.688199999975","ms",passed
+2026-03-19T02:08:43.175Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","208.87890000001062","ms",passed
+2026-03-19T02:09:44.805Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T02:09:44.805Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3032","ms",passed
+2026-03-19T02:27:13.712Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","127.9880000000012","ms",passed
+2026-03-19T02:28:51.141Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T02:29:18.143Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26303.685799999992","ms",passed
+2026-03-19T02:29:46.909Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","86.59999999962747","ms",passed
+2026-03-19T02:30:40.968Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","18.88498306274414","MB",passed
+2026-03-19T02:31:10.181Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27458.647100000002","ms",passed
+2026-03-19T02:31:40.989Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","198.59999999962747","ms",passed
+2026-03-19T02:32:40.590Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.51717758178711","MB",passed
+2026-03-19T02:33:40.907Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","54119.884100000025","ms",passed
+2026-03-19T02:34:42.703Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","710.5999999996275","ms",passed
+2026-03-19T02:36:42.918Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","69.39789962768555","MB",passed
+2026-03-19T02:37:10.246Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26286.68689999997","ms",passed
+2026-03-19T02:37:10.246Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","196.1610000000801","ms",passed
+2026-03-19T02:38:11.906Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","5","count",passed
+2026-03-19T02:38:11.906Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3216","ms",passed
+2026-03-19T02:55:34.844Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","123.50560000000041","ms",passed
+2026-03-19T02:57:11.767Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T02:57:38.765Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26299.254900000014","ms",passed
+2026-03-19T02:58:07.394Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","83.10000000149012","ms",passed
+2026-03-19T02:59:01.315Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.499702453613281","MB",passed
+2026-03-19T02:59:30.375Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27294.2151","ms",passed
+2026-03-19T03:00:00.537Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","221.5","ms",passed
+2026-03-19T03:01:00.070Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.537826538085938","MB",passed
+2026-03-19T03:02:00.354Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","53902.1666","ms",passed
+2026-03-19T03:03:01.847Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","661.3000000007451","ms",passed
+2026-03-19T03:05:03.042Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","68.9754409790039","MB",passed
+2026-03-19T03:05:30.372Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26257.704800000065","ms",passed
+2026-03-19T03:05:30.372Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","207.17299999995157","ms",passed
+2026-03-19T03:06:32.114Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T03:06:32.114Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3132","ms",passed
+2026-03-19T03:23:57.723Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","50.45959999999832","ms",passed
+2026-03-19T03:25:34.683Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T03:26:02.476Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27110.466","ms",passed
+2026-03-19T03:26:31.262Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","75.10000000149012","ms",passed
+2026-03-19T03:27:27.015Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.91134262084961","MB",passed
+2026-03-19T03:27:56.208Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27386.011999999988","ms",passed
+2026-03-19T03:28:26.828Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","170.90000000223517","ms",passed
+2026-03-19T03:29:24.873Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","20.295536041259766","MB",passed
+2026-03-19T03:30:25.062Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","54032.41880000004","ms",passed
+2026-03-19T03:31:26.062Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","582.1999999992549","ms",passed
+2026-03-19T03:33:26.421Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","75.6479721069336","MB",passed
+2026-03-19T03:33:53.677Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26218.272800000035","ms",passed
+2026-03-19T03:33:53.677Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","187.6826000000583","ms",passed
+2026-03-19T03:34:55.518Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T03:34:55.518Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","2853","ms",passed
+2026-03-19T03:52:19.974Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","50.363499999999476","ms",passed
+2026-03-19T03:53:56.591Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T03:54:24.428Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27150.4988","ms",passed
+2026-03-19T03:54:53.269Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","86.09999999776483","ms",passed
+2026-03-19T03:55:47.165Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.509956359863281","MB",passed
+2026-03-19T03:56:16.233Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27296.067700000014","ms",passed
+2026-03-19T03:56:47.169Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","193.19999999925494","ms",passed
+2026-03-19T03:57:47.253Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","23.427841186523438","MB",passed
+2026-03-19T03:58:47.324Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","53900.58119999996","ms",passed
+2026-03-19T03:59:49.025Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","649.3000000007451","ms",passed
+2026-03-19T04:01:49.317Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","92.7087631225586","MB",passed
+2026-03-19T04:02:16.641Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26255.4841","ms",passed
+2026-03-19T04:02:16.641Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","210.76269999996293","ms",passed
+2026-03-19T04:03:18.420Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T04:03:18.420Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3163","ms",passed
+2026-03-19T04:20:43.940Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","130.2947000000022","ms",passed
+2026-03-19T04:22:20.870Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T04:22:48.774Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27207.623300000007","ms",passed
+2026-03-19T04:23:16.562Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","80.19999999925494","ms",passed
+2026-03-19T04:24:11.624Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.900680541992188","MB",passed
+2026-03-19T04:24:41.615Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28185.08050000001","ms",passed
+2026-03-19T04:25:12.364Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","205.19999999925494","ms",passed
+2026-03-19T04:26:11.621Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","23.312732696533203","MB",passed
+2026-03-19T04:27:11.867Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","54032.57290000003","ms",passed
+2026-03-19T04:28:13.972Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","686","ms",passed
+2026-03-19T04:30:14.029Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","52.23981857299805","MB",passed
+2026-03-19T04:30:41.384Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26278.464000000036","ms",passed
+2026-03-19T04:30:41.384Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","204.68799999996554","ms",passed
+2026-03-19T04:31:43.268Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T04:31:43.268Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3142","ms",passed
+2026-03-19T04:50:11.904Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","124.91679999999906","ms",passed
+2026-03-19T04:51:49.045Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T04:52:15.977Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26257.641600000003","ms",passed
+2026-03-19T04:52:43.748Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","84.29999999701977","ms",passed
+2026-03-19T04:53:37.674Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.510231018066406","MB",passed
+2026-03-19T04:54:07.491Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28061.543000000005","ms",passed
+2026-03-19T04:54:38.305Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","199.30000000074506","ms",passed
+2026-03-19T04:55:36.966Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.27147674560547","MB",passed
+2026-03-19T04:56:37.215Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","54120.08529999998","ms",passed
+2026-03-19T04:57:38.956Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","673","ms",passed
+2026-03-19T04:59:39.431Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","68.99230194091797","MB",passed
+2026-03-19T05:00:06.815Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26290.61380000005","ms",passed
+2026-03-19T05:00:06.815Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","199.50209999992512","ms",passed
+2026-03-19T05:01:08.897Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T05:01:08.897Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3289","ms",passed
+2026-03-19T05:18:38.600Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","121.79099999999744","ms",passed
+2026-03-19T05:20:15.269Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T05:20:42.238Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26273.885800000004","ms",passed
+2026-03-19T05:21:10.091Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","79.09999999776483","ms",passed
+2026-03-19T05:22:04.925Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","19.022762298583984","MB",passed
+2026-03-19T05:22:34.573Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27888.51509999999","ms",passed
+2026-03-19T05:23:04.298Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","180.90000000223517","ms",passed
+2026-03-19T05:24:03.242Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.517574310302734","MB",passed
+2026-03-19T05:25:03.450Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","53807.46889999998","ms",passed
+2026-03-19T05:26:05.114Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","638.1000000014901","ms",passed
+2026-03-19T05:28:05.776Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","69.18853378295898","MB",passed
+2026-03-19T05:28:33.848Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","27030.422500000102","ms",passed
+2026-03-19T05:28:33.848Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","192.2115000000922","ms",passed
+2026-03-19T05:29:35.419Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T05:29:35.419Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","2993","ms",passed
+2026-03-19T05:47:04.472Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","127.50920000000042","ms",passed
+2026-03-19T05:48:42.234Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T05:49:09.206Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26278.596699999995","ms",passed
+2026-03-19T05:49:37.120Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","79.69999999925494","ms",passed
+2026-03-19T05:50:32.054Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.510124206542969","MB",passed
+2026-03-19T05:51:01.878Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28031.148800000024","ms",passed
+2026-03-19T05:51:31.601Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","196.80000000074506","ms",passed
+2026-03-19T05:52:31.271Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.521461486816406","MB",passed
+2026-03-19T05:53:31.522Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","54080.44549999997","ms",passed
+2026-03-19T05:54:33.398Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","676.6999999992549","ms",passed
+2026-03-19T05:56:33.924Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","68.48020935058594","MB",passed
+2026-03-19T05:57:01.295Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26294.75349999999","ms",passed
+2026-03-19T05:57:01.295Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","200.7108999999473","ms",passed
+2026-03-19T05:58:03.068Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T05:58:03.068Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3123","ms",passed
+2026-03-19T06:15:26.871Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","129.29609999999957","ms",passed
+2026-03-19T06:17:03.994Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T06:17:30.983Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26291.828600000008","ms",passed
+2026-03-19T06:17:58.878Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","91.09999999776483","ms",passed
+2026-03-19T06:18:52.746Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.510051727294922","MB",passed
+2026-03-19T06:19:21.866Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27353.974200000026","ms",passed
+2026-03-19T06:19:51.926Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","220.5","ms",passed
+2026-03-19T06:20:51.935Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","23.450050354003906","MB",passed
+2026-03-19T06:21:52.222Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","54050.66480000003","ms",passed
+2026-03-19T06:22:54.026Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","670","ms",passed
+2026-03-19T06:24:54.856Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","52.23210144042969","MB",passed
+2026-03-19T06:25:22.193Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26290.85249999992","ms",passed
+2026-03-19T06:25:22.193Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","193.03009999997448","ms",passed
+2026-03-19T06:26:23.872Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T06:26:23.872Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3036","ms",passed
+2026-03-19T06:43:48.030Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","132.26239999999962","ms",passed
+2026-03-19T06:45:24.820Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T06:45:51.780Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26269.21549999999","ms",passed
+2026-03-19T06:46:20.530Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","77.10000000149012","ms",passed
+2026-03-19T06:47:14.421Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.827606201171875","MB",passed
+2026-03-19T06:47:44.266Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28066.369599999976","ms",passed
+2026-03-19T06:48:14.989Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","206.40000000223517","ms",passed
+2026-03-19T06:49:14.087Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.598819732666016","MB",passed
+2026-03-19T06:50:14.392Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","53997.918399999966","ms",passed
+2026-03-19T06:51:16.296Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","626.1999999992549","ms",passed
+2026-03-19T06:53:16.911Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","75.87274169921875","MB",passed
+2026-03-19T06:53:45.118Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","27149.157799999928","ms",passed
+2026-03-19T06:53:45.118Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","208.24219999997877","ms",passed
+2026-03-19T06:54:47.218Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T06:54:47.218Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3308","ms",passed
+2026-03-19T07:12:37.780Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","127.67870000000039","ms",passed
+2026-03-19T07:14:14.689Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T07:14:42.743Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27352.3741","ms",passed
+2026-03-19T07:15:10.480Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","85.30000000074506","ms",passed
+2026-03-19T07:16:04.459Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","19.294235229492188","MB",passed
+2026-03-19T07:16:33.563Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27334.97219999996","ms",passed
+2026-03-19T07:17:04.477Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","181.29999999701977","ms",passed
+2026-03-19T07:18:03.437Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.135299682617188","MB",passed
+2026-03-19T07:19:03.924Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","54221.801800000016","ms",passed
+2026-03-19T07:20:05.744Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","664.5","ms",passed
+2026-03-19T07:22:07.060Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","93.10882568359375","MB",passed
+2026-03-19T07:22:34.424Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26265.755300000077","ms",passed
+2026-03-19T07:22:34.424Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","199.2933999999659","ms",passed
+2026-03-19T07:23:36.176Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T07:23:36.176Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3204","ms",passed
+2026-03-19T07:41:56.087Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","152.63600000000224","ms",passed
+2026-03-19T07:43:33.718Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T07:44:01.603Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27175.536900000006","ms",passed
+2026-03-19T07:44:30.582Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","89.70000000298023","ms",passed
+2026-03-19T07:45:25.580Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.829761505126953","MB",passed
+2026-03-19T07:45:55.443Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28075.146100000013","ms",passed
+2026-03-19T07:46:25.455Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","216.20000000298023","ms",passed
+2026-03-19T07:47:24.374Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.12047576904297","MB",passed
+2026-03-19T07:48:24.888Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","54219.52299999999","ms",passed
+2026-03-19T07:49:26.664Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","665.1999999955297","ms",passed
+2026-03-19T07:51:27.513Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","90.9093246459961","MB",passed
+2026-03-19T07:51:54.863Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26269.986199999927","ms",passed
+2026-03-19T07:51:54.863Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","208.22959999996237","ms",passed
+2026-03-19T07:52:56.550Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T07:52:56.550Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3091","ms",passed
+2026-03-19T08:10:21.465Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","123.4249000000018","ms",passed
+2026-03-19T08:11:58.530Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T08:12:25.517Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26296.82730000002","ms",passed
+2026-03-19T08:12:53.294Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","83.39999999850988","ms",passed
+2026-03-19T08:13:47.328Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.513717651367188","MB",passed
+2026-03-19T08:14:17.671Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28533.473200000008","ms",passed
+2026-03-19T08:14:48.915Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","247.39999999850988","ms",passed
+2026-03-19T08:15:51.072Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","19.972373962402344","MB",passed
+2026-03-19T08:16:52.911Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","55262.19570000004","ms",passed
+2026-03-19T08:17:56.341Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","916.1000000014901","ms",passed
+2026-03-19T08:20:00.139Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","69.64245223999023","MB",passed
+2026-03-19T08:20:28.171Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26912.67420000001","ms",passed
+2026-03-19T08:20:28.171Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","219.50439999997616","ms",passed
+2026-03-19T08:21:32.009Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T08:21:32.009Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","4362","ms",passed
+2026-03-19T08:39:45.330Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","62.13969999999972","ms",passed
+2026-03-19T08:41:24.248Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T08:41:51.279Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26309.1339","ms",passed
+2026-03-19T08:42:19.147Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","86.60000000149012","ms",passed
+2026-03-19T08:43:14.315Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","19.36648941040039","MB",passed
+2026-03-19T08:43:45.007Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28588.86460000003","ms",passed
+2026-03-19T08:44:16.789Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","270","ms",passed
+2026-03-19T08:45:18.264Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","23.53118133544922","MB",passed
+2026-03-19T08:46:20.926Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","54545.52600000001","ms",passed
+2026-03-19T08:47:24.186Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","791.6000000014901","ms",passed
+2026-03-19T08:49:30.334Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","75.26498413085938","MB",passed
+2026-03-19T08:49:57.930Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26358.35499999998","ms",passed
+2026-03-19T08:49:57.930Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","230.47420000005513","ms",passed
+2026-03-19T08:51:02.585Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","5","count",passed
+2026-03-19T08:51:02.585Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3839","ms",passed
+2026-03-19T09:09:30.434Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","136.96770000000106","ms",passed
+2026-03-19T09:11:08.170Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T09:11:35.277Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26379.876900000003","ms",passed
+2026-03-19T09:12:03.099Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","79.39999999850988","ms",passed
+2026-03-19T09:12:57.164Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.511348724365234","MB",passed
+2026-03-19T09:13:26.563Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27398.53079999998","ms",passed
+2026-03-19T09:13:56.684Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","228","ms",passed
+2026-03-19T09:14:57.109Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","20.324352264404297","MB",passed
+2026-03-19T09:15:58.601Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","54986.1164","ms",passed
+2026-03-19T09:17:01.280Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","753.8000000044703","ms",passed
+2026-03-19T09:19:04.237Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","92.02984619140625","MB",passed
+2026-03-19T09:19:32.459Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","27147.01370000001","ms",passed
+2026-03-19T09:19:32.459Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","200.1180999999633","ms",passed
+2026-03-19T09:20:35.441Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T09:20:35.441Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3380","ms",passed
+2026-03-19T09:39:14.457Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","56.616399999998976","ms",passed
+2026-03-19T09:40:52.600Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T09:41:19.627Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26320.052299999996","ms",passed
+2026-03-19T09:41:47.427Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","126.80000000447035","ms",passed
+2026-03-19T09:42:42.070Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.507217407226562","MB",passed
+2026-03-19T09:43:12.138Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28238.394099999976","ms",passed
+2026-03-19T09:43:43.395Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","264.1000000014901","ms",passed
+2026-03-19T09:44:44.256Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.646583557128906","MB",passed
+2026-03-19T09:45:46.080Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","55128.9522","ms",passed
+2026-03-19T09:46:49.599Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","846.4000000059605","ms",passed
+2026-03-19T09:48:52.476Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","90.14385604858398","MB",passed
+2026-03-19T09:49:19.896Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26341.190100000007","ms",passed
+2026-03-19T09:49:19.896Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","211.20689999999013","ms",passed
+2026-03-19T09:50:22.831Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","5","count",passed
+2026-03-19T09:50:22.831Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3765","ms",passed
+2026-03-19T10:08:57.924Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","51.12810000000172","ms",passed
+2026-03-19T10:10:36.912Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T10:11:03.952Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26296.143700000015","ms",passed
+2026-03-19T10:11:32.592Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","75.70000000298023","ms",passed
+2026-03-19T10:12:26.659Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.513919830322266","MB",passed
+2026-03-19T10:12:57.397Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28591.628399999987","ms",passed
+2026-03-19T10:13:28.001Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","240.60000000149012","ms",passed
+2026-03-19T10:14:26.621Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","20.362926483154297","MB",passed
+2026-03-19T10:15:27.994Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","54460.98820000002","ms",passed
+2026-03-19T10:16:30.801Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","677","ms",passed
+2026-03-19T10:18:36.195Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","51.977046966552734","MB",passed
+2026-03-19T10:19:04.643Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","27331.45279999997","ms",passed
+2026-03-19T10:19:04.643Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","200.4079999999376","ms",passed
+2026-03-19T10:20:08.382Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T10:20:08.382Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3188","ms",passed
+2026-03-19T10:38:16.989Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","140.74269999999888","ms",passed
+2026-03-19T10:39:56.229Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T10:40:23.289Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26339.326899999985","ms",passed
+2026-03-19T10:40:52.188Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","87.70000000298023","ms",passed
+2026-03-19T10:41:47.767Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.927928924560547","MB",passed
+2026-03-19T10:42:17.905Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28312.529699999985","ms",passed
+2026-03-19T10:42:49.314Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","252.39999999850988","ms",passed
+2026-03-19T10:43:49.850Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","20.129501342773438","MB",passed
+2026-03-19T10:44:51.627Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","55409.639000000025","ms",passed
+2026-03-19T10:45:55.306Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","941.7000000029802","ms",passed
+2026-03-19T10:47:59.457Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","87.94823455810547","MB",passed
+2026-03-19T10:48:27.791Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","27182.4706","ms",passed
+2026-03-19T10:48:27.791Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","238.15009999996983","ms",passed
+2026-03-19T10:49:31.445Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","5","count",passed
+2026-03-19T10:49:31.445Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","4091","ms",passed
+2026-03-19T11:07:19.152Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","124.89660000000003","ms",passed
+2026-03-19T11:08:55.810Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T11:09:23.657Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27163.192599999995","ms",passed
+2026-03-19T11:09:52.178Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","72","ms",passed
+2026-03-19T11:10:47.998Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.896717071533203","MB",passed
+2026-03-19T11:11:18.209Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28397.975800000015","ms",passed
+2026-03-19T11:11:48.963Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","185.09999999403954","ms",passed
+2026-03-19T11:12:47.863Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","50.48899841308594","MB",passed
+2026-03-19T11:13:47.660Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","53607.79680000001","ms",passed
+2026-03-19T11:14:49.153Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","615.8999999985099","ms",passed
+2026-03-19T11:16:49.004Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","69.57291030883789","MB",passed
+2026-03-19T11:17:17.165Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","27135.76390000002","ms",passed
+2026-03-19T11:17:17.165Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","187.31500000006054","ms",passed
+2026-03-19T11:18:19.382Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T11:18:19.382Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","2907","ms",passed
+2026-03-19T11:35:43.429Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","125.18219999999928","ms",passed
+2026-03-19T11:37:21.304Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T11:37:48.290Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26291.09669999998","ms",passed
+2026-03-19T11:38:16.196Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","76.70000000298023","ms",passed
+2026-03-19T11:39:11.001Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.91064453125","MB",passed
+2026-03-19T11:39:40.842Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28061.948800000013","ms",passed
+2026-03-19T11:40:11.658Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","188.20000000298023","ms",passed
+2026-03-19T11:41:11.337Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.508445739746094","MB",passed
+2026-03-19T11:42:11.530Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","53967.35879999999","ms",passed
+2026-03-19T11:43:13.078Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","666.5","ms",passed
+2026-03-19T11:45:13.559Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","75.6181411743164","MB",passed
+2026-03-19T11:45:41.836Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","27236.989500000025","ms",passed
+2026-03-19T11:45:41.836Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","194.95169999997597","ms",passed
+2026-03-19T11:46:43.804Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T11:46:43.804Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3121","ms",passed
+2026-03-19T12:04:09.126Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","133.39029999999912","ms",passed
+2026-03-19T12:05:46.960Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T12:06:13.931Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26272.05800000002","ms",passed
+2026-03-19T12:06:41.688Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","83.69999999552965","ms",passed
+2026-03-19T12:07:36.500Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.510356903076172","MB",passed
+2026-03-19T12:08:06.396Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28082.61929999999","ms",passed
+2026-03-19T12:08:37.041Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","187.39999999850988","ms",passed
+2026-03-19T12:09:36.110Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","23.30148696899414","MB",passed
+2026-03-19T12:10:36.608Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","53978.68189999997","ms",passed
+2026-03-19T12:11:38.287Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","680.7999999970198","ms",passed
+2026-03-19T12:13:38.873Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","89.70450973510742","MB",passed
+2026-03-19T12:14:06.243Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26292.89690000005","ms",passed
+2026-03-19T12:14:06.243Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","203.0067000000272","ms",passed
+2026-03-19T12:15:08.223Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T12:15:08.223Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3211","ms",passed
+2026-03-19T12:32:30.789Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","45.19149999999718","ms",passed
+2026-03-19T12:34:08.252Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T12:34:35.184Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26239.186599999986","ms",passed
+2026-03-19T12:35:02.891Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","78.19999999552965","ms",passed
+2026-03-19T12:35:57.651Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.515796661376953","MB",passed
+2026-03-19T12:36:27.391Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","27933.24060000002","ms",passed
+2026-03-19T12:36:58.155Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","198.80000000447035","ms",passed
+2026-03-19T12:37:56.076Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","22.17351531982422","MB",passed
+2026-03-19T12:38:55.951Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","53729.43470000004","ms",passed
+2026-03-19T12:39:57.447Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","638.1000000014901","ms",passed
+2026-03-19T12:41:57.630Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","69.6497802734375","MB",passed
+2026-03-19T12:42:24.982Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26285.874899999937","ms",passed
+2026-03-19T12:42:24.982Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","199.4496999999974","ms",passed
+2026-03-19T12:43:26.688Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T12:43:26.688Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3020","ms",passed
+2026-03-19T13:01:30.886Z,"consistency.spec.ts","Consistency & Conflict Tests","Time to Consistency","metric:time-to-consistency","53.09950000000026","ms",passed
+2026-03-19T13:03:07.721Z,"network.spec.ts","Network Efficiency Tests","Delta Update Payload","metric:delta-update-payload-size","326","bytes",passed
+2026-03-19T13:03:34.650Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","26235.781899999987","ms",passed
+2026-03-19T13:04:03.326Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Interaction Latency: Local Filter","metric:interaction-latency","82.29999999701977","ms",passed
+2026-03-19T13:04:58.324Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","11.898921966552734","MB",passed
+2026-03-19T13:05:28.261Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","28156.655900000012","ms",passed
+2026-03-19T13:05:59.069Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Interaction Latency: Local Filter","metric:interaction-latency","185.69999999552965","ms",passed
+2026-03-19T13:06:57.712Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","51.04793930053711","MB",passed
+2026-03-19T13:07:57.765Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Initial Sync Time (Time to Data Availability)","metric:initial-sync-time","53883.85440000001","ms",passed
+2026-03-19T13:08:59.099Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Interaction Latency: Local Filter","metric:interaction-latency","683.8000000044703","ms",passed
+2026-03-19T13:10:59.842Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Client Resource Tax (Heap Memory)","metric:js-heap-used","69.02217864990234","MB",passed
+2026-03-19T13:11:27.134Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:initial-load-time","26267.121199999936","ms",passed
+2026-03-19T13:11:27.134Z,"performance.spec.ts","Performance & Resource Tests","Subsequent navigation utilizes populated cache for faster load","metric:cached-load-time","188.53980000002775","ms",passed
+2026-03-19T13:12:28.928Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:lag-spikes-count","4","count",passed
+2026-03-19T13:12:28.928Z,"performance.spec.ts","Performance & Resource Tests","Mobile Stability","metric:total-scroll-lag-ms","3142","ms",passed
+2026-03-20T13:31:22.978Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","620.2626953125","KB",passed
+2026-03-20T13:31:22.978Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.00390625","KB",passed
+2026-03-20T13:31:22.978Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T13:33:11.316Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","619.71484375","KB",passed
+2026-03-20T13:33:11.316Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.8720703125","KB",passed
+2026-03-20T13:33:11.316Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T13:35:00.039Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","626.3935546875","KB",passed
+2026-03-20T13:35:00.039Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.7998046875","KB",passed
+2026-03-20T13:35:00.039Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T13:36:47.035Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","627.005859375","KB",passed
+2026-03-20T13:36:47.035Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.771484375","KB",passed
+2026-03-20T13:36:47.035Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T13:38:33.535Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","624.2802734375","KB",passed
+2026-03-20T13:38:33.535Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","199.9853515625","KB",passed
+2026-03-20T13:38:33.535Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T13:40:20.902Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","620.8173828125","KB",passed
+2026-03-20T13:40:20.902Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.7880859375","KB",passed
+2026-03-20T13:40:20.902Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T13:42:08.534Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","626.205078125","KB",passed
+2026-03-20T13:42:08.534Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.6298828125","KB",passed
+2026-03-20T13:42:08.534Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T13:43:56.183Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","626.923828125","KB",passed
+2026-03-20T13:43:56.183Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","199.8837890625","KB",passed
+2026-03-20T13:43:56.183Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T13:45:43.907Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","626.4111328125","KB",passed
+2026-03-20T13:45:43.907Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.728515625","KB",passed
+2026-03-20T13:45:43.907Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T13:47:31.990Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","623.482421875","KB",passed
+2026-03-20T13:47:31.990Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.0849609375","KB",passed
+2026-03-20T13:47:31.990Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T13:49:19.340Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","626.875","KB",passed
+2026-03-20T13:49:19.340Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.736328125","KB",passed
+2026-03-20T13:49:19.340Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T13:51:06.558Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","623.7138671875","KB",passed
+2026-03-20T13:51:06.558Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","199.9931640625","KB",passed
+2026-03-20T13:51:06.558Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T13:52:54.635Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","625.1162109375","KB",passed
+2026-03-20T13:52:54.635Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.9111328125","KB",passed
+2026-03-20T13:52:54.635Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T13:54:41.862Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","626.9248046875","KB",passed
+2026-03-20T13:54:41.862Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.3095703125","KB",passed
+2026-03-20T13:54:41.862Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T13:56:29.953Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","622.865234375","KB",passed
+2026-03-20T13:56:29.953Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.8857421875","KB",passed
+2026-03-20T13:56:29.953Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T13:58:17.424Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","627.794921875","KB",passed
+2026-03-20T13:58:17.424Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.828125","KB",passed
+2026-03-20T13:58:17.424Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T14:00:05.343Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","619.59375","KB",passed
+2026-03-20T14:00:05.343Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","199.970703125","KB",passed
+2026-03-20T14:00:05.343Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T14:01:53.989Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","620.251953125","KB",passed
+2026-03-20T14:01:53.989Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.8212890625","KB",passed
+2026-03-20T14:01:53.989Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T14:03:35.640Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","623.6201171875","KB",passed
+2026-03-20T14:03:35.640Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.7392578125","KB",passed
+2026-03-20T14:03:35.640Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T14:05:22.886Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","623.759765625","KB",passed
+2026-03-20T14:05:22.886Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.9140625","KB",passed
+2026-03-20T14:05:22.886Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T14:07:09.962Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","624.7939453125","KB",passed
+2026-03-20T14:07:09.962Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.869140625","KB",passed
+2026-03-20T14:07:09.962Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T14:08:57.275Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","624.2900390625","KB",passed
+2026-03-20T14:08:57.275Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.4033203125","KB",passed
+2026-03-20T14:08:57.275Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T14:10:44.546Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","624.1826171875","KB",passed
+2026-03-20T14:10:44.546Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","199.7314453125","KB",passed
+2026-03-20T14:10:44.546Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T14:12:31.698Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","626.5146484375","KB",passed
+2026-03-20T14:12:31.698Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.8486328125","KB",passed
+2026-03-20T14:12:31.698Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T14:14:19.596Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","626.8427734375","KB",passed
+2026-03-20T14:14:19.596Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","199.6982421875","KB",passed
+2026-03-20T14:14:19.596Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T14:16:06.642Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","623.4921875","KB",passed
+2026-03-20T14:16:06.642Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.8076171875","KB",passed
+2026-03-20T14:16:06.642Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T14:17:51.871Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","626.3310546875","KB",passed
+2026-03-20T14:17:51.871Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.234375","KB",passed
+2026-03-20T14:17:51.871Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T14:19:37.168Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","626.275390625","KB",passed
+2026-03-20T14:19:37.168Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.8828125","KB",passed
+2026-03-20T14:19:37.168Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T14:21:22.644Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","642.03515625","KB",passed
+2026-03-20T14:21:22.644Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.8798828125","KB",passed
+2026-03-20T14:21:22.644Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-20T14:23:08.002Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-home-load","626.314453125","KB",passed
+2026-03-20T14:23:08.002Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-search-nav","200.845703125","KB",passed
+2026-03-20T14:23:08.002Z,"network.spec.ts","Network Efficiency Tests","Bandwidth Consumption (Home -> Search -> Product)","metric:bandwidth-product-nav","0","KB",passed
+2026-03-26T09:00:29.670Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699291229248047","MB",passed
+2026-03-26T09:00:55.851Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600449562072754","MB",passed
+2026-03-26T09:01:47.100Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806560516357422","MB",passed
+2026-03-26T09:04:43.836Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699234008789062","MB",passed
+2026-03-26T09:05:09.930Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600449562072754","MB",passed
+2026-03-26T09:06:00.918Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806561470031738","MB",passed
+2026-03-26T09:08:56.286Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5694808959960938","MB",passed
+2026-03-26T09:09:22.418Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600449562072754","MB",passed
+2026-03-26T09:10:13.526Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806560516357422","MB",passed
+2026-03-26T09:13:11.965Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699310302734375","MB",passed
+2026-03-26T09:13:38.426Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600434303283691","MB",passed
+2026-03-26T09:14:34.043Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806565284729004","MB",passed
+2026-03-26T09:17:39.895Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5694732666015625","MB",passed
+2026-03-26T09:18:07.760Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600441932678223","MB",passed
+2026-03-26T09:19:05.440Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806561470031738","MB",passed
+2026-03-26T10:02:46.416Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.569927215576172","MB",passed
+2026-03-26T10:03:13.825Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.6004533767700195","MB",passed
+2026-03-26T10:04:06.640Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806538581848145","MB",passed
+2026-03-26T10:07:07.555Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5694808959960938","MB",passed
+2026-03-26T10:07:34.759Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600449562072754","MB",passed
+2026-03-26T10:08:27.491Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806563377380371","MB",passed
+2026-03-26T10:11:28.513Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699234008789062","MB",passed
+2026-03-26T10:11:55.631Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600441932678223","MB",passed
+2026-03-26T10:12:48.129Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.80656909942627","MB",passed
+2026-03-26T10:15:48.493Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.569488525390625","MB",passed
+2026-03-26T10:16:14.712Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600464820861816","MB",passed
+2026-03-26T10:17:07.607Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806565284729004","MB",passed
+2026-03-26T10:20:07.709Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.569934844970703","MB",passed
+2026-03-26T10:20:35.004Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600441932678223","MB",passed
+2026-03-26T10:21:28.044Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806572914123535","MB",passed
+2026-03-26T10:24:29.614Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699234008789062","MB",passed
+2026-03-26T10:24:56.177Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600445747375488","MB",passed
+2026-03-26T10:25:48.977Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806561470031738","MB",passed
+2026-03-26T10:28:48.455Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699291229248047","MB",passed
+2026-03-26T10:29:15.914Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600464820861816","MB",passed
+2026-03-26T10:30:08.462Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806563377380371","MB",passed
+2026-03-26T10:33:10.719Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699329376220703","MB",passed
+2026-03-26T10:33:36.946Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600445747375488","MB",passed
+2026-03-26T10:34:29.870Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806541442871094","MB",passed
+2026-03-26T10:37:30.078Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699119567871094","MB",passed
+2026-03-26T10:37:56.215Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600445747375488","MB",passed
+2026-03-26T10:38:48.450Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806565284729004","MB",passed
+2026-03-26T10:41:46.959Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.569477081298828","MB",passed
+2026-03-26T10:42:13.173Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600433349609375","MB",passed
+2026-03-26T10:43:05.716Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.80656909942627","MB",passed
+2026-03-26T10:46:07.980Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699195861816406","MB",passed
+2026-03-26T10:46:34.277Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600440979003906","MB",passed
+2026-03-26T10:47:26.764Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806561470031738","MB",passed
+2026-03-26T10:50:27.637Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699462890625","MB",passed
+2026-03-26T10:50:53.800Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600451469421387","MB",passed
+2026-03-26T10:51:46.720Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806567192077637","MB",passed
+2026-03-26T10:54:49.288Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.569934844970703","MB",passed
+2026-03-26T10:55:16.750Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600457191467285","MB",passed
+2026-03-26T10:56:09.242Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806561470031738","MB",passed
+2026-03-26T10:59:09.599Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699386596679688","MB",passed
+2026-03-26T10:59:35.861Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600438117980957","MB",passed
+2026-03-26T11:00:28.460Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806571006774902","MB",passed
+2026-03-26T11:03:29.583Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5698957443237305","MB",passed
+2026-03-26T11:03:56.882Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600449562072754","MB",passed
+2026-03-26T11:04:49.753Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.80656909942627","MB",passed
+2026-03-26T11:07:51.258Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699214935302734","MB",passed
+2026-03-26T11:08:17.759Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.60044002532959","MB",passed
+2026-03-26T11:09:10.609Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806584358215332","MB",passed
+2026-03-26T11:12:11.654Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.569488525390625","MB",passed
+2026-03-26T11:12:38.911Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600429534912109","MB",passed
+2026-03-26T11:13:31.623Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806553840637207","MB",passed
+2026-03-26T11:16:34.871Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699501037597656","MB",passed
+2026-03-26T11:17:02.077Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.6004533767700195","MB",passed
+2026-03-26T11:17:55.033Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806561470031738","MB",passed
+2026-03-26T11:20:55.811Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.569925308227539","MB",passed
+2026-03-26T11:21:22.141Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600434303283691","MB",passed
+2026-03-26T11:22:14.931Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806557655334473","MB",passed
+2026-03-26T11:25:15.327Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.569477081298828","MB",passed
+2026-03-26T11:25:42.389Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600452423095703","MB",passed
+2026-03-26T11:26:34.735Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806578636169434","MB",passed
+2026-03-26T11:29:36.150Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699310302734375","MB",passed
+2026-03-26T11:30:02.774Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600449562072754","MB",passed
+2026-03-26T11:30:56.041Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806584358215332","MB",passed
+2026-03-26T11:34:38.177Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.569927215576172","MB",passed
+2026-03-26T11:35:05.540Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600438117980957","MB",passed
+2026-03-26T11:35:58.435Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806557655334473","MB",passed
+2026-03-26T11:39:00.766Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699310302734375","MB",passed
+2026-03-26T11:39:27.062Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600457191467285","MB",passed
+2026-03-26T11:40:19.783Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.806550025939941","MB",passed
+2026-03-26T11:43:23.618Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699310302734375","MB",passed
+2026-03-26T11:43:51.036Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.6004533767700195","MB",passed
+2026-03-26T11:44:43.255Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.80656909942627","MB",passed
+2026-03-26T11:47:42.489Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 100 products","Storage Footprint","metric:storage-usage","3.5699234008789062","MB",passed
+2026-03-26T11:48:09.660Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 5000 products","Storage Footprint","metric:storage-usage","4.600441932678223","MB",passed
+2026-03-26T11:49:01.976Z,"performance.spec.ts","Performance & Resource Tests > Dataset with 25000 products","Storage Footprint","metric:storage-usage","8.80656909942627","MB",passed
