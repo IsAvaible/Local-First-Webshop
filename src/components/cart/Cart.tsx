@@ -465,6 +465,7 @@ export function Cart({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div
+                          role="status"
                           aria-label={`Connection status: ${connectivityStatus}`}
                           className={cn(
                             "focus-visible:ring-ring flex items-center justify-center rounded-full p-1 transition-colors focus-visible:ring-2 focus-visible:outline-none",

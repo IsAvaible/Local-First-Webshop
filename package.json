@@ -9,7 +9,7 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:generate": "drizzle-kit generate",
-    "stripe:listen": "stripe listen --forward-to http://localhost:5173/api/stripe-webhook",
+    "stripe:listen": "stripe listen --forward-to https://local-first-webshop.localhost/api/stripe-webhook",
     "format": "prettier --write . --ignore-unknown",
     "lint": "eslint .",
     "wake-tunnel": "wait-on http-get://localhost:4173 && node -e \"fetch('http://localhost:4173').catch(()=>{})\"",

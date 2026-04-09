@@ -28,6 +28,9 @@ export const CartFolderComponent = ({
 
   const isOver = false;
 
+  // Generate a unique ID for ARIA linking
+  const folderHeadingId = `folder-heading-${folder.id}`;
+
   // Focus input when entering edit mode
   React.useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -76,13 +79,14 @@ export const CartFolderComponent = ({
 
   return (
     <div
+      data-testid="folder-container"
       className={cn(
         "rounded-lg border bg-gray-50 p-4 shadow-sm transition-colors",
         isOver ? "border-blue-300 bg-blue-50 ring-2 ring-blue-200" : ""
       )}
     >
       <div className="mb-2 flex items-center justify-between">
-        <div className="flex flex-1 items-center overflow-hidden font-semibold text-gray-700">
+        <h3 className="m-0 flex flex-1 items-center overflow-hidden font-semibold text-gray-700">
           <FolderIcon className="mr-2 h-5 w-5 shrink-0" aria-hidden="true" />
 
           {isEditing && !disabled ? (
@@ -101,6 +105,7 @@ export const CartFolderComponent = ({
           ) : (
             <button
               ref={editTriggerRef}
+              id={folderHeadingId}
               type="button"
               disabled={disabled}
               onClick={(e) => {
@@ -110,17 +115,17 @@ export const CartFolderComponent = ({
                 }
               }}
               className={cn(
-                "truncate rounded px-1 py-0.5 text-left transition-colors",
+                "truncate rounded px-1 py-1 text-left transition-colors",
                 !disabled &&
                   "focus-visible:ring-ring cursor-text hover:bg-gray-200/50 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none"
               )}
               title="Click to rename"
-              aria-label={`Folder: ${folder.name}, click to rename`}
+              aria-label={`Rename folder: ${folder.name}`}
             >
               {folder.name}
             </button>
           )}
-        </div>
+        </h3>
 
         <Button
           variant="ghost"
@@ -134,13 +139,17 @@ export const CartFolderComponent = ({
         </Button>
       </div>
 
-      <div className="flex min-h-[3rem] flex-col gap-2">
+      <div
+        className="flex min-h-[3rem] flex-col gap-2"
+        role="group"
+        aria-labelledby={folderHeadingId}
+      >
         <SortableContext
           items={folder.children.map((c) => c.id)}
           strategy={verticalListSortingStrategy}
         >
           {folder.children.length === 0 && !isOver && (
-            <p className="rounded border-2 border-dashed py-2 text-center text-xs text-gray-400">
+            <p className="rounded border-2 border-dashed py-2 text-center text-xs text-gray-500">
               {disabled ? "Empty folder" : "Drop items here"}
             </p>
           )}

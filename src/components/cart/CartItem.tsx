@@ -235,7 +235,7 @@ export function CartItem({
             variant="ghost"
             size="icon"
             disabled={disabled}
-            className={cn("h-8 w-8", !disabled && "cursor-grab")}
+            className={cn("h-8 w-8 touch-none", !disabled && "cursor-grab")}
             aria-label={`Reorder ${productName}`}
             aria-description="Press Space or Enter to activate drag mode, then use arrow keys to move."
             {...dragHandleProps}

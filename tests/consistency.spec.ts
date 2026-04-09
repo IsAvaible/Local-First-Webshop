@@ -31,11 +31,14 @@ test.describe("Consistency & Conflict Tests", () => {
       "SSR does not support offline mode."
     );
 
-    await seedDatabase({
-      categories: 1,
-      productsPerCategory: 1,
-      inventoryPerProduct: 1
+    await test.step("Setup database", async () => {
+      await seedDatabase({
+        categories: 1,
+        productsPerCategory: 1,
+        inventoryPerProduct: 1
+      });
     });
+
     const products = await db.query.productsTable.findMany();
     const targetProduct = products[0];
 
@@ -49,43 +52,49 @@ test.describe("Consistency & Conflict Tests", () => {
     const productPageB = new ProductPage(pageB);
     const cartPageA = new CartPage(pageA);
     const cartPageB = new CartPage(pageB);
-    const checkoutPageA = new CheckoutPage(pageA);
 
-    // Both users view the product
-    await Promise.all([
-      productPageA.goto(targetProduct.id),
-      productPageB.goto(targetProduct.id)
-    ]);
+    await test.step("Both users navigate to the target product", async () => {
+      await Promise.all([
+        productPageA.goto(targetProduct.id),
+        productPageB.goto(targetProduct.id)
+      ]);
+    });
 
-    // User A goes offline and adds to cart
-    await contextA.setOffline(true);
-    await productPageA.addToCartBtn.click();
+    await test.step("User A goes offline and adds item to cart", async () => {
+      await contextA.setOffline(true);
+      await productPageA.addToCartBtn.click();
 
-    await cartPageA.goto();
-    await cartPageA.verifyItemVisible(targetProduct.name);
+      await cartPageA.goto();
+      await cartPageA.verifyItemVisible(targetProduct.name);
+    });
 
-    // User B (Online) buys the item
-    await productPageB.addToCartBtn.click();
-    await cartPageB.goto();
-    await cartPageB.verifyItemVisible(targetProduct.name);
-    await cartPageB.checkoutBtn.click();
+    await test.step("User B stays online and buys the last item", async () => {
+      await productPageB.addToCartBtn.click();
+      await cartPageB.goto();
+      await cartPageB.verifyItemVisible(targetProduct.name);
+      await cartPageB.checkoutBtn.click();
 
-    // Simulate "Sold Out" by deleting ledger entry
-    await db
-      .delete(schema.inventoryLedgerTable)
-      .where(eq(schema.inventoryLedgerTable.product_id, targetProduct.id));
+      // Simulate "Sold Out" by deleting ledger entry
+      await db
+        .delete(schema.inventoryLedgerTable)
+        .where(eq(schema.inventoryLedgerTable.product_id, targetProduct.id));
+    });
 
-    // User A comes back online and tries to check out
-    await contextA.setOffline(false);
-    await cartPageA.goto();
+    await test.step("User A comes back online and sees 'Out of Stock'", async () => {
+      await contextA.setOffline(false);
+      await cartPageA.goto();
 
-    await expect(async () => {
-      await cartPageA.checkoutBtn.click();
-      await checkoutPageA.expectErrorMessage();
-    }).toPass();
+      await expect(async () => {
+        await expect(cartPageA.getItemRow(targetProduct.name)).toContainText(
+          "Out of Stock"
+        );
+      }).toPass();
+    });
 
-    await contextA.close();
-    await contextB.close();
+    await test.step("Teardown browser contexts", async () => {
+      await contextA.close();
+      await contextB.close();
+    });
   });
 
   test("Conflict Scenario: Structural Concurrency (Orphaned Item)", async ({

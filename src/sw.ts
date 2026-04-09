@@ -81,7 +81,6 @@ const serwist = new Serwist({
         url.pathname.startsWith("/api/") && request.method === "GET",
       handler: new NetworkFirst({
         cacheName: "electric-full-shapes-cache",
-        networkTimeoutSeconds: 3,
         plugins: [cacheOnlyFullSnapshotsPlugin],
         matchOptions: {
           ignoreSearch: true

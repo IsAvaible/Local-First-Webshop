@@ -13,6 +13,7 @@ import {
   parseTraceForSyncMetrics,
   type TraceData
 } from "./utils/parse-trace-metrics.ts";
+import { CheckoutPage } from "./pages/CheckoutPage.ts";
 
 test.describe("Offline & Recovery Tests", () => {
   test.beforeEach(async () => {
@@ -23,6 +24,7 @@ test.describe("Offline & Recovery Tests", () => {
     const searchPage = new SearchPage(page);
     const cartPage = new CartPage(page);
     const productPage = new ProductPage(page);
+    const checkoutPage = new CheckoutPage(page);
 
     await test.step("Setup: Seed DB and navigate to Search", async () => {
       await seedDatabase({ categories: 2, productsPerCategory: 5 });
@@ -67,6 +69,8 @@ test.describe("Offline & Recovery Tests", () => {
     await test.step("Verify: Critical actions (Checkout) are blocked", async () => {
       await cartPage.goto();
       await cartPage.checkoutBtn.click();
+
+      await checkoutPage.enterCheckoutFlow();
 
       // Expect rejection/warning toast or modal
       await expect(

@@ -38,7 +38,7 @@ export class CartPage {
   /**
    * Helper to find a specific cart item row based on the item name.
    */
-  private getItemRow(itemName: string): Locator {
+  public getItemRow(itemName: string): Locator {
     return this.page.getByRole("group", { name: `Cart item: ${itemName}` });
   }
 
@@ -63,8 +63,12 @@ export class CartPage {
   }
 
   getFolderLocator(folderName: string): Locator {
-    // Assumes the folder text is visible on the screen
-    return this.page.getByText(folderName, { exact: true });
+    return this.page.getByTestId("folder-container").filter({
+      has: this.page.getByRole("button", {
+        name: `Delete ${folderName} folder`,
+        exact: true
+      })
+    });
   }
 
   async deleteFolder(folderName: string) {
@@ -73,59 +77,67 @@ export class CartPage {
       .click();
   }
   /**
-   * Manually dispatches mouse events to satisfy dnd-kit's sensor requirements.
-   * Homing sequence: recalculates target position during the move to account for dynamic layout shifts.
+   * Uses keyboard navigation to interact with dnd-kit's KeyboardSensor.
+   * Focuses the item, picks it up with Space, moves it with Arrow keys, and drops it.
    */
   async dragItemToFolder(itemName: string, folderName: string) {
-    const dragHandle = this.page.getByRole("button", {
+    const allHandles = this.page.getByRole("button", {
       name: `Reorder ${itemName}`
     });
+    const sourceHandle = allHandles.first();
+    const targetFolder = this.getFolderLocator(folderName).first();
 
-    const targetFolderTitle = this.getFolderLocator(folderName);
+    // Focus the drag handle and pick up the item
+    await sourceHandle.focus();
+    await this.page.keyboard.press("Space");
 
-    // Hover over the drag handle and grab it
-    await dragHandle.hover();
-    await this.page.mouse.down();
+    // Briefly wait for dnd-kit to mount the DragOverlay
+    await this.page.waitForTimeout(250);
 
-    // Trigger dnd-kit's PointerSensor activation constraint
-    const handleBox = await dragHandle.boundingBox();
-    if (!handleBox) throw new Error(`Drag handle for ${itemName} not visible.`);
+    // The DragOverlay is now mounted. The overlay handle will be the last matching element.
+    const overlayHandle = allHandles.last();
 
-    let currentX = handleBox.x + handleBox.width / 2;
-    let currentY = handleBox.y + handleBox.height / 2;
+    const maxSteps = 30; // Safety break to prevent infinite loops
 
-    // Initial nudge to activate the dnd-kit drag state
-    currentX += 10;
-    currentY += 10;
-    await this.page.mouse.move(currentX, currentY);
+    for (let i = 0; i < maxSteps; i++) {
+      const overlayBox = await overlayHandle.boundingBox();
+      const folderBox = await targetFolder.boundingBox();
 
-    // Briefly wait for dnd-kit to mount the DragOverlay and trigger initial layout shifts
-    await this.page.waitForTimeout(100);
+      if (!overlayBox || !folderBox) {
+        throw new Error(
+          `Overlay or folder bounding box not found during drag.`
+        );
+      }
 
-    // Homing sequence: move in segments, recalculating the moving target each time
-    const segments = 5;
-    for (let i = 1; i <= segments; i++) {
-      // Recalculate target position (with offset to drop below the folder title)
-      const titleBox = await targetFolderTitle.boundingBox();
-      if (!titleBox)
-        throw new Error(`Target folder ${folderName} not visible during drag.`);
-      const targetX = titleBox.x + titleBox.width / 2;
-      const targetY = titleBox.y + titleBox.height + 20;
+      // Calculate the center Y of the dragging item for a more accurate hit area
+      const overlayCenterY = overlayBox.y + overlayBox.height / 2;
 
-      // Calculate fraction of remaining distance to travel
-      const progress = 1 / (segments - i + 1);
-      currentX = currentX + (targetX - currentX) * progress;
-      currentY = currentY + (targetY - currentY) * progress;
+      // 3. Check if the center of the drag overlay is within the folder's vertical bounds
+      const isInsideFolder =
+        overlayCenterY >= folderBox.y &&
+        overlayCenterY <= folderBox.y + folderBox.height;
 
-      // Move to the waypoint
-      await this.page.mouse.move(currentX, currentY, { steps: 5 });
+      console.log(overlayCenterY, folderBox);
 
-      // Wait for layout to stabilize before the next segment
-      await this.page.waitForTimeout(50);
+      if (isInsideFolder) {
+        break; // Target reached
+      }
+
+      // 4. Dynamically determine which way to move based on real-time positions
+      // We aim slightly below the top of the folder box (folderBox.y)
+      const moveKey = overlayCenterY < folderBox.y ? "ArrowDown" : "ArrowUp";
+
+      await this.page.keyboard.press(moveKey);
+
+      // Wait for React to re-render the sortable context and apply layout shifts
+      await this.page.waitForTimeout(200);
     }
 
-    // Drop the item
-    await this.page.mouse.up();
+    // Drop the item into place
+    await this.page.keyboard.press("Space");
+
+    // Wait for the drop animation to finish settling
+    await this.page.waitForTimeout(250);
   }
 
   /**
@@ -175,6 +187,7 @@ export class CartPage {
     await this.page.getByRole("option", { name: roleName }).click();
 
     await this.shareSendBtn.click();
+    await expect(this.shareEmailInput).toBeEmpty();
 
     await this.page.keyboard.press("Escape");
     await expect(this.shareEmailInput).toBeHidden();
@@ -201,13 +214,14 @@ export class CartPage {
   async renameFolder(oldName: string, newName: string) {
     const folder = this.getFolderLocator(oldName);
 
-    // Trigger edit mode
-    await folder.click();
+    await folder
+      .getByRole("button", { name: `Rename folder: ${oldName}` })
+      .click();
 
-    // Locate the input that appears
-    const renameInput = this.page.getByRole("textbox", {
+    const renameInput = folder.getByRole("textbox", {
       name: `Rename folder ${oldName}`
     });
+
     await renameInput.fill(newName);
     await renameInput.press("Enter");
 
@@ -218,19 +232,11 @@ export class CartPage {
    * Hovers over the sync indicator and waits for the specific tooltip.
    */
   async waitForSync() {
-    // We target the tooltip trigger container which houses the Wifi icon.
-    const syncIndicator = this.page.locator(".lucide-wifi").first();
-
-    // Radix Tooltips require hover/focus to attach to the DOM
-    await syncIndicator.hover();
-
-    const tooltip = this.page.getByRole("tooltip", {
-      name: /Connected to sync server/i
+    const syncIndicator = this.page.getByRole("status", {
+      name: "Connection status: connected"
     });
-    await expect(tooltip).toBeAttached({ timeout: 10000 });
 
-    // Move mouse away to dismiss tooltip so it doesn't block future interactions
-    await this.page.mouse.move(0, 0);
+    await expect(syncIndicator).toBeAttached({ timeout: 10000 });
   }
 
   /**
